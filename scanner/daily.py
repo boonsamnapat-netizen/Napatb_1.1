@@ -20,9 +20,9 @@ from notifier.telegram import send_message, send_signal_card, send_daily_summary
 def _get_stock_data(verbose: bool) -> dict:
     """Fetch ~400 trading days of OHLCV data for the full universe."""
     today     = datetime.date.today()
-    # ~560 calendar days ≈ 400 business days
-    cal_start = today - datetime.timedelta(days=560)
-    start_str = str(cal_start)
+    # pd.bdate_range going back 560 calendar days gives ~400 business days
+    brange    = pd.bdate_range(end=today, periods=400)
+    start_str = str(brange[0].date())
     end_str   = str(today + datetime.timedelta(days=1))  # exclusive upper bound
 
     if verbose:
