@@ -16,12 +16,11 @@ Backtest: 2020-01-01 → 2025-01-01  (5 years, $100,000 start)
 import os, sys, time, warnings
 import pandas as pd
 import numpy as np
-import yfinance as yf
 warnings.filterwarnings('ignore')
 
 import config
-from data.synthetic            import generate as generate_synthetic
-from indicators.technical      import compute_all_indicators
+from data.fetcher               import build_dataset
+from indicators.technical       import compute_all_indicators
 from strategies.vcp_minervini  import VCPMinerviniStrategy
 from strategies.zanger_breakout import ZangerBreakoutStrategy
 from strategies.trend_following import TrendFollowingStrategy
@@ -41,26 +40,10 @@ def download_data(tickers, start, end):
         print(f'  Loading cached data ({CACHE})...')
         return pd.read_pickle(CACHE)
 
-    # Try yfinance first
-    print(f'  Attempting yfinance download for {len(tickers)} tickers...')
-    data = {}
-    try:
-        for i, ticker in enumerate(tickers, 1):
-            df = yf.download(ticker, start=start, end=end,
-                             progress=False, auto_adjust=True)
-            if not df.empty and len(df) >= 100:
-                df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
-                data[ticker] = df
-                print(f'  [{i:2d}/{len(tickers)}] {ticker:6s} — {len(df)} days')
-    except Exception:
-        pass
-
-    # Fall back to realistic synthetic data if network is unavailable
-    if len(data) < 3:
-        print('  yfinance unavailable — generating realistic synthetic data...')
-        print('  (GBM + regime events: COVID crash, 2021 bull, 2022 bear, 2023-24 AI boom)')
-        data = generate_synthetic(tickers, start=start, end=end, seed=2024)
-        print(f'  Generated synthetic data for {len(data)} tickers ({len(next(iter(data.values())))} days each)')
+    print(f'  Fetching data for {len(tickers)} tickers...')
+    print('  (Real 2020 data from GitHub for AAPL/MSFT/GOOGL/AMZN/TSLA; calibrated GBM for rest)')
+    data = build_dataset(tickers, full_start=start, full_end=end, seed=42, verbose=True)
+    print(f'  Dataset ready: {len(data)} tickers')
 
     pd.to_pickle(data, CACHE)
     return data
