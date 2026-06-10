@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+reports/*.json
+reports/*.md
+!reports/.gitkeep
+data/exports/*.json
+!data/exports/sample_export.json

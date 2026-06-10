@@ -1,0 +1,73 @@
+{
+  "guild": {
+    "id": "123456789",
+    "name": "Trading Signals"
+  },
+  "channel": {
+    "id": "987654321",
+    "type": "GuildTextChat",
+    "name": "trade-setups"
+  },
+  "messages": [
+    {
+      "id": "1001",
+      "timestamp": "2024-01-15T02:30:00+00:00",
+      "author": {"name": "TraderA", "nickname": ""},
+      "content": "BTC LONG\nEntry: 42500-43000\nSL: 41800\nTP1: 44000\nTP2: 45500\nTP3: 47000\nPattern: Bullish engulfing on 4H after support retest"
+    },
+    {
+      "id": "1002",
+      "timestamp": "2024-01-15T03:15:00+00:00",
+      "author": {"name": "TraderB", "nickname": ""},
+      "content": "gm everyone, coffee time ☕"
+    },
+    {
+      "id": "1003",
+      "timestamp": "2024-01-15T04:00:00+00:00",
+      "author": {"name": "TraderA", "nickname": ""},
+      "content": "ETH SHORT setup\nTimeframe: 1H\nEntry: 2280\nStop: 2320\nTargets: 2220 / 2180 / 2150\nBOS confirmed on 1H, looking for retest of broken support"
+    },
+    {
+      "id": "1004",
+      "timestamp": "2024-01-15T06:30:00+00:00",
+      "author": {"name": "TraderC", "nickname": ""},
+      "content": "SOL Long\nEntry zone 95-97\nSL 92\nTP 105, 112\n4H OB retest"
+    },
+    {
+      "id": "1005",
+      "timestamp": "2024-01-15T07:00:00+00:00",
+      "author": {"name": "TraderB", "nickname": ""},
+      "content": "who caught the BTC move? 🚀🚀"
+    },
+    {
+      "id": "1006",
+      "timestamp": "2024-01-15T08:00:00+00:00",
+      "author": {"name": "TraderA", "nickname": ""},
+      "content": "BNBUSDT\nBuy 280\nSL 270\nTP1 295\nTP2 310\nBreakout setup H4"
+    },
+    {
+      "id": "1007",
+      "timestamp": "2024-01-15T09:00:00+00:00",
+      "author": {"name": "TraderC", "nickname": ""},
+      "content": "LINKUSDT SHORT\nEntry: 14.50\nSL: 15.20\nTP: 13.50, 12.80\nWeakness at resistance, 1H"
+    },
+    {
+      "id": "1008",
+      "timestamp": "2024-01-16T01:00:00+00:00",
+      "author": {"name": "TraderA", "nickname": ""},
+      "content": "BTC ล้าง long ที่ 43000 ไปแล้ว TP1 hit 44000 ✅\nปิดครึ่ง มูฟ SL to entry"
+    },
+    {
+      "id": "1009",
+      "timestamp": "2024-01-16T03:00:00+00:00",
+      "author": {"name": "TraderD", "nickname": ""},
+      "content": "AVAXUSDT\nLong entry 35.00\nStop loss 33.50\nTake profit 37.50 / 40.00\nDaily support + 4H bullish structure"
+    },
+    {
+      "id": "1010",
+      "timestamp": "2024-01-16T05:00:00+00:00",
+      "author": {"name": "TraderB", "nickname": ""},
+      "content": "ETH/USDT\nSell 2350\nSL 2390\nTP 2280\nOverextended, expecting pullback"
+    }
+  ]
+}

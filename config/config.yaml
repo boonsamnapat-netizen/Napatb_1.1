@@ -1,0 +1,32 @@
+anthropic:
+  model: "claude-sonnet-4-6"
+  max_tokens: 4096
+
+backtest:
+  # ccxt exchange for price data
+  exchange: "binance"
+  # Default timeframe for OHLCV data
+  default_timeframe: "1h"
+  # How many candles to fetch for validation
+  candles_lookahead: 200
+  # Slippage % to add to entry
+  slippage_pct: 0.05
+
+parser:
+  # Minimum confidence score to include a trade setup (0-1)
+  min_confidence: 0.6
+  # Symbols to track (empty = all)
+  symbols_whitelist: []
+  # Ignore messages from these authors
+  authors_blacklist: []
+
+output:
+  # Directory for analysis reports
+  reports_dir: "reports"
+  # Strategy repo path (local clone) - set this to your strategy repo path
+  strategy_repo_path: ""
+  # File in strategy repo to update
+  strategy_file: "strategy_insights.json"
+
+logging:
+  level: "INFO"
