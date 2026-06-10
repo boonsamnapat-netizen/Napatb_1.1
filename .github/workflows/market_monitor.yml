@@ -1,0 +1,25 @@
+name: Position Monitor
+on:
+  schedule:
+    - cron: '0 14,15,16,17,18,19 * * 1-5'  # every hour 10AM-3PM ET
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/us-traders-high-wr-y5w9xh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn requests yfinance alpaca-trade-api
+      - name: Monitor positions
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+        run: python3 -c "from scanner.daily import monitor_exits; monitor_exits()"

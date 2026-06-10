@@ -1,0 +1,25 @@
+name: Daily Market Scan
+on:
+  schedule:
+    - cron: '30 13 * * 1-5'   # 9:30 AM ET = 13:30 UTC, Mon-Fri
+  workflow_dispatch:            # allow manual trigger
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/us-traders-high-wr-y5w9xh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn matplotlib requests yfinance alpaca-trade-api
+      - name: Run daily scan
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+        run: python3 -c "from scanner.daily import run_daily_scan; run_daily_scan(paper_trade=True)"
