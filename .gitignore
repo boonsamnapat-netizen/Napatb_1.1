@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pkl
+*.pdf
+backtest_report.png
+.DS_Store
