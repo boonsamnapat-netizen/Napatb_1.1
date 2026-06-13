@@ -1,0 +1,12 @@
+# ข้อมูลราคา (ดาวน์โหลด/สร้างใหม่ได้ ไม่ต้องเก็บใน git)
+user_data/data/
+# ผลลัพธ์ที่ระบบสร้าง
+user_data/backtest_results/
+user_data/hyperopt_results/
+user_data/logs/
+user_data/plot/
+*.feather
+*.json.gz
+# ของลับ — อย่า commit เด็ดขาด!
+user_data/*-private.json
+.env

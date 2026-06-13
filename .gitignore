@@ -8,6 +8,7 @@ dist/
 build/
 .venv/
 venv/
+.ft-venv/
 reports/*.json
 reports/*.md
 !reports/.gitkeep
