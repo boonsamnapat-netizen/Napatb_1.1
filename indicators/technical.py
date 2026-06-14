@@ -100,4 +100,11 @@ def compute_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     d['dist_from_high'] = (c - d['high52w']) / d['high52w'].replace(0, np.nan)
     d['dist_from_low']  = (c - d['low52w'])  / d['low52w'].replace(0, np.nan)
 
+    # Regime features
+    d['realized_vol_20'] = c.pct_change().rolling(20).std() * np.sqrt(252)
+    d['realized_vol_60'] = c.pct_change().rolling(60).std() * np.sqrt(252)
+    d['vol_regime'] = (d['realized_vol_20'] / d['realized_vol_60']).fillna(1.0)
+    d['mom12m'] = c.pct_change(252)
+    d['price_accel'] = d['mom1m'] - d['mom3m'] / 3
+
     return d

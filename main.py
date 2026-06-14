@@ -95,6 +95,12 @@ def main():
         print('  Top features:')
         for feat, imp in ranker.top_features(6):
             print(f'    {feat:<28} {imp:.4f}')
+        # Build annual models for expanding-window scoring
+        ranker.build_annual_models(tradeable, start_year=2020, end_year=2024)
+        trained_years = sorted(ranker.annual_models.keys())
+        print(f'  Annual models built for years: {trained_years}')
+        for yr, pr in sorted(ranker.annual_pos_rates.items()):
+            print(f'    {yr}: pos_rate={pr:.1%}')
     else:
         print('  WARNING: insufficient training data — AI scoring disabled')
 
@@ -129,7 +135,7 @@ def main():
 
                 # AI score (only after training cutoff to avoid look-ahead)
                 if ranker.is_trained and str(date)[:10] > config.ML_TRAIN_CUTOFF:
-                    ai_prob = ranker.score_row(row)
+                    ai_prob = ranker.score_row_annual(row, str(date)[:10])
                 else:
                     ai_prob = 0.55  # neutral score during warm-up period
 

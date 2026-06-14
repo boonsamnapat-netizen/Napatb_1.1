@@ -3,7 +3,7 @@ Portfolio Backtesting Engine
 ==============================
 Event-driven daily simulation:
   - Position sizing: ATR-based 1% risk per trade
-  - Exits: hard stop -8%, trailing stop, take profit +25%
+  - Exits: hard stop -8%, trailing stop, time stop (no take-profit ceiling)
   - Max 10 concurrent positions
   - Transaction costs + slippage
 """
@@ -133,7 +133,11 @@ class Portfolio:
     # ── Daily Update ──────────────────────────────────────────────────────
 
     def update_exits(self, date: pd.Timestamp, ohlc: Dict[str, dict]) -> None:
-        """Check stop / take-profit / trailing for all open positions."""
+        """Check stop / trailing / time-stop for all open positions.
+
+        Take-profit ceiling removed (Phase 1B): trailing stop is the sole
+        upside exit so winners can run to +50-200%.
+        """
         to_close: List[tuple] = []
 
         for ticker, pos in self.positions.items():
@@ -141,25 +145,25 @@ class Portfolio:
             if bar is None:
                 continue
 
-            op, low, high = bar['Open'], bar['Low'], bar['High']
+            op, low, high, close = bar['Open'], bar['Low'], bar['High'], bar['Close']
 
             # --- Exit checks run FIRST, against the stop as it stood at the
             #     start of the day (no same-day look-ahead from today's High). ---
 
-            # Hard stop (use Low of day)
+            # Hard stop / trailing stop (use Low of day)
             if low <= pos.stop_price:
                 # Overnight gap-down through the stop fills at the (worse) Open.
                 exit_px = min(pos.stop_price, op)
                 to_close.append((ticker, exit_px, 'STOP_LOSS'))
                 continue
 
-            # Take profit (use High of day)
-            tp = pos.entry_price * (1 + config.TAKE_PROFIT_PCT)
-            if high >= tp:
-                # If price gapped above the target overnight, fill at the Open.
-                exit_px = op if op > tp else tp
-                to_close.append((ticker, exit_px, 'TAKE_PROFIT'))
-                continue
+            # Time stop: exit if held > TIME_STOP_DAYS with gain < TIME_STOP_MIN_GAIN
+            time_held = (date - pos.entry_date).days
+            if time_held > config.TIME_STOP_DAYS:
+                gain_pct = (close - pos.entry_price) / pos.entry_price
+                if gain_pct < config.TIME_STOP_MIN_GAIN:
+                    to_close.append((ticker, close, 'TIME_STOP'))
+                    continue
 
             # --- Survivors: update trailing state for use on the NEXT day. ---
             if high > pos.highest:
@@ -206,6 +210,9 @@ class BacktestEngine:
             if start_date <= str(d)[:10] <= end_date
         })
 
+        # Cooldown tracker: after a STOP_LOSS exit, block re-entry for COOLDOWN_DAYS
+        stop_cooldown: Dict[str, pd.Timestamp] = {}
+
         for date in all_dates:
             # Build today's OHLC snapshot
             ohlc: Dict[str, dict] = {}
@@ -220,6 +227,11 @@ class BacktestEngine:
             # 1. Process exits
             self.portfolio.update_exits(date, ohlc)
 
+            # Update cooldown tracker: record any STOP_LOSS exits that fired today
+            for trade in self.portfolio.trades:
+                if trade.exit_date == date and trade.exit_reason == 'STOP_LOSS':
+                    stop_cooldown[trade.ticker] = date
+
             # 2. Enter new positions (top-scored signals)
             if date in signals_by_date:
                 day_sigs = sorted(signals_by_date[date], key=lambda x: x['score'], reverse=True)
@@ -229,6 +241,11 @@ class BacktestEngine:
                         continue
                     if len(self.portfolio.positions) >= config.MAX_POSITIONS:
                         break
+                    # Skip if ticker is in cooldown after a stop-loss
+                    if ticker in stop_cooldown:
+                        days_since_stop = (date - stop_cooldown[ticker]).days
+                        if days_since_stop < config.COOLDOWN_DAYS:
+                            continue
                     self.portfolio.buy(ticker, date, prices[ticker], sig['strategy'])
 
             # 3. Record equity

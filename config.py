@@ -83,9 +83,12 @@ SLIPPAGE         = 0.0005        # 0.05% slippage
 
 # --- Exit Rules (Minervini + Zanger combined) ---
 STOP_LOSS_PCT    = 0.08          # -8% hard stop
-TAKE_PROFIT_PCT  = 0.25          # +25% full exit
+TAKE_PROFIT_PCT  = 0.25          # +25% reference (kept for Telegram alert targets; NOT used for exits — see Phase 1B)
 TRAILING_START   = 0.15          # Activate trailing stop after +15% gain
 TRAILING_STOP    = 0.12          # Trail 12% below highest price
+TIME_STOP_DAYS     = 35          # Exit if held > 35 calendar days with gain < threshold
+TIME_STOP_MIN_GAIN = 0.03        # Must show at least +3% in TIME_STOP_DAYS or exit
+COOLDOWN_DAYS      = 10          # No re-entry in same ticker for 10 days after stop-loss
 
 # --- Strategy weights ---
 STRATEGY_WEIGHTS = {

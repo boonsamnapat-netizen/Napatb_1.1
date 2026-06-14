@@ -26,6 +26,7 @@ FEATURE_COLS = [
     'price_vs_sma50', 'price_vs_sma200',
     'sma50_slope', 'sma150_slope',
     'above_sma50', 'above_sma150', 'above_sma200',
+    'realized_vol_20', 'vol_regime', 'mom12m', 'price_accel', 'realized_vol_60',
 ]
 
 
@@ -45,6 +46,8 @@ class EnsembleRanker:
         ])
         self.is_trained   = False
         self.feature_imp_  = {}
+        self.annual_models: dict = {}
+        self.annual_pos_rates: dict = {}
 
     # ── Training ──────────────────────────────────────────────────────────
 
@@ -91,10 +94,35 @@ class EnsembleRanker:
         clf = self.pipeline.named_steps['clf']
         self.feature_imp_ = dict(zip(FEATURE_COLS, clf.feature_importances_))
 
+    def build_annual_models(
+        self,
+        stock_data: Dict[str, pd.DataFrame],
+        start_year: int = 2020,
+        end_year: int = 2024,
+    ) -> None:
+        for year in range(start_year, end_year + 1):
+            train_end = f'{year - 1}-12-31'
+            X, y = self.build_training_set(stock_data, train_end)
+            if X is None or len(X) < 500:
+                continue
+            pipe = Pipeline([
+                ('scaler', StandardScaler()),
+                ('clf', RandomForestClassifier(
+                    n_estimators=200,
+                    max_depth=6,
+                    min_samples_leaf=15,
+                    max_features='sqrt',
+                    random_state=42,
+                    n_jobs=-1,
+                )),
+            ])
+            pipe.fit(X, y)
+            self.annual_models[year] = pipe
+            self.annual_pos_rates[year] = float(y.mean())
+
     # ── Scoring ───────────────────────────────────────────────────────────
 
     def score_row(self, row: pd.Series) -> float:
-        """Score one signal row. Returns probability [0, 1]."""
         if not self.is_trained:
             return 0.50
 
@@ -103,6 +131,18 @@ class EnsembleRanker:
             return 0.40
 
         return float(self.pipeline.predict_proba(feat)[0][1])
+
+    def score_row_annual(self, row: pd.Series, date_str: str) -> float:
+        year = int(date_str[:4])
+        pipe = self.annual_models.get(year)
+        if pipe is not None:
+            feat = row[FEATURE_COLS].values.reshape(1, -1).astype(float)
+            if np.any(np.isnan(feat)):
+                return 0.40
+            return float(pipe.predict_proba(feat)[0][1])
+        if self.is_trained:
+            return self.score_row(row)
+        return 0.50
 
     def score_dataframe(self, df: pd.DataFrame) -> pd.Series:
         """Score multiple rows at once."""
