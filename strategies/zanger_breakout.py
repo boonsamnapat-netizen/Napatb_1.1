@@ -48,7 +48,7 @@ class ZangerBreakoutStrategy(BaseStrategy):
         # ── 5. Uptrend ────────────────────────────────────────────────────
         uptrend = d['Close'] > d['sma50']
 
-        # ── Market filter ──────────────────────────────────────────────────
+        # ── Market filter: SPY above SMA200 ───────────────────────────────
         if market_df is not None and 'sma200' in market_df.columns:
             mkt_up = (market_df['Close'] > market_df['sma200']).reindex(d.index, method='ffill').fillna(False)
         else:
