@@ -15,6 +15,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: claude/us-traders-high-wr-y5w9xh
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
 
       - uses: actions/setup-python@v5
         with:
@@ -24,16 +26,55 @@ jobs:
         run: pip install yfinance pandas
 
       - name: Download real market data
-        run: python data/download_real.py
+        run: |
+          python - <<'EOF'
+          import yfinance as yf
+          import pandas as pd
+          import os, pathlib
+
+          pathlib.Path('data/real').mkdir(parents=True, exist_ok=True)
+
+          universe_file = pathlib.Path('data/universe.txt')
+          if universe_file.exists():
+              tickers = [t.strip() for t in universe_file.read_text().splitlines() if t.strip()]
+          else:
+              tickers = [
+                  'AAPL','MSFT','NVDA','META','GOOGL','AMZN','TSLA','AMD','AVGO','ORCL',
+                  'CRWD','PANW','DDOG','NET','MDB','TTD','CELH','LULU','ENPH','DECK',
+                  'LLY','UNH','ISRG','TMO','JPM','V','MA','GS','SPGI',
+                  'COST','HD','MCD','CMG','WMT','XOM','CVX','SPY',
+              ]
+
+          ok, fail = [], []
+          for ticker in tickers:
+              try:
+                  df = yf.download(ticker, start='2015-01-01', auto_adjust=True, progress=False)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open','High','Low','Close','Volume']].dropna()
+                  if len(df) >= 100:
+                      df.to_csv(f'data/real/{ticker}.csv')
+                      ok.append(ticker)
+                      print(f'  {ticker}: {len(df)} rows')
+                  else:
+                      fail.append(ticker)
+              except Exception as e:
+                  fail.append(ticker)
+                  print(f'  {ticker}: SKIP ({e})')
+
+          print(f'\nDone: {len(ok)} ok, {len(fail)} failed')
+          if fail:
+              print('Failed:', fail)
+          EOF
 
       - name: Commit and push CSVs
         run: |
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
-          git add data/real
+          git add data/real/
           if git diff --cached --quiet; then
             echo "No data changes to commit."
           else
-            git commit -m "chore: refresh real market data"
+            git commit -m "chore: refresh real market data $(date +%Y-%m-%d)"
             git push origin HEAD:claude/us-traders-high-wr-y5w9xh
           fi
