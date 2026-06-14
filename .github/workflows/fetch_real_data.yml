@@ -1,0 +1,39 @@
+name: Fetch Real Market Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 6'  # Saturdays at 08:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/us-traders-high-wr-y5w9xh
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Download real market data
+        run: python data/download_real.py
+
+      - name: Commit and push CSVs
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add data/real
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "chore: refresh real market data"
+            git push origin HEAD:claude/us-traders-high-wr-y5w9xh
+          fi

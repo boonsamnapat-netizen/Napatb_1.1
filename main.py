@@ -26,7 +26,7 @@ from strategies.zanger_breakout import ZangerBreakoutStrategy
 from strategies.trend_following import TrendFollowingStrategy
 from strategies.ensemble        import EnsembleRanker, FEATURE_COLS
 from backtest.engine            import BacktestEngine
-from backtest.metrics           import compute_metrics, print_metrics
+from backtest.metrics           import compute_metrics, print_metrics, compute_period_metrics, print_period_split
 from report.visualizer          import plot_report
 
 
@@ -199,6 +199,15 @@ def main():
     )
 
     print_metrics(metrics, spy_ret=spy_total_ret)
+
+    # Honest split: pre-AI warmup vs AI-filtered period
+    periods = compute_period_metrics(
+        portfolio.equity_curve,
+        portfolio.trades,
+        config.INITIAL_CAPITAL,
+        config.ML_TRAIN_CUTOFF,
+    )
+    print_period_split(periods)
 
     # Visual report
     try:

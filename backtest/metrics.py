@@ -117,6 +117,62 @@ def compute_metrics(
     }
 
 
+def _trade_stats(trades: List[Trade], initial_capital: float) -> Dict[str, Any]:
+    """Aggregate return/win-rate/profit-factor for a subset of trades."""
+    if not trades:
+        return {'trades': 0, 'return': 0.0, 'win_rate': 0.0, 'profit_factor': 0.0}
+    wins   = [t for t in trades if t.pnl > 0]
+    losses = [t for t in trades if t.pnl <= 0]
+    gp     = sum(t.pnl for t in wins)
+    gl     = abs(sum(t.pnl for t in losses))
+    return {
+        'trades':        len(trades),
+        'return':        sum(t.pnl for t in trades) / initial_capital,
+        'win_rate':      len(wins) / len(trades),
+        'profit_factor': gp / gl if gl > 0 else np.inf,
+    }
+
+
+def compute_period_metrics(
+    equity_curve: List[dict],
+    trades: List[Trade],
+    initial_capital: float,
+    cutoff_date: str,
+) -> Dict[str, Dict[str, Any]]:
+    """Split trade stats by entry date around the AI training cutoff.
+
+    Trades entered on/before the cutoff had no real AI filtering (a neutral
+    score was assigned during warm-up); those after are AI-filtered.
+    Return is expressed as summed PnL over the initial capital, so the two
+    sub-periods are comparable rather than compounded.
+    """
+    cutoff = pd.Timestamp(cutoff_date)
+    pre  = [t for t in trades if t.entry_date <= cutoff]
+    post = [t for t in trades if t.entry_date >  cutoff]
+    return {
+        'pre-AI / warmup': _trade_stats(pre,  initial_capital),
+        'AI-filtered':     _trade_stats(post, initial_capital),
+    }
+
+
+def print_period_split(periods: Dict[str, Dict[str, Any]]) -> None:
+    """Pretty-print the pre-AI vs AI-filtered period comparison."""
+    sep = '─' * 52
+    print(f"\n{'═'*52}")
+    print(f"  HONESTY SPLIT — PRE-AI WARMUP vs AI-FILTERED")
+    print(f"{'═'*52}")
+    for label, s in periods.items():
+        pf = '∞' if s['profit_factor'] == np.inf else f"{s['profit_factor']:.2f}"
+        print(f"  {label}")
+        print(sep)
+        print(f"  {'Trades':<30} {s['trades']}")
+        print(f"  {'Return (PnL / capital)':<30} {s['return']:+.2%}")
+        print(f"  {'Win Rate':<30} {s['win_rate']:.2%}")
+        print(f"  {'Profit Factor':<30} {pf}")
+        print()
+    print(f"{'═'*52}\n")
+
+
 def print_metrics(m: Dict[str, Any], spy_ret: float = None) -> None:
     """Pretty-print metrics to console."""
 

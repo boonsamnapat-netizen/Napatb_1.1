@@ -141,34 +141,37 @@ class Portfolio:
             if bar is None:
                 continue
 
-            low, high, close = bar['Low'], bar['High'], bar['Close']
+            op, low, high = bar['Open'], bar['Low'], bar['High']
 
-            # Update highest
-            if high > pos.highest:
-                pos.highest = high
+            # --- Exit checks run FIRST, against the stop as it stood at the
+            #     start of the day (no same-day look-ahead from today's High). ---
 
-            # Activate trailing stop after TRAILING_START gain
-            gain = (pos.highest - pos.entry_price) / pos.entry_price
-            if gain >= config.TRAILING_START:
-                pos.trailing_on = True
-
-            # Update trailing stop
-            if pos.trailing_on:
-                trail_stop = pos.highest * (1 - config.TRAILING_STOP)
-                pos.stop_price = max(pos.stop_price, trail_stop)
-
-            # --- Exit checks ---
             # Hard stop (use Low of day)
             if low <= pos.stop_price:
-                exit_px = pos.stop_price  # assume filled at stop
+                # Overnight gap-down through the stop fills at the (worse) Open.
+                exit_px = min(pos.stop_price, op)
                 to_close.append((ticker, exit_px, 'STOP_LOSS'))
                 continue
 
             # Take profit (use High of day)
             tp = pos.entry_price * (1 + config.TAKE_PROFIT_PCT)
             if high >= tp:
-                to_close.append((ticker, tp, 'TAKE_PROFIT'))
+                # If price gapped above the target overnight, fill at the Open.
+                exit_px = op if op > tp else tp
+                to_close.append((ticker, exit_px, 'TAKE_PROFIT'))
                 continue
+
+            # --- Survivors: update trailing state for use on the NEXT day. ---
+            if high > pos.highest:
+                pos.highest = high
+
+            gain = (pos.highest - pos.entry_price) / pos.entry_price
+            if gain >= config.TRAILING_START:
+                pos.trailing_on = True
+
+            if pos.trailing_on:
+                trail_stop = pos.highest * (1 - config.TRAILING_STOP)
+                pos.stop_price = max(pos.stop_price, trail_stop)
 
         for ticker, px, reason in to_close:
             self.sell(ticker, date, px, reason)

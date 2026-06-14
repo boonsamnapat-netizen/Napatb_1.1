@@ -12,10 +12,39 @@ Real data confirmed accessible via raw.githubusercontent.com:
 
 from __future__ import annotations
 import io
+import os
 import requests
 import pandas as pd
 import numpy as np
 from typing import Optional
+
+# Directory holding real OHLCV CSVs committed by the GitHub Actions workflow
+# (.github/workflows/fetch_real_data.yml → data/download_real.py).
+_REAL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'real')
+
+
+def _load_real_csv(ticker: str) -> Optional[pd.DataFrame]:
+    """Load data/real/{ticker}.csv as an OHLCV DataFrame indexed by Date.
+
+    Returns None if the file is missing or cannot be parsed.
+    """
+    path = os.path.join(_REAL_DIR, f'{ticker}.csv')
+    if not os.path.isfile(path):
+        return None
+    try:
+        df = pd.read_csv(path)
+        df.columns = [c.strip() for c in df.columns]
+        if 'Date' not in df.columns:
+            return None
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+        df = df.dropna(subset=['Date']).set_index('Date').sort_index()
+        cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+        if any(c not in df.columns for c in cols):
+            return None
+        df = df[cols].apply(pd.to_numeric, errors='coerce').dropna()
+        return df if len(df) > 0 else None
+    except Exception:
+        return None
 
 # ── GitHub sources ────────────────────────────────────────────────────────────
 
@@ -222,6 +251,21 @@ def build_dataset(
     for ticker in tickers:
         if verbose:
             print(f'  {ticker}', end=' ')
+
+        # ── Priority 1: real OHLCV CSV committed by the GH Actions workflow ──
+        real_df = _load_real_csv(ticker)
+        if real_df is not None:
+            sliced = real_df[
+                (real_df.index >= full_start) &
+                (real_df.index <  full_end)
+            ]
+            if len(sliced) >= 200:
+                dataset[ticker] = sliced
+                if verbose:
+                    print(f'[REAL csv: {len(sliced)}d] → {len(sliced)}d (real)')
+                continue
+            # Real file exists but doesn't cover the requested range adequately;
+            # fall through to the rskworld + synthetic fallback below.
 
         annual_rets = _ANNUAL_RET.get(ticker, [0.15, 0.20, -0.15, 0.20, 0.15])
         annual_vol  = _ANNUAL_VOL.get(ticker, 0.30)

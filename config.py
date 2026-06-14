@@ -4,20 +4,66 @@ Based on Minervini (VCP/SEPA), Zanger (breakout), and trend following
 """
 
 # --- Universe ---
+# ─────────────────────────────────────────────────────────────────────────────
+# SURVIVORSHIP-BIAS NOTE (Phase 0, workstream C)
+#
+# This list is a CURRENT-MEMBERSHIP APPROXIMATION of a broad, liquid US universe.
+# The original 37-name list was composed entirely of TODAY's mega-winners, which
+# is severe survivorship bias: backtesting a momentum strategy only on names you
+# already know went up massively overstates returns.
+#
+# Below we keep the original 37 but add ~50 names that suffered significant
+# multi-year drawdowns or stagnation during 2018-2024 (e.g. INTC, BA, DIS, PYPL,
+# NFLX, BABA, PFE, T, F, GE, cruise lines, etc.) plus a few sector ETFs for
+# breadth. This only PARTIALLY mitigates the bias — every ticker here is still a
+# company that survived to 2026. Names that were delisted, acquired, or went
+# bankrupt (e.g. former index members that failed) are still absent.
+#
+# The PROPER fix is point-in-time index constituents + delisted-securities data
+# (CRSP / Norgate / Sharadar). See docs/SURVIVORSHIP.md.
+#
+# SPY is kept LAST as the benchmark and is excluded from trading by main.py.
+# ─────────────────────────────────────────────────────────────────────────────
 UNIVERSE = [
+    # --- Original 37 (today's mega-winners — kept for continuity) ---
     # Mega-cap Tech / FAANG+
     'AAPL', 'MSFT', 'NVDA', 'META', 'GOOGL', 'AMZN', 'TSLA', 'AMD', 'AVGO', 'ORCL',
     # High-growth / Momentum leaders
     'CRWD', 'PANW', 'DDOG', 'NET', 'MDB', 'TTD', 'CELH', 'LULU', 'ENPH', 'DECK',
-    # Healthcare
+    # Healthcare (winners)
     'LLY', 'UNH', 'ISRG', 'TMO',
-    # Financials
+    # Financials (winners)
     'JPM', 'V', 'MA', 'GS', 'SPGI',
-    # Consumer
+    # Consumer (winners)
     'COST', 'HD', 'MCD', 'CMG', 'WMT',
-    # Energy
+    # Energy (winners)
     'XOM', 'CVX',
-    # Benchmark (not traded)
+
+    # --- Added breadth: names with rough 2018-2024 stretches ---
+    # Semis / hardware that lagged or fell
+    'INTC', 'QCOM', 'MU', 'CSCO', 'IBM', 'TXN',
+    # Software / internet that crashed from 2021 highs
+    'PYPL', 'XYZ', 'ROKU', 'ZM', 'SNAP', 'PINS', 'NFLX', 'SHOP', 'UBER',
+    # China / international large caps with deep drawdowns
+    'BABA', 'JD', 'PDD',
+    # Industrials / transports (cyclical, mixed decade)
+    'BA', 'GE', 'CAT', 'DE', 'MMM', 'HON', 'UPS', 'FDX', 'EMR',
+    # Autos
+    'F', 'GM',
+    # Telecom / media (long stagnation / decline)
+    'T', 'VZ', 'DIS', 'CMCSA',
+    # Consumer staples / retail (defensive, slow)
+    'KO', 'PEP', 'PG', 'CL', 'NKE', 'SBUX', 'TGT', 'LOW', 'WBA',
+    # Healthcare / pharma (mixed, some declines)
+    'PFE', 'MRK', 'ABBV', 'JNJ', 'GILD', 'MRNA', 'CVS', 'BMY',
+    # Financials / banks (rate-sensitive, drawdowns)
+    'BAC', 'WFC', 'C', 'MS',
+    # Travel / leisure (COVID-shocked)
+    'UAL', 'DAL', 'CCL', 'RCL', 'MAR',
+    # Sector ETFs for breadth
+    'XLF', 'XLE', 'XLK', 'IWM',
+
+    # Benchmark (not traded — must stay LAST)
     'SPY',
 ]
 
