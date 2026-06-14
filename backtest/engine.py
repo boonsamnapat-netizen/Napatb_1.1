@@ -154,7 +154,8 @@ class Portfolio:
             if low <= pos.stop_price:
                 # Overnight gap-down through the stop fills at the (worse) Open.
                 exit_px = min(pos.stop_price, op)
-                to_close.append((ticker, exit_px, 'STOP_LOSS'))
+                reason  = 'TRAILING_STOP' if pos.trailing_on else 'STOP_LOSS'
+                to_close.append((ticker, exit_px, reason))
                 continue
 
             # Time stop: exit if held > TIME_STOP_DAYS with gain < TIME_STOP_MIN_GAIN
@@ -227,7 +228,7 @@ class BacktestEngine:
             # 1. Process exits
             self.portfolio.update_exits(date, ohlc)
 
-            # Update cooldown tracker: record any STOP_LOSS exits that fired today
+            # Cooldown only on hard STOP_LOSS (not trailing stop — those exit profitably)
             for trade in self.portfolio.trades:
                 if trade.exit_date == date and trade.exit_reason == 'STOP_LOSS':
                     stop_cooldown[trade.ticker] = date

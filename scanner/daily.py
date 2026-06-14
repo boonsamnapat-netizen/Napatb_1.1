@@ -140,6 +140,7 @@ def _collect_signals(
                 'ai_prob':      ai_prob,
                 'vol_ratio':    vol_ratio,
                 'qty':          qty,
+                '_df':          df,  # attached for chart generation, stripped before logging
             })
 
     # Sort by ai_prob descending
@@ -189,9 +190,10 @@ def run_daily_scan(paper_trade: bool = True, verbose: bool = True) -> list:
                 f"qty={s['qty']}"
             )
 
-    # 5. Send Telegram alerts
+    # 5. Send Telegram alerts (with chart)
     for sig in signals:
-        send_signal_card(sig, market_ok)
+        df_for_chart = sig.pop('_df', None)
+        send_signal_card(sig, market_ok, df=df_for_chart)
 
     # 6. Paper trading via Alpaca
     trades_placed = 0
