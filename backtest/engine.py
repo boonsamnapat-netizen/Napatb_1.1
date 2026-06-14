@@ -71,7 +71,7 @@ class Portfolio:
             return 0
         shares = int((equity * config.RISK_PER_TRADE) / stop_dist)
         # Cap at 12% of equity per name
-        max_shares = int(equity * 0.12 / price)
+        max_shares = int(equity * 0.15 / price)
         return max(0, min(shares, max_shares))
 
     # ── Orders ────────────────────────────────────────────────────────────

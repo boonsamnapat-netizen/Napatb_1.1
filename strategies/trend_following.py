@@ -40,19 +40,19 @@ class TrendFollowingStrategy(BaseStrategy):
         # ── 3. RSI signal ──────────────────────────────────────────────────
         rsi_prev = d['rsi14'].shift(1)
         if self.rsi_cross:
-            # RSI crosses above 48 from below (more permissive than 50)
-            rsi_ok = (rsi_prev < 48) & (d['rsi14'] >= 48)
+            # RSI crosses above 55 — requires confirmed momentum, not just 50
+            rsi_ok = (rsi_prev < 55) & (d['rsi14'] >= 55)
         else:
-            rsi_ok = (d['rsi14'] >= 45) & (d['rsi14'] <= 75)
+            rsi_ok = (d['rsi14'] >= 50) & (d['rsi14'] <= 75)
 
         # ── 4. Positive momentum ─────────────────────────────────────────
-        momentum_ok = (d['mom1m'] > 0.02) & (d['mom3m'] > 0.05)
+        momentum_ok = (d['mom1m'] > 0.02) & (d['mom3m'] > 0.10)
 
-        # ── 5. Average or above-average volume ────────────────────────────
-        vol_ok = d['vol_ratio'] >= 1.0
+        # ── 5. Above-average volume ───────────────────────────────────────
+        vol_ok = d['vol_ratio'] >= 1.3
 
         # ── 6. Not too extended ───────────────────────────────────────────
-        not_extended = d['dist_from_high'] >= -0.20
+        not_extended = d['dist_from_high'] >= -0.15
 
         # ── Market filter ─────────────────────────────────────────────────
         if market_df is not None and 'sma200' in market_df.columns:

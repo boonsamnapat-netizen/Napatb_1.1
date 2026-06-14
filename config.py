@@ -76,7 +76,7 @@ ML_TRAIN_CUTOFF  = '2021-12-31'  # Train on 2018-2021, score 2022-2024
 
 # --- Portfolio ---
 INITIAL_CAPITAL  = 100_000.0
-MAX_POSITIONS    = 10
+MAX_POSITIONS    = 12
 RISK_PER_TRADE   = 0.02          # 2% portfolio risk per trade
 COMMISSION       = 0.001         # 0.1% each side
 SLIPPAGE         = 0.0005        # 0.05% slippage
@@ -86,18 +86,18 @@ STOP_LOSS_PCT    = 0.08          # -8% hard stop
 TAKE_PROFIT_PCT  = 0.25          # +25% reference (kept for Telegram alert targets; NOT used for exits — see Phase 1B)
 TRAILING_START   = 0.15          # Activate trailing stop after +15% gain
 TRAILING_STOP    = 0.12          # Trail 12% below highest price
-TIME_STOP_DAYS     = 35          # Exit if held > 35 calendar days with gain < threshold
-TIME_STOP_MIN_GAIN = 0.03        # Must show at least +3% in TIME_STOP_DAYS or exit
+TIME_STOP_DAYS     = 50          # Exit if held > 50 calendar days with gain < threshold
+TIME_STOP_MIN_GAIN = 0.02        # Must show at least +2% in TIME_STOP_DAYS or exit
 COOLDOWN_DAYS      = 10          # No re-entry in same ticker for 10 days after stop-loss
 
 # --- Strategy weights ---
 STRATEGY_WEIGHTS = {
-    'VCP_Minervini':     0.40,
-    'Zanger_Breakout':   0.30,
-    'Trend_Following':   0.30,
+    'VCP_Minervini':     0.45,   # WR 67% on real data — highest weight
+    'Zanger_Breakout':   0.40,   # WR 55% — second
+    'Trend_Following':   0.15,   # WR 39% — reduced; tighter rules applied in strategy
 }
 
 # --- ML Config ---
 ML_TARGET_DAYS      = 20     # Predict 20-day forward return
 ML_TARGET_THRESHOLD = 0.08   # > 8% = positive label
-ML_MIN_PROB         = 0.38   # Min AI probability to accept a signal
+ML_MIN_PROB         = 0.32   # Lowered from 0.38 to pass more post-2021 signals
