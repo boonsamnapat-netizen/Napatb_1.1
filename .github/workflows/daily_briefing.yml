@@ -1,0 +1,44 @@
+name: Daily Pre-Market Briefing
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 12:00 UTC on weekdays ≈ 08:00 ET, ~1.5h before US market open
+    - cron: '0 12 * * 1-5'
+
+permissions:
+  contents: write
+
+jobs:
+  briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/investor-workflow-optimization-4t8z03
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas pyyaml anthropic
+
+      - name: Generate briefing
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python briefing.py
+
+      - name: Commit briefing
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add reports/briefings/
+          if git diff --cached --quiet; then
+            echo "No new briefing to commit."
+          else
+            git commit -m "chore: daily briefing $(date +%Y-%m-%d)"
+            git push origin HEAD:claude/investor-workflow-optimization-4t8z03
+          fi

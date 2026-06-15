@@ -46,11 +46,17 @@ class BacktestResult:
 class BacktestEngine:
     def __init__(self, config: dict):
         cfg = config.get("backtest", {})
+        # "crypto" → ccxt exchange data; "stock"/"equity" → yfinance/CSV cache
+        self.market = cfg.get("market", "crypto").lower()
         self.exchange_id = cfg.get("exchange", "binance")
         self.default_tf = cfg.get("default_timeframe", "1h")
         self.lookahead = cfg.get("candles_lookahead", 200)
         self.slippage = cfg.get("slippage_pct", 0.05) / 100
         self._exchange = None
+
+    @property
+    def is_stock(self) -> bool:
+        return self.market in ("stock", "stocks", "equity", "equities")
 
     def _get_exchange(self):
         if self._exchange is None:
@@ -76,8 +82,22 @@ class BacktestEngine:
         df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
         return df.set_index("ts")
 
+    def _fetch_ohlcv_equity(
+        self, symbol: str, timeframe: str, since_ts: int, limit: int
+    ) -> pd.DataFrame:
+        """Fetch US equity OHLCV via the cache/yfinance provider."""
+        from src.data.equity_data import get_ohlcv, to_yf_interval
+
+        start_dt = datetime.fromtimestamp(since_ts / 1000, tz=timezone.utc)
+        return get_ohlcv(
+            symbol,
+            start=start_dt,
+            interval=to_yf_interval(timeframe),
+            limit=limit,
+        )
+
     def _normalize_symbol(self, symbol: str) -> str:
-        """Convert BTCUSDT → BTC/USDT for ccxt."""
+        """Convert BTCUSDT → BTC/USDT for ccxt (crypto only)."""
         if "/" in symbol:
             return symbol.upper()
         if symbol.endswith("USDT"):
@@ -224,12 +244,19 @@ class BacktestEngine:
                 )
                 continue
 
-            ccxt_symbol = self._normalize_symbol(setup.symbol)
             timeframe = setup.timeframe if setup.timeframe else self.default_tf
             since_ts = self._parse_timestamp(setup.timestamp)
 
             try:
-                df = self._fetch_ohlcv(ccxt_symbol, timeframe, since_ts, self.lookahead)
+                if self.is_stock:
+                    df = self._fetch_ohlcv_equity(
+                        setup.symbol.upper(), timeframe, since_ts, self.lookahead
+                    )
+                else:
+                    ccxt_symbol = self._normalize_symbol(setup.symbol)
+                    df = self._fetch_ohlcv(
+                        ccxt_symbol, timeframe, since_ts, self.lookahead
+                    )
                 result = self._simulate(setup, df)
                 results.append(result)
                 logger.info(

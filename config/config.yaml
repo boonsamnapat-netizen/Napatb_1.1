@@ -3,7 +3,9 @@ anthropic:
   max_tokens: 4096
 
 backtest:
-  # ccxt exchange for price data
+  # Market type: "crypto" (ccxt exchange) or "stock"/"equity" (yfinance + CSV cache)
+  market: "crypto"
+  # ccxt exchange for price data (crypto only)
   exchange: "binance"
   # Default timeframe for OHLCV data
   default_timeframe: "1h"
@@ -27,6 +29,18 @@ output:
   strategy_repo_path: ""
   # File in strategy repo to update
   strategy_file: "strategy_insights.json"
+
+# Daily pre-market briefing (python briefing.py)
+briefing:
+  # Inline watchlist takes priority; otherwise read from watchlist_file
+  watchlist: []
+  watchlist_file: "data/universe.txt"
+  # Trading days of history to pull per symbol (260 ≈ 1 year for 52w range)
+  lookback_days: 260
+  # How many symbols to show in the snapshot table (ranked by attention score)
+  top_movers: 12
+  # Env var holding the Discord webhook URL for posting the digest
+  discord_webhook_env: "DISCORD_WEBHOOK_URL"
 
 logging:
   level: "INFO"

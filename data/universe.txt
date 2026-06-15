@@ -1,0 +1,44 @@
+# US stock watchlist (one ticker per line, blank lines and # comments ignored)
+# Megacap tech
+AAPL
+MSFT
+NVDA
+META
+GOOGL
+AMZN
+TSLA
+AMD
+AVGO
+ORCL
+# High-growth software / momentum
+CRWD
+PANW
+DDOG
+NET
+MDB
+TTD
+CELH
+LULU
+DECK
+# Healthcare
+LLY
+UNH
+ISRG
+TMO
+# Financials
+JPM
+V
+MA
+GS
+SPGI
+# Consumer / staples / energy
+COST
+HD
+MCD
+CMG
+WMT
+XOM
+CVX
+# Benchmark
+SPY
+QQQ
