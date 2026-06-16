@@ -181,7 +181,7 @@ def main():
             if args.portfolio:
                 _render_portfolio(config, rows, args.account)
 
-    if args.notify and rows:
+    if args.notify and any(r.decision == "ENTER" for r in rows):
         from src.signal.notifier import TelegramNotifier
 
         plan = None
