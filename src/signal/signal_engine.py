@@ -242,6 +242,7 @@ class SignalEngine:
         account_size: float | None = None,
         risk_per_trade_pct: float | None = None,
         use_news: bool = True,
+        market_regime: float | None = None,
     ) -> Signal:
         now = datetime.now(timezone.utc).isoformat()
         sig = Signal(
@@ -330,6 +331,18 @@ class SignalEngine:
             for l in sorted(all_levels, key=lambda x: abs(x.price - price))[:8]
         ]
 
+        # ---- Market regime gate (don't fight BTC's trend) ----
+        regime_block = False
+        if market_regime is not None and market_regime != 0:
+            if (direction == "LONG" and market_regime < 0) or (
+                direction == "SHORT" and market_regime > 0
+            ):
+                regime_block = True
+                sig.warnings.append(
+                    f"Market regime opposes {direction} — standing aside "
+                    f"(don't fight the broad market / BTC trend)."
+                )
+
         # ---- News overlay ----
         risk_multiplier = 1.0
         if use_news:
@@ -381,6 +394,9 @@ class SignalEngine:
 
         if in_blackout and sig.decision == "ENTER":
             sig.decision = "WAIT"  # do not open fresh risk into a known event
+
+        if regime_block and sig.decision == "ENTER":
+            sig.decision = "AVOID"  # counter to the market regime
 
         sig.confidence = confidence
 

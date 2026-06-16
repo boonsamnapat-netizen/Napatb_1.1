@@ -67,6 +67,8 @@ class Scanner:
         # ~2x on per-trade edge). Keep the top N by recent $-volume.
         self.quality_top_n = cfg.get("quality_top_n", 0)   # 0 = keep all
         self.quality_min_bars = cfg.get("quality_min_bars", 250)
+        self.use_regime = cfg.get("use_regime", True)      # BTC market-regime gate
+        self.regime_period = cfg.get("regime_period", 200)
 
     # ---- universe (live, via ccxt) --------------------------------------
     def fetch_universe(self) -> list[str]:
@@ -114,6 +116,17 @@ class Scanner:
             signal=sig,
         )
 
+    def _market_regime(self, universe: dict[str, pd.DataFrame]) -> float | None:
+        """+1/-1 market regime from BTC (price vs 200-EMA). None if BTC absent."""
+        if not self.use_regime:
+            return None
+        btc = next((df for s, df in universe.items() if s.upper().startswith("BTC")), None)
+        if btc is None or len(btc) < self.regime_period:
+            return None
+        from src.signal import indicators as ind
+
+        return float(ind.regime(btc, self.regime_period).iloc[-1])
+
     # ---- quality filter -------------------------------------------------
     def quality_filter(self, universe: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         """Drop short histories and keep the most liquid symbols by recent
@@ -141,6 +154,7 @@ class Scanner:
         derived by resampling each entry frame (so one dataset drives both TFs).
         """
         universe = self.quality_filter(universe)
+        market_regime = self._market_regime(universe)
 
         def work(item):
             symbol, entry_df = item
@@ -153,6 +167,7 @@ class Scanner:
                     use_news=use_news,
                     account_size=account_size,
                     risk_per_trade_pct=risk_per_trade_pct,
+                    market_regime=market_regime,
                 )
                 return self._to_row(sig)
             except Exception as e:  # noqa: BLE001

@@ -170,6 +170,16 @@ def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 3.0) -> p
     return pd.Series(direction, index=df.index)
 
 
+def regime(df: pd.DataFrame, period: int = 200) -> pd.Series:
+    """
+    Market regime from price vs a slow EMA: +1 (risk-on / above) / -1 (risk-off).
+    Applied to BTC it becomes a market-wide gate — a proven way to avoid taking
+    longs into a bear market (and shorts into a bull).
+    """
+    e = ema(df["close"], period)
+    return pd.Series(np.where(df["close"] >= e, 1.0, -1.0), index=df.index)
+
+
 def compute_all(df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
     """Attach every indicator as columns onto a copy of the OHLCV frame."""
     p = params or {}

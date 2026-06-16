@@ -110,6 +110,10 @@ class SignalBacktester:
         # exits & protections (ideas borrowed from Freqtrade / OSS crypto bots)
         self.trailing_r = bt.get("trailing_r", 0.0)       # trail stop this many R behind peak (0=off)
         self.cooldown_bars = bt.get("cooldown_bars", 0)   # skip entries N bars after a loss
+        # optional market-regime gate (e.g. BTC). Set .regime_df to a price frame;
+        # longs are blocked when regime is -1, shorts when regime is +1.
+        self.regime_df: pd.DataFrame | None = None
+        self.regime_period = bt.get("regime_period", 200)
         self.params = self.engine.indicator_params
         self.p = self.engine.p
 
@@ -134,7 +138,16 @@ class SignalBacktester:
                 htf_aligned = htf_series.reindex(
                     htf_series.index.union(ent_ind.index)
                 ).ffill().reindex(ent_ind.index).fillna(0.0)
+
+        self._regime_aligned = self._align_regime(ent_ind.index)
         return ent_ind, htf_aligned
+
+    def _align_regime(self, index) -> pd.Series | None:
+        """Regime (+1/-1) from self.regime_df, forward-filled onto `index`."""
+        if self.regime_df is None or len(self.regime_df) < self.regime_period:
+            return None
+        reg = ind.regime(self.regime_df, self.regime_period)
+        return reg.reindex(reg.index.union(index)).ffill().reindex(index)
 
     # ---- single backtest over a range -----------------------------------
     def backtest_range(
@@ -328,6 +341,17 @@ class SignalBacktester:
             else:
                 i += 1
                 continue
+
+            # Market-regime gate: don't fight BTC's trend (block longs in a bear
+            # market and shorts in a bull market).
+            reg = getattr(self, "_regime_aligned", None)
+            if reg is not None:
+                rv = reg.iloc[i]
+                if pd.notna(rv) and ((direction == "LONG" and rv < 0) or
+                                     (direction == "SHORT" and rv > 0)):
+                    i += 1
+                    continue
+
             htf_trend = float(htf_aligned.iloc[i])
             confidence = abs(composite) * 70.0
             if (direction == "LONG" and htf_trend > 0.2) or (direction == "SHORT" and htf_trend < -0.2):
