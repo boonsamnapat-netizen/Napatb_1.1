@@ -1,0 +1,77 @@
+name: Auto Scan & Telegram Alert
+
+# Runs the scanner on fresh daily data and pushes ENTER setups to Telegram —
+# fully hands-off. Daily timeframe is used because it has the strongest net-of-
+# fees edge (~+0.20R/trade) and is low-noise (one quiet run per day).
+#
+# Setup (one time):
+#   Repo Settings -> Secrets and variables -> Actions -> add:
+#     TELEGRAM_BOT_TOKEN   (from @BotFather)
+#     TELEGRAM_CHAT_ID     (your chat id)
+#   Without the secrets the job still runs and logs the message (dry-run).
+
+on:
+  workflow_dispatch:
+    inputs:
+      htf:
+        description: "Higher timeframe resample rule"
+        default: "W"
+      account:
+        description: "Account size for sizing"
+        default: "1000"
+  schedule:
+    - cron: '0 1 * * *'    # daily 01:00 UTC, just after the daily candle close
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/crypto-signal-system-kcf8vq
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy pyyaml rich yfinance
+
+      - name: Fetch fresh daily data
+        run: |
+          python - <<'EOF'
+          import pathlib
+          import yfinance as yf
+          import pandas as pd
+
+          out = pathlib.Path('data/real/crypto'); out.mkdir(parents=True, exist_ok=True)
+          uni = pathlib.Path('data/crypto_universe.txt')
+          tickers = [t.strip() for t in uni.read_text().splitlines() if t.strip()] \
+              if uni.exists() else ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','BNB-USD']
+          for t in tickers:
+              try:
+                  df = yf.download(t, start='2018-01-01', interval='1d',
+                                   auto_adjust=False, progress=False)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open','High','Low','Close','Volume']].dropna()
+                  if len(df) >= 250:
+                      df.to_csv(out / f"{t.replace('-USD','USDT')}.csv")
+                      print(f"  {t}: {len(df)} rows")
+              except Exception as e:
+                  print(f"  {t}: SKIP ({e})")
+          EOF
+
+      - name: Scan and alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HTF: ${{ github.event.inputs.htf || 'W' }}
+          ACCOUNT: ${{ github.event.inputs.account || '1000' }}
+        run: |
+          python signal_scan.py --csv-dir data/real/crypto --htf "$HTF" \
+            --account "$ACCOUNT" --portfolio --notify --top 10
