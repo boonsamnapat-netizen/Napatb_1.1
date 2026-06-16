@@ -86,6 +86,24 @@ python signal_cli.py BTCUSDT --json
 
 ---
 
+## Telegram alerts (ยิง signal เข้ามือถือ)
+
+`src/signal/notifier.py` — ส่ง signal ตอน `decision == ENTER` เข้า Telegram พร้อม
+entry/SL/TP/size/portfolio ตั้ง env `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`
+(จาก @BotFather) ถ้าไม่ตั้ง = dry-run (พิมพ์ข้อความที่จะส่งให้ดู)
+
+```bash
+python signal_cli.py BTCUSDT --notify              # alert ตอน ENTER
+python signal_scan.py --csv-dir data/real/crypto_1h --htf 4h --portfolio --notify
+```
+
+> รันบนเครื่อง/Actions ที่ออกเน็ตได้ (sandbox dev ส่ง api.telegram.org ไม่ได้)
+
+**ความปลอดภัย:** มี floor `min_stop_pct` (0.3% ของราคา) กัน position size/leverage ระเบิด
+เมื่อ ATR จิ๋ว + guard ปฏิเสธข้อมูล flat/stale (O=H=L=C, เหรียญ delisted) อัตโนมัติ
+
+---
+
 ## Portfolio risk management + ค่าธรรมเนียม (maker/taker)
 
 **Portfolio heat** (`src/signal/portfolio.py`, `signal_scan --portfolio`) — เปิดหลาย

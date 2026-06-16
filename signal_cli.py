@@ -154,6 +154,9 @@ def main():
     ap.add_argument("--headlines", nargs="*", help="manual news headlines")
     ap.add_argument("--no-news", action="store_true", help="skip news overlay")
     ap.add_argument("--demo", action="store_true", help="use synthetic offline data")
+    ap.add_argument("--notify", action="store_true", help="send a Telegram alert (on ENTER)")
+    ap.add_argument("--notify-all", action="store_true",
+                    help="with --notify, send regardless of decision")
     ap.add_argument("--json", action="store_true", help="print JSON only")
     ap.add_argument("--log-level", default="WARNING")
     args = ap.parse_args()
@@ -217,6 +220,16 @@ def main():
     else:
         render(sig)
         console.print(f"[dim]Saved report → {out_path}[/dim]")
+
+    # Telegram alert
+    if args.notify:
+        from src.signal.notifier import TelegramNotifier
+
+        notify_on = config.get("signal", {}).get("telegram", {}).get("notify_on", "ENTER")
+        if args.notify_all or sig.decision == notify_on:
+            tg = TelegramNotifier(config)
+            sent = tg.send(TelegramNotifier.format_signal(sig))
+            console.print(f"[dim]Telegram: {'sent' if sent else 'dry-run/not configured'}[/dim]")
 
 
 if __name__ == "__main__":

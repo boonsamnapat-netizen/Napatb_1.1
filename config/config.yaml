@@ -24,6 +24,7 @@ signal:
   atr_stop_mult: 1.5         # ATR-based stop distance
   min_stop_atr: 0.6
   max_stop_atr: 4.0
+  min_stop_pct: 0.003        # floor stop at 0.3% of price (caps position size/leverage)
   tp_allocations: [50, 30, 20]   # % closed at TP1/TP2/TP3
   max_tp_r: 8.0                  # cap take-profit distance in R (avoid unrealistic targets)
   backtest:
@@ -52,6 +53,12 @@ signal:
     max_per_direction_heat_pct: 4.0  # cap net risk per side (crypto is correlated)
     max_concurrent: 5            # max simultaneous positions
     max_gross_leverage: 10.0
+  telegram:
+    # set TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID env vars (preferred) or here.
+    # with no token the notifier runs in dry-run (prints the message).
+    bot_token: ""
+    chat_id: ""
+    notify_on: "ENTER"           # only push when decision == ENTER
   account_size: 1000.0       # default MM account size
   risk_per_trade_pct: 1.0    # % of equity risked per trade
   max_leverage_cap: 10.0

@@ -51,6 +51,7 @@ DEFAULTS = {
     "atr_stop_mult": 1.5,
     "min_stop_atr": 0.6,
     "max_stop_atr": 4.0,
+    "min_stop_pct": 0.003,       # floor stop distance at 0.3% of price (caps leverage)
     "tp_allocations": [50, 30, 20],
     "max_tp_r": 8.0,             # cap take-profit distance in R (avoid fake 20R targets)
     "account_size": 1000.0,
@@ -262,6 +263,17 @@ class SignalEngine:
         price = float(ent["close"].iloc[-1])
         atr_val = float(ent["atr"].iloc[-1])
         sig.current_price = price
+
+        # Guard against flat / stale / bad data: zero ATR or a flat last bar means
+        # the feed is broken (e.g. a delisted ticker padded with O=H=L=C). Don't
+        # trade it — a near-zero stop would otherwise blow up position size.
+        last = ent.iloc[-1]
+        flat = float(last["high"]) <= float(last["low"])
+        if not (atr_val > 0) or atr_val < price * 1e-6 or flat:
+            sig.decision = "AVOID"
+            sig.warnings.append("Flat/stale price data (zero range/ATR) — not tradable.")
+            sig.indicators = {self.p["entry_timeframe"]: entry_scores["snapshot"]}
+            return sig
 
         # Higher-timeframe trend gate
         htf_scores = None
@@ -477,8 +489,12 @@ class SignalEngine:
         self, direction: str, price: float, atr_val: float, levels: list[lv.Level]
     ):
         atr_stop_dist = self.p["atr_stop_mult"] * atr_val
-        min_dist = self.p["min_stop_atr"] * atr_val
-        max_dist = self.p["max_stop_atr"] * atr_val
+        # Floor the stop distance at a % of price too, so a collapsed/zero ATR
+        # (flat or stale data) can't produce a microscopic stop -> exploding size
+        # and leverage. Caps position size sanity regardless of volatility.
+        min_pct_dist = self.p.get("min_stop_pct", 0.003) * price
+        min_dist = max(self.p["min_stop_atr"] * atr_val, min_pct_dist)
+        max_dist = max(self.p["max_stop_atr"] * atr_val, min_dist)
 
         if direction == "LONG":
             support = lv.nearest_support(levels, price)

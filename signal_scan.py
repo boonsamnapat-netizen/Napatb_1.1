@@ -111,6 +111,8 @@ def main():
     ap.add_argument("--only-enter", action="store_true", help="show only ENTER setups")
     ap.add_argument("--portfolio", action="store_true",
                     help="build a portfolio risk allocation across the ENTER setups")
+    ap.add_argument("--notify", action="store_true",
+                    help="send a Telegram alert summarising ENTER setups")
     ap.add_argument("--account", type=float)
     ap.add_argument("--risk", type=float)
     ap.add_argument("--news", action="store_true", help="enable news overlay (slower)")
@@ -178,6 +180,18 @@ def main():
                           f"[dim]Saved → {out_path}[/dim]")
             if args.portfolio:
                 _render_portfolio(config, rows, args.account)
+
+    if args.notify and rows:
+        from src.signal.notifier import TelegramNotifier
+
+        plan = None
+        if args.portfolio:
+            from src.signal.portfolio import PortfolioRiskManager
+            acct = args.account or config.get("signal", {}).get("account_size", 1000.0)
+            plan = PortfolioRiskManager(config).allocate(rows, acct)
+        tg = TelegramNotifier(config)
+        sent = tg.send(TelegramNotifier.format_scan(rows, plan))
+        console.print(f"[dim]Telegram: {'sent' if sent else 'dry-run/not configured'}[/dim]")
     console.print(
         "\n[dim]Ranked by setup quality (confluence + R:R + EV), not by who is "
         "pumping hardest. Decision-support only — manage your own risk.[/dim]"
