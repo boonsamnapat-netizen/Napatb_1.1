@@ -86,6 +86,29 @@ python signal_cli.py BTCUSDT --json
 
 ---
 
+## Portfolio risk management + ค่าธรรมเนียม (maker/taker)
+
+**Portfolio heat** (`src/signal/portfolio.py`, `signal_scan --portfolio`) — เปิดหลาย
+position พร้อมกันในคริปโตไม่ใช่กระจายความเสี่ยงจริง เพราะทุกเหรียญวิ่งตาม BTC
+(all-longs = เดิมพัน BTC beta ก้อนเดียว) จึงคุม:
+- `max_portfolio_heat_pct` — ความเสี่ยงรวมทุก position (default 6%)
+- `max_per_direction_heat_pct` — เพดานต่อทิศ (correlation-aware, default 4%)
+- `max_concurrent` — จำนวน position พร้อมกัน (default 5)
+- กระจาย budget ความเสี่ยงให้ setup ที่อันดับดีสุดก่อน + คำนวณ size/leverage ให้
+
+**ค่าธรรมเนียม (maker vs taker)** — ทดสอบจริงบน 4h majors net of fees:
+
+| วิธี | exp(R) | เทียบ |
+|---|---|---|
+| Taker ทั้งหมด (0.05%+slip) | +0.108R | baseline |
+| Maker entry (limit) | +0.129R | +19% |
+| Maker entry + TP exits | +0.137R | **+27%** |
+
+backtester คิดต้นทุนตาม path จริง: limit (maker 0.02%) สำหรับ entry/TP, market (taker)
+สำหรับ stop เสมอ → `signal.backtest.maker_entries` / `maker_exits` (default: exits=on)
+
+---
+
 ## สิ่งที่ยืมจาก open-source bots (Freqtrade/Jesse) + ผลที่วัดได้
 
 เรียนจากโปรเจกต์ที่คนลองผิดลองถูกมาเยอะ แล้ว A/B บนข้อมูลจริง (4h, 18 เหรียญ, net of fees):

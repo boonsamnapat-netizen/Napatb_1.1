@@ -32,8 +32,8 @@ signal:
     fee_pct: 0.0005              # per-side TAKER fee (market orders): 0.05%
     slippage_pct: 0.0003         # per-side taker slippage: 0.03%
     maker_fee_pct: 0.0002        # per-side MAKER fee (limit orders): 0.02%
-    maker_entries: false         # enter with limit orders (cheaper, may miss fills)
-    maker_exits: false           # take profit with limit orders (cheaper)
+    maker_entries: false         # enter with limit orders (cheaper, but may miss fills)
+    maker_exits: true            # take profit with limit orders (realistic, cheaper, +edge)
     level_lookback: 500          # bars back to scan for S/R levels
     trailing_r: 2.5              # trail stop 2.5R behind the peak (A/B best; 0=off)
     cooldown_bars: 0             # bars to sit out after a loss (A/B: 0 best here)
