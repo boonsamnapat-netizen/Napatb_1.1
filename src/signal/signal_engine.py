@@ -147,6 +147,12 @@ def score_timeframe(df_ind: pd.DataFrame, i: int = -1) -> dict:
     adx_scale = min(1.0, max(0.3, adx_val / 25.0))  # weak trend (<25) dampened
     trend = _clamp(trend * adx_scale)
 
+    # Supertrend confirmation (proven trend filter in OSS crypto bots): nudge the
+    # trend score toward the supertrend direction so we don't fight it.
+    st_dir = row["supertrend_dir"] if "supertrend_dir" in row.index else None
+    if st_dir is not None and pd.notna(st_dir):
+        trend = _clamp(0.8 * trend + 0.2 * float(st_dir))
+
     # --- Momentum: RSI, MACD hist, Stochastic ---
     rsi_val = float(row["rsi"]) if pd.notna(row["rsi"]) else 50.0
     rsi_score = _clamp((rsi_val - 50.0) / 30.0)
@@ -201,6 +207,7 @@ def score_timeframe(df_ind: pd.DataFrame, i: int = -1) -> dict:
         "bb_pct_b": round(pct_b, 3),
         "rvol": round(rvol, 2),
         "atr": round(float(row["atr"]), 8) if pd.notna(row["atr"]) else None,
+        "supertrend": int(st_dir) if (st_dir is not None and pd.notna(st_dir)) else None,
     }
 
     return {

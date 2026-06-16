@@ -127,6 +127,49 @@ def relative_volume(df: pd.DataFrame, period: int = 20) -> pd.Series:
     return df["volume"] / avg.replace(0.0, np.nan)
 
 
+def supertrend(df: pd.DataFrame, period: int = 10, multiplier: float = 3.0) -> pd.Series:
+    """
+    Supertrend direction: +1 (uptrend) / -1 (downtrend). A widely used trend
+    filter in open-source crypto bots (Freqtrade/Jesse strategies) — we use it as
+    confirmation so we don't fight the prevailing trend.
+    """
+    atr_ = atr(df, period)
+    hl2 = (df["high"] + df["low"]) / 2.0
+    upper = hl2 + multiplier * atr_
+    lower = hl2 - multiplier * atr_
+
+    close = df["close"].values
+    up = upper.values
+    low = lower.values
+    n = len(df)
+    final_upper = np.full(n, np.nan)
+    final_lower = np.full(n, np.nan)
+    direction = np.ones(n)  # 1 = up
+
+    for i in range(1, n):
+        # carry the tighter band unless price breaks it
+        final_upper[i] = (
+            up[i]
+            if (up[i] < final_upper[i - 1] or close[i - 1] > final_upper[i - 1]
+                or np.isnan(final_upper[i - 1]))
+            else final_upper[i - 1]
+        )
+        final_lower[i] = (
+            low[i]
+            if (low[i] > final_lower[i - 1] or close[i - 1] < final_lower[i - 1]
+                or np.isnan(final_lower[i - 1]))
+            else final_lower[i - 1]
+        )
+        if close[i] > final_upper[i - 1]:
+            direction[i] = 1
+        elif close[i] < final_lower[i - 1]:
+            direction[i] = -1
+        else:
+            direction[i] = direction[i - 1]
+
+    return pd.Series(direction, index=df.index)
+
+
 def compute_all(df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
     """Attach every indicator as columns onto a copy of the OHLCV frame."""
     p = params or {}
@@ -167,5 +210,9 @@ def compute_all(df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
 
     out["obv"] = obv(df)
     out["rvol"] = relative_volume(df, p.get("rvol_period", 20))
+
+    out["supertrend_dir"] = supertrend(
+        df, p.get("supertrend_period", 10), p.get("supertrend_mult", 3.0)
+    )
 
     return out

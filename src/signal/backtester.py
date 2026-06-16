@@ -107,6 +107,9 @@ class SignalBacktester:
         # only look this many bars back for S/R levels (recent levels matter, and
         # it keeps level-finding O(window) instead of O(n) per signal)
         self.level_lookback = bt.get("level_lookback", 500)
+        # exits & protections (ideas borrowed from Freqtrade / OSS crypto bots)
+        self.trailing_r = bt.get("trailing_r", 0.0)       # trail stop this many R behind peak (0=off)
+        self.cooldown_bars = bt.get("cooldown_bars", 0)   # skip entries N bars after a loss
         self.params = self.engine.indicator_params
         self.p = self.engine.p
 
@@ -169,6 +172,7 @@ class SignalBacktester:
         hit = [False] * len(tps)
         n = len(ent_ind)
         last_j = i
+        peak = entry  # favorable extreme, for the ATR/R trailing stop
 
         for j in range(i + 1, min(i + 1 + self.max_hold, n)):
             bar = ent_ind.iloc[j]
@@ -203,6 +207,16 @@ class SignalBacktester:
             if remaining <= 1e-9:
                 return Trade(i, j, direction, entry, stop, realized_r - cost_r,
                              "WIN", confidence, j - i)
+
+            # Trail the stop behind the favorable extreme (applied next bar, so no
+            # intra-bar look-ahead). Lets winners run -> bigger R -> fees matter less.
+            if self.trailing_r > 0:
+                if is_long:
+                    peak = max(peak, high)
+                    cur_stop = max(cur_stop, peak - self.trailing_r * risk)
+                else:
+                    peak = min(peak, low)
+                    cur_stop = min(cur_stop, peak + self.trailing_r * risk)
 
         # Time stop: close remainder at last close
         last_close = float(ent_ind.iloc[last_j]["close"])
@@ -335,7 +349,12 @@ class SignalBacktester:
             trade = self._simulate(ent_ind, i, direction, entry, stop, tps, confidence)
             if trade is not None:
                 trades.append(trade)
-                i = trade.exit_index + 1
+                # Cooldown: after a losing trade, sit out N bars (Freqtrade-style
+                # protection) to avoid re-entering the same chop that just stopped us.
+                if trade.realized_r < 0 and self.cooldown_bars > 0:
+                    i = trade.exit_index + 1 + self.cooldown_bars
+                else:
+                    i = trade.exit_index + 1
             else:
                 i += 1
         return trades
