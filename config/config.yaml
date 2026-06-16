@@ -31,6 +31,9 @@ signal:
     max_hold: 60                 # bars before a time-stop exit
     fee_pct: 0.0005              # per-side taker fee (fraction of price): 0.05%
     slippage_pct: 0.0003         # per-side slippage: 0.03%
+    level_lookback: 500          # bars back to scan for S/R levels
+    trailing_r: 2.5              # trail stop 2.5R behind the peak (A/B best; 0=off)
+    cooldown_bars: 0             # bars to sit out after a loss (A/B: 0 best here)
   account_size: 1000.0       # default MM account size
   risk_per_trade_pct: 1.0    # % of equity risked per trade
   max_leverage_cap: 10.0
