@@ -63,6 +63,10 @@ class Scanner:
         self.min_quote_volume = cfg.get("min_quote_volume", 5_000_000)
         self.max_workers = cfg.get("max_workers", 8)
         self.candles = cfg.get("candles", 400)
+        # Liquidity filter for CSV universes (validated: majors beat illiquid alts
+        # ~2x on per-trade edge). Keep the top N by recent $-volume.
+        self.quality_top_n = cfg.get("quality_top_n", 0)   # 0 = keep all
+        self.quality_min_bars = cfg.get("quality_min_bars", 250)
 
     # ---- universe (live, via ccxt) --------------------------------------
     def fetch_universe(self) -> list[str]:
@@ -110,6 +114,19 @@ class Scanner:
             signal=sig,
         )
 
+    # ---- quality filter -------------------------------------------------
+    def quality_filter(self, universe: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+        """Drop short histories and keep the most liquid symbols by recent
+        dollar-volume (close x volume). No-op when quality_top_n <= 0."""
+        kept = {s: df for s, df in universe.items() if len(df) >= self.quality_min_bars}
+        if self.quality_top_n and len(kept) > self.quality_top_n:
+            def dollar_vol(df: pd.DataFrame) -> float:
+                tail = df.tail(90)
+                return float((tail["close"] * tail["volume"]).mean())
+            ranked = sorted(kept.items(), key=lambda kv: dollar_vol(kv[1]), reverse=True)
+            kept = dict(ranked[: self.quality_top_n])
+        return kept
+
     # ---- scanning -------------------------------------------------------
     def scan_universe(
         self,
@@ -123,6 +140,8 @@ class Scanner:
         Run the engine over a {symbol: entry_df} universe. The higher timeframe is
         derived by resampling each entry frame (so one dataset drives both TFs).
         """
+        universe = self.quality_filter(universe)
+
         def work(item):
             symbol, entry_df = item
             try:

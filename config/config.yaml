@@ -34,6 +34,13 @@ signal:
     level_lookback: 500          # bars back to scan for S/R levels
     trailing_r: 2.5              # trail stop 2.5R behind the peak (A/B best; 0=off)
     cooldown_bars: 0             # bars to sit out after a loss (A/B: 0 best here)
+  scanner:
+    quote: "USDT"
+    universe_size: 50            # live (ccxt): top-N by 24h volume
+    min_quote_volume: 5000000
+    max_workers: 8
+    quality_top_n: 0             # CSV mode: keep top-N most liquid (0=all). Set e.g. 10 for majors
+    quality_min_bars: 250
   account_size: 1000.0       # default MM account size
   risk_per_trade_pct: 1.0    # % of equity risked per trade
   max_leverage_cap: 10.0

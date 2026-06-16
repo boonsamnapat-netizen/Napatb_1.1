@@ -86,6 +86,25 @@ python signal_cli.py BTCUSDT --json
 
 ---
 
+## สิ่งที่ยืมจาก open-source bots (Freqtrade/Jesse) + ผลที่วัดได้
+
+เรียนจากโปรเจกต์ที่คนลองผิดลองถูกมาเยอะ แล้ว A/B บนข้อมูลจริง (4h, 18 เหรียญ, net of fees):
+
+| เทคนิค (ที่มา) | ผล A/B | ใช้ไหม |
+|---|---|---|
+| ย้าย 1h → 4h/1d (intermediate TF, arxiv/Freqtrade) | net −0.06R → **+0.10R** | ✅ default |
+| **Supertrend** confirmation (Freqtrade/Jesse) | ยืนยันเทรนด์, ~เป็นกลางถึงบวกนิด | ✅ ใน trend score |
+| **ATR/R trailing stop** ปล่อยกำไรวิ่ง | 2.5R ดีสุด (1.5R แย่ — ตัดเร็วไป) | ✅ `trailing_r: 2.5` |
+| **Cooldown** หลังขาดทุน (Freqtrade protection) | กลับแย่ลงเล็กน้อยที่ TF นี้ | ⛔ ปิด (`0`) |
+| **Liquidity/pairlist filter** (stick to majors) | alts +0.058R vs majors **+0.108R** | ✅ `scanner.quality_top_n` |
+
+**สรุป config ที่ดีสุดตอนนี้** (net of fees, ~validated): 4h/1d + supertrend + trail 2.5R +
+กรองเฉพาะเหรียญ liquid → **~+0.108R/ไม้, WR ~47%, DD ~−9%, บวกทุก major**
+
+> ตั้ง `signal.scanner.quality_top_n: 10` เพื่อให้ scanner เทรดเฉพาะ top-10 ที่ liquidity สูงสุด
+
+---
+
 ## ผลทดสอบข้อมูลจริง + บทเรียนเรื่องค่าธรรมเนียม (สำคัญมาก)
 
 ทดสอบบนข้อมูลจริง (ดึงผ่าน GitHub Actions/yfinance) **หักค่าธรรมเนียมแล้ว**
