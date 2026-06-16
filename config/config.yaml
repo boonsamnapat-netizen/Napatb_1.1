@@ -14,8 +14,11 @@ backtest:
 
 # Live signal generator (signal_cli.py)
 signal:
-  entry_timeframe: "1h"      # timeframe we trade on
-  htf_timeframe: "4h"        # higher timeframe trend filter
+  # Net-of-fees backtests on real data show the edge lives on HIGHER timeframes:
+  # 1d ~ +0.20R/trade, 4h ~ +0.10R/trade, but 1h is NEGATIVE after fees (tight
+  # stops make the 0.16% round-trip cost dominate). Default to 4h/1d.
+  entry_timeframe: "4h"      # timeframe we trade on
+  htf_timeframe: "1d"        # higher timeframe trend filter
   entry_threshold: 0.20      # min |composite| to take a direction
   min_confidence: 55.0       # below this -> WAIT (no trade)
   atr_stop_mult: 1.5         # ATR-based stop distance
