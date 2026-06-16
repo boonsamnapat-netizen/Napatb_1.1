@@ -12,6 +12,45 @@ backtest:
   # Slippage % to add to entry
   slippage_pct: 0.05
 
+# Live signal generator (signal_cli.py)
+signal:
+  entry_timeframe: "1h"      # timeframe we trade on
+  htf_timeframe: "4h"        # higher timeframe trend filter
+  entry_threshold: 0.20      # min |composite| to take a direction
+  min_confidence: 55.0       # below this -> WAIT (no trade)
+  atr_stop_mult: 1.5         # ATR-based stop distance
+  min_stop_atr: 0.6
+  max_stop_atr: 4.0
+  tp_allocations: [50, 30, 20]   # % closed at TP1/TP2/TP3
+  account_size: 1000.0       # default MM account size
+  risk_per_trade_pct: 1.0    # % of equity risked per trade
+  max_leverage_cap: 10.0
+  weights:                   # how much each indicator family counts
+    trend: 0.35
+    momentum: 0.30
+    volatility: 0.15
+    volume: 0.20
+  indicators:                # periods for the mainstream indicators
+    ema_fast: 21
+    ema_mid: 50
+    ema_slow: 200
+    rsi_period: 14
+    macd_fast: 12
+    macd_slow: 26
+    macd_signal: 9
+    bb_period: 20
+    bb_std: 2.0
+    atr_period: 14
+    stoch_k: 14
+    adx_period: 14
+  news:
+    enabled: true
+    use_llm: true            # use Claude if ANTHROPIC_API_KEY is set
+    max_headlines: 25
+    feeds:
+      - "https://www.coindesk.com/arc/outboundfeeds/rss/"
+      - "https://cointelegraph.com/rss"
+
 parser:
   # Minimum confidence score to include a trade setup (0-1)
   min_confidence: 0.6
