@@ -104,6 +104,9 @@ class SignalBacktester:
         # transaction costs (per side, as a fraction of price)
         self.fee_pct = bt.get("fee_pct", 0.0005)        # 0.05% taker (futures-ish)
         self.slippage_pct = bt.get("slippage_pct", 0.0003)  # 0.03% slip
+        # only look this many bars back for S/R levels (recent levels matter, and
+        # it keeps level-finding O(window) instead of O(n) per signal)
+        self.level_lookback = bt.get("level_lookback", 500)
         self.params = self.engine.indicator_params
         self.p = self.engine.p
 
@@ -118,7 +121,7 @@ class SignalBacktester:
             scores = []
             for j in range(60, len(htf_ind)):
                 scores.append(
-                    (htf_ind.index[j], score_timeframe(htf_ind.iloc[: j + 1])["trend"])
+                    (htf_ind.index[j], score_timeframe(htf_ind, j)["trend"])
                 )
             if scores:
                 htf_series = pd.Series(
@@ -299,8 +302,9 @@ class SignalBacktester:
         trades: list[Trade] = []
         i = max(start, self.warmup)
         end = min(end, len(ent_ind) - 1)
+        lookback = self.level_lookback
         while i < end:
-            scores = score_timeframe(ent_ind.iloc[: i + 1])
+            scores = score_timeframe(ent_ind, i)
             composite = _clamp(sum(weights[k] * scores[k] for k in weights))
             threshold = self.p["entry_threshold"]
             if composite >= threshold:
@@ -322,7 +326,7 @@ class SignalBacktester:
             if confidence < self.p["min_confidence"]:
                 i += 1
                 continue
-            view = ent_ind.iloc[: i + 1]
+            view = ent_ind.iloc[max(0, i - lookback) : i + 1]
             price = float(view["close"].iloc[-1])
             atr_val = float(view["atr"].iloc[-1])
             all_levels = lv.find_levels(view, price, atr_val)

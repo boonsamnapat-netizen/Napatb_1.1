@@ -119,9 +119,15 @@ def _clamp(x: float, lo: float = -1.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, x))
 
 
-def score_timeframe(df_ind: pd.DataFrame) -> dict:
-    """Compute component scores (-1..1) and an indicator snapshot for one TF."""
-    row = _latest(df_ind)
+def score_timeframe(df_ind: pd.DataFrame, i: int = -1) -> dict:
+    """
+    Compute component scores (-1..1) and an indicator snapshot at bar `i`
+    (default last bar). Reads only the single row + a short OBV window so the
+    backtester can call it per-bar without slicing the whole frame (O(1)).
+    """
+    n = len(df_ind)
+    pos = i if i >= 0 else n + i
+    row = df_ind.iloc[pos]
     price = float(row["close"])
 
     # --- Trend: EMA stacking + price location, scaled by ADX strength ---
@@ -173,8 +179,8 @@ def score_timeframe(df_ind: pd.DataFrame) -> dict:
     # --- Volume confirmation: rvol + OBV slope ---
     rvol = float(row["rvol"]) if pd.notna(row["rvol"]) else 1.0
     obv_slope = 0.0
-    if len(df_ind) > 5 and pd.notna(df_ind["obv"].iloc[-5]):
-        recent = df_ind["obv"].iloc[-5:]
+    if pos >= 5 and pd.notna(df_ind["obv"].iloc[pos - 4]):
+        recent = df_ind["obv"].iloc[pos - 4 : pos + 1]
         rng = recent.max() - recent.min()
         if rng > 0:
             obv_slope = _clamp((recent.iloc[-1] - recent.iloc[0]) / rng)
