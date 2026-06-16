@@ -64,6 +64,95 @@ class MarketData:
         return out
 
 
+def _find_col(columns, names) -> str | None:
+    for c in columns:
+        if str(c).lower().strip() in names:
+            return c
+    for c in columns:
+        cl = str(c).lower().strip()
+        if any(cl.endswith(sep + n) for n in names for sep in (".", "_", " ", "-")):
+            return c
+    return None
+
+
+def normalize_ohlcv_frame(df: pd.DataFrame) -> pd.DataFrame:
+    """Coerce an arbitrary CSV frame into an OHLCV frame indexed by UTC time."""
+    date_col = _find_col(df.columns, {"date", "time", "timestamp", "datetime", "ts"})
+    o = _find_col(df.columns, {"open"})
+    h = _find_col(df.columns, {"high"})
+    low = _find_col(df.columns, {"low"})
+    c = _find_col(df.columns, {"close", "price", "priceusd"})
+    v = _find_col(df.columns, {"volume", "vol", "volumefrom"})
+    if not (o and h and low and c):
+        raise ValueError(
+            f"CSV missing OHLC columns (open={o}, high={h}, low={low}, close={c})"
+        )
+
+    out = pd.DataFrame()
+    out["open"] = pd.to_numeric(df[o], errors="coerce")
+    out["high"] = pd.to_numeric(df[h], errors="coerce")
+    out["low"] = pd.to_numeric(df[low], errors="coerce")
+    out["close"] = pd.to_numeric(df[c], errors="coerce")
+    out["volume"] = pd.to_numeric(df[v], errors="coerce") if v else 0.0
+
+    if date_col is not None:
+        out.index = pd.to_datetime(df[date_col], utc=True, errors="coerce")
+        out = out[out.index.notna()]
+    return out.dropna(subset=["open", "high", "low", "close"]).sort_index()
+
+
+def load_csv(source: str, symbol: str | None = None) -> pd.DataFrame:
+    """
+    Load OHLCV from a local path or http(s) URL. If the file has a symbol/name
+    column and `symbol` is given, keep only that symbol's rows. pandas reads URLs
+    directly, so this works with e.g. raw.githubusercontent.com datasets.
+    """
+    df = pd.read_csv(source)
+    sym_col = _find_col(df.columns, {"symbol", "name", "ticker", "asset"})
+    if sym_col is not None and symbol:
+        df = df[df[sym_col].astype(str).str.upper() == symbol.upper()]
+    return normalize_ohlcv_frame(df)
+
+
+def load_csv_universe(source: str, min_bars: int = 60) -> dict[str, pd.DataFrame]:
+    """Load a multi-symbol CSV (with a symbol/name column) into {symbol: frame}."""
+    df = pd.read_csv(source)
+    sym_col = _find_col(df.columns, {"symbol", "name", "ticker", "asset"})
+    if sym_col is None:
+        raise ValueError("CSV has no symbol/name column for a universe load")
+    out: dict[str, pd.DataFrame] = {}
+    for sym, g in df.groupby(sym_col):
+        try:
+            frame = normalize_ohlcv_frame(g)
+            if len(frame) >= min_bars:
+                out[str(sym).upper()] = frame
+        except ValueError:
+            continue
+    return out
+
+
+def load_csv_dir(directory: str, min_bars: int = 60) -> dict[str, pd.DataFrame]:
+    """Load every *.csv in a directory as {FILENAME_STEM: ohlcv_frame}."""
+    import pathlib
+
+    out: dict[str, pd.DataFrame] = {}
+    for p in sorted(pathlib.Path(directory).glob("*.csv")):
+        try:
+            frame = load_csv(str(p))
+            if len(frame) >= min_bars:
+                out[p.stem.upper()] = frame
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+def resample_ohlcv(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+    """Aggregate to a higher timeframe (e.g. '4h', 'D', 'W')."""
+    agg = {"open": "first", "high": "max", "low": "min",
+           "close": "last", "volume": "sum"}
+    return df.resample(rule).agg(agg).dropna(subset=["open", "high", "low", "close"])
+
+
 def generate_demo_ohlcv(
     bars: int = 400,
     start_price: float = 100.0,

@@ -86,6 +86,48 @@ python signal_cli.py BTCUSDT --json
 
 ---
 
+## Scanner — หาเหรียญที่ setup ดีที่สุด ("setup-first")
+
+แทนที่จะถามทีละเหรียญ scanner รัน engine ทั้ง universe แล้ว **จัดอันดับ** ให้เห็นว่า
+*ตอนนี้ตัวไหนน่าเข้าที่สุด* — เรียงตามคุณภาพ setup (confluence + R:R + EV) ไม่ใช่ตัวที่ขึ้นแรงสุด
+
+```bash
+python signal_scan.py                                  # live: top coins by volume (ccxt)
+python signal_scan.py --symbols BTCUSDT ETHUSDT SOLUSDT
+python signal_scan.py --csv-dir data/real/crypto --htf W --only-enter --top 15
+```
+
+ผลลัพธ์เป็นตารางจัดอันดับ: decision / direction / confidence / entry / stop / R:R / EV
+(`src/signal/scanner.py`) — รันแบบขนาน (ThreadPool), news ปิด default เพื่อความเร็ว
+แต่ calendar gate ยังทำงาน
+
+---
+
+## ข้อมูลจริง (Real market data)
+
+sandbox dev ต่อ exchange API ไม่ได้ จึงใช้ **GitHub Actions** ดึงข้อมูลจริง (runner มีเน็ต):
+
+- `.github/workflows/fetch_crypto_data.yml` — ดึง crypto OHLCV จริงผ่าน `yfinance`
+  (BTC-USD, ETH-USD, …) → commit เป็น CSV ที่ `data/real/crypto/<SYM>.csv`
+  - สั่งรันจากแท็บ **Actions → Fetch Real Crypto Data → Run workflow**
+  - แก้ universe ได้ที่ `data/crypto_universe.txt`
+- บนเครื่องคุณที่ต่อ Binance ได้ → `signal_cli.py` / `signal_scan.py` ดึงสดผ่าน ccxt ตรงๆ
+
+แล้ว backtest/scan กับไฟล์จริง:
+```bash
+python signal_backtest.py BTCUSDT --csv data/real/crypto/BTCUSDT.csv --htf-rule W --optimize
+python signal_scan.py --csv-dir data/real/crypto --htf W
+```
+
+CSV loader (`src/signal/market_data.py`) อ่านได้ทั้ง path และ URL (เช่น raw.githubusercontent.com)
+รองรับ format มาตรฐาน (Date,Open,High,Low,Close,Volume) และไฟล์ multi-symbol
+
+> หมายเหตุ: ระบบ asset-agnostic — backtest กับหุ้นจริงได้ผลสมจริง เช่น AAPL รายวัน 11 ปี
+> ~36 เทรด, WR ~58%, PF ~2.0; MSFT walk-forward OOS WR ~46% แต่ expectancy ยังเป็นบวก
+> (กำไรจาก R-multiple ไม่ใช่ win-rate สูง)
+
+---
+
 ## Backtest & Walk-forward tuning (วัด win-rate จริง)
 
 `signal_backtest.py` เล่นกฎ signal เดิม **bar-by-bar ไม่มี look-ahead** เพื่อวัด
@@ -138,14 +180,20 @@ src/signal/
   news.py              # RSS/manual headlines + sentiment (Claude หรือ keyword)
   calendar.py          # ปฏิทิน event เวลา จริง + blackout window
   backtester.py        # backtest กฎ signal + walk-forward weight tuning
+  scanner.py           # สแกนทั้ง universe + จัดอันดับ setup
   signal_engine.py     # รวมทุกอย่าง → Signal
-signal_cli.py          # CLI สร้าง signal สด
+signal_cli.py          # CLI สร้าง signal สด (ทีละเหรียญ)
+signal_scan.py         # CLI สแกนหา setup ดีที่สุดทั้งตลาด
 signal_backtest.py     # CLI backtest / จูน weights
-config/economic_calendar.yaml   # ตารางข่าว
+config/economic_calendar.yaml      # ตารางข่าว
+data/crypto_universe.txt           # รายชื่อเหรียญสำหรับ workflow
+.github/workflows/fetch_crypto_data.yml   # ดึง crypto จริงผ่าน Actions
 ```
 
 ## ทิศทางพัฒนาต่อ
 - ✅ backtest กฎ signal + วัด win-rate จริง (walk-forward)
 - ✅ ปฏิทินข่าวเศรษฐกิจ (เวลา event แน่นอน)
+- ✅ scanner หาเหรียญที่ setup ดีที่สุดทั้งตลาด
+- ✅ ข้อมูลจริงผ่าน GitHub Actions (yfinance) + CSV/URL loader
 - ⏳ ส่ง alert เข้า Telegram เมื่อ decision = ENTER (ขั้นต่อไป — ตอนยิงจริง)
 - คิดค่า fee / slippage / funding ในการ backtest ให้สมจริงยิ่งขึ้น

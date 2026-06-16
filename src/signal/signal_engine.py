@@ -52,6 +52,7 @@ DEFAULTS = {
     "min_stop_atr": 0.6,
     "max_stop_atr": 4.0,
     "tp_allocations": [50, 30, 20],
+    "max_tp_r": 8.0,             # cap take-profit distance in R (avoid fake 20R targets)
     "account_size": 1000.0,
     "risk_per_trade_pct": 1.0,
     "max_leverage_cap": 10.0,
@@ -488,11 +489,14 @@ class SignalEngine:
             candidates = [l for l in lv.supports_below(levels, entry)]
             level_prices = [l.price for l in candidates]
 
-        # keep levels that give at least ~0.8R, ordered by distance
+        # keep levels that give a realistic R (0.8R..max_tp_r), ordered by distance.
+        # The upper cap matters: on higher timeframes a tight ATR stop next to a
+        # far swing level can fabricate a 20R+ target that distorts EV/ranking.
+        max_tp_r = self.p.get("max_tp_r", 8.0)
         chosen: list[float] = []
         for lp in level_prices:
             r = abs(lp - entry) / risk if risk > 0 else 0
-            if r >= 0.8:
+            if 0.8 <= r <= max_tp_r:
                 chosen.append(lp)
             if len(chosen) >= len(allocs):
                 break

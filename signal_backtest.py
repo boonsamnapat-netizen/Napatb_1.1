@@ -82,6 +82,9 @@ def main():
     ap.add_argument("--apply", action="store_true",
                     help="write calibrated_win_rate back to config")
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--csv", help="backtest a local/URL OHLCV CSV (real data)")
+    ap.add_argument("--htf-rule", default="W",
+                    help="higher-timeframe resample rule for --csv (e.g. W, D, 4h)")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--log-level", default="WARNING")
     args = ap.parse_args()
@@ -100,7 +103,13 @@ def main():
     entry_tf = bt.engine.p["entry_timeframe"]
     htf_tf = bt.engine.p["htf_timeframe"]
 
-    if args.demo:
+    if args.csv:
+        from src.signal.market_data import load_csv, resample_ohlcv
+
+        entry_df = load_csv(args.csv, symbol=args.symbol)
+        htf_df = resample_ohlcv(entry_df, args.htf_rule)
+        htf_tf = args.htf_rule
+    elif args.demo:
         from src.signal.market_data import generate_demo_ohlcv
 
         entry_df = generate_demo_ohlcv(bars=args.limit, seed=11, trend=0.0015,

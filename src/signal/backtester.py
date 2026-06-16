@@ -330,6 +330,7 @@ class SignalBacktester:
         self,
         entry_df: pd.DataFrame,
         htf_df: pd.DataFrame | None,
+        *,
         weights: dict | None = None,
         risk_per_trade_pct: float = 1.0,
     ) -> BacktestMetrics:
