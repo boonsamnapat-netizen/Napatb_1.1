@@ -43,6 +43,14 @@ signal:
     atr_period: 14
     stoch_k: 14
     adx_period: 14
+  # calibrated_win_rate: 0.52   # set from backtest (signal_backtest.py) to make MM honest
+  calendar:
+    enabled: true
+    file: "config/economic_calendar.yaml"
+    remote_url: ""              # optional JSON feed of {events: [...]}
+    blackout_before_hours: 4    # stand aside this long before a high-impact event
+    blackout_after_hours: 2
+    high_impact_only: true
   news:
     enabled: true
     use_llm: true            # use Claude if ANTHROPIC_API_KEY is set

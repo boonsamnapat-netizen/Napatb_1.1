@@ -84,6 +84,49 @@ python signal_cli.py BTCUSDT --json
 
 ---
 
+---
+
+## Backtest & Walk-forward tuning (วัด win-rate จริง)
+
+`signal_backtest.py` เล่นกฎ signal เดิม **bar-by-bar ไม่มี look-ahead** เพื่อวัด
+win-rate / expectancy จริง แล้วป้อนกลับเข้า MM (เลิกใช้ค่าสมมติ)
+
+```bash
+# backtest ธรรมดา (in-sample)
+python signal_backtest.py BTCUSDT --tf 1h --htf 4h --limit 1500
+
+# walk-forward: จูน weights บนช่วง in-sample แล้ววัดผลเฉพาะ out-of-sample (เลขที่ซื่อสัตย์)
+python signal_backtest.py BTCUSDT --optimize --train 500 --test 250
+
+# เขียน calibrated_win_rate กลับเข้า config ให้ MM ใช้ค่าจริง
+python signal_backtest.py BTCUSDT --optimize --apply
+
+python signal_backtest.py BTCUSDT --demo      # ทดสอบ offline
+```
+
+โมเดลการเทรดตรงกับแผนของ engine: เข้าเมื่อ ENTER, scale out ที่ TP1/TP2/TP3 ตาม
+allocation, **เลื่อน stop ไป breakeven หลัง TP1**, ปิดที่เหลือเมื่อโดน stop หรือครบ max hold
+
+> รายงาน metrics: win rate, expectancy (R/ไม้), profit factor, total R,
+> max drawdown (R และ %), return แบบทบต้น — เน้นตัวเลข **out-of-sample**
+> (in-sample อย่างเดียวมักดูดีเกินจริง)
+
+---
+
+## Economic Calendar (เวลา event จริง)
+
+`config/economic_calendar.yaml` เก็บเวลา event ที่มีผลสูง (FOMC, CPI, NFP, token unlock)
+engine บังคับ **blackout window** รอบ event: ลดขนาด/ยืนนอกตลาด (ดู `signal.calendar` ใน config)
+
+- ในช่วง blackout → `risk_multiplier × 0.4` และ downgrade ENTER → WAIT
+- มี event ภายใน 12 ชม. → เตือนล่วงหน้า
+- กรองตาม asset ได้ (unlock ของ ARB ไม่กระทบ BTC)
+
+อัปเดตไฟล์เองทุกเดือน (ลอกเวลาได้จาก forexfactory / investing.com / token-unlock trackers)
+หรือชี้ `signal.calendar.remote_url` ไปยัง JSON feed รูปแบบเดียวกัน
+
+---
+
 ## โครงสร้างโค้ด
 
 ```
@@ -93,12 +136,16 @@ src/signal/
   levels.py            # swing points, round numbers, liquidity zones
   money_management.py   # position sizing, R-multiple, EV
   news.py              # RSS/manual headlines + sentiment (Claude หรือ keyword)
+  calendar.py          # ปฏิทิน event เวลา จริง + blackout window
+  backtester.py        # backtest กฎ signal + walk-forward weight tuning
   signal_engine.py     # รวมทุกอย่าง → Signal
-signal_cli.py          # CLI + การแสดงผล
+signal_cli.py          # CLI สร้าง signal สด
+signal_backtest.py     # CLI backtest / จูน weights
+config/economic_calendar.yaml   # ตารางข่าว
 ```
 
 ## ทิศทางพัฒนาต่อ
-- เชื่อม `src/backtest/` เพื่อ backtest กฎ signal เองและวัด win-rate จริง (แทนค่าสมมติ)
-- ปฏิทินข่าวเศรษฐกิจ (เวลา event แน่นอน) แทนการเดาจากพาดหัว
-- ส่ง alert เข้า Discord/Telegram เมื่อ decision = ENTER
-- ปรับ weights อัตโนมัติจากผล backtest (walk-forward)
+- ✅ backtest กฎ signal + วัด win-rate จริง (walk-forward)
+- ✅ ปฏิทินข่าวเศรษฐกิจ (เวลา event แน่นอน)
+- ⏳ ส่ง alert เข้า Telegram เมื่อ decision = ENTER (ขั้นต่อไป — ตอนยิงจริง)
+- คิดค่า fee / slippage / funding ในการ backtest ให้สมจริงยิ่งขึ้น

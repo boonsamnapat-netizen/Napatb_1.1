@@ -1,0 +1,36 @@
+# Economic / crypto event calendar (high-impact = volatility / stop-hunt risk).
+#
+# Update this file regularly (or point signal.calendar.remote_url at a JSON feed
+# of the same shape). The engine enforces a blackout window around each relevant
+# high-impact event: it sizes down or stands aside.
+#
+# Free sources to copy times from: forexfactory.com calendar, investing.com,
+# tradingeconomics.com, and token-unlock trackers (e.g. token.unlocks).
+#
+# Fields: time (ISO-8601 UTC), name, impact (high/medium/low),
+#         currency (optional), assets (optional; empty = whole market)
+
+events:
+  # --- Examples (replace with current month's real schedule) ---
+  - time: "2026-06-18T18:00:00Z"
+    name: "FOMC rate decision"
+    impact: "high"
+    currency: "USD"
+    assets: []          # macro: affects the whole market
+
+  - time: "2026-06-11T12:30:00Z"
+    name: "US CPI (inflation)"
+    impact: "high"
+    currency: "USD"
+    assets: []
+
+  - time: "2026-06-06T12:30:00Z"
+    name: "US Non-Farm Payrolls (NFP)"
+    impact: "high"
+    currency: "USD"
+    assets: []
+
+  - time: "2026-06-20T00:00:00Z"
+    name: "Example large token unlock"
+    impact: "high"
+    assets: ["ARB", "OP"]

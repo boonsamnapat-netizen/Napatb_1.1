@@ -26,6 +26,7 @@ import pandas as pd
 
 from src.signal import indicators as ind
 from src.signal import levels as lv
+from src.signal.calendar import EconomicCalendar
 from src.signal.money_management import (
     PositionPlan,
     TakeProfit,
@@ -212,6 +213,10 @@ class SignalEngine:
         self.weights = {**DEFAULTS["weights"], **cfg.get("weights", {})}
         self.indicator_params = cfg.get("indicators", {})
         self.news_provider = NewsProvider(config)
+        self.calendar = EconomicCalendar(config)
+        # optional measured win-rate from backtest calibration (overrides the
+        # confidence-derived assumption when present)
+        self.win_rate_override = cfg.get("calibrated_win_rate")
 
     # ----------------------------------------------------------------- core
     def analyze(
@@ -322,6 +327,25 @@ class SignalEngine:
         else:
             sig.news = {"summary": "News overlay skipped."}
 
+        # ---- Economic calendar gate (precise event timing) ----
+        in_blackout, cal_events = self.calendar.blackout(symbol)
+        if cal_events:
+            sig.news.setdefault("calendar", [e.to_dict() for e in cal_events])
+        if in_blackout:
+            risk_multiplier *= 0.4
+            names = ", ".join(e.name for e in cal_events)
+            sig.warnings.append(
+                f"Inside high-impact event window ({names}) — stand aside or size "
+                f"down hard; this is where the crowd gets liquidated."
+            )
+        else:
+            upcoming = self.calendar.upcoming(symbol, within_hours=12)
+            if upcoming:
+                sig.warnings.append(
+                    "High-impact event within 12h: "
+                    + ", ".join(f"{e.name} @ {e.time.isoformat()}" for e in upcoming)
+                )
+
         # ---- Decision & plan ----
         if direction == "NEUTRAL":
             sig.decision = "WAIT"
@@ -341,6 +365,9 @@ class SignalEngine:
         else:
             sig.decision = "ENTER"
 
+        if in_blackout and sig.decision == "ENTER":
+            sig.decision = "WAIT"  # do not open fresh risk into a known event
+
         sig.confidence = confidence
 
         # Build entry / stop / targets
@@ -359,7 +386,10 @@ class SignalEngine:
             if risk_per_trade_pct is not None
             else self.p["risk_per_trade_pct"]
         )
-        win_rate = assumed_win_rate_from_confidence(confidence)
+        if self.win_rate_override is not None:
+            win_rate = float(self.win_rate_override)
+        else:
+            win_rate = assumed_win_rate_from_confidence(confidence)
         plan = build_position_plan(
             direction=direction,
             entry=entry,
