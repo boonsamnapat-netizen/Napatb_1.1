@@ -102,8 +102,13 @@ class SignalBacktester:
         self.max_hold = bt.get("max_hold", 60)     # bars before time-stop
         self.min_trades = bt.get("min_trades", 8)  # for optimiser to trust a window
         # transaction costs (per side, as a fraction of price)
-        self.fee_pct = bt.get("fee_pct", 0.0005)        # 0.05% taker (futures-ish)
-        self.slippage_pct = bt.get("slippage_pct", 0.0003)  # 0.03% slip
+        self.fee_pct = bt.get("fee_pct", 0.0005)        # taker fee
+        self.slippage_pct = bt.get("slippage_pct", 0.0003)  # taker slippage
+        self.maker_fee_pct = bt.get("maker_fee_pct", 0.0002)  # limit-order fee
+        # use limit (maker) orders for entries / take-profits -> cheaper, no slip.
+        # Stops are always market (taker). Defaults off = conservative all-taker.
+        self.maker_entries = bt.get("maker_entries", False)
+        self.maker_exits = bt.get("maker_exits", False)
         # only look this many bars back for S/R levels (recent levels matter, and
         # it keeps level-finding O(window) instead of O(n) per signal)
         self.level_lookback = bt.get("level_lookback", 500)
@@ -170,13 +175,15 @@ class SignalBacktester:
         if risk <= 0 or not tps:
             return None
 
-        # Round-trip transaction cost expressed in R. Cost as a fraction of price
-        # is (fee + slippage) per side; dividing by the stop distance fraction
-        # converts it to R, then x2 for entry + exit. Tight stops (small stop_frac)
-        # are hit hardest — exactly why high-frequency 1h setups must be fee-tested.
+        # Path-based transaction cost (accumulated as fills happen), expressed in
+        # R by dividing the price-fraction cost by the stop distance fraction.
+        # maker (limit) side = maker fee, no slippage; taker (market) = fee + slip.
         stop_frac = risk / entry if entry else 0.0
-        per_side = self.fee_pct + self.slippage_pct
-        cost_r = (2.0 * per_side / stop_frac) if stop_frac > 0 else 0.0
+        taker_side = self.fee_pct + self.slippage_pct
+        maker_side = self.maker_fee_pct
+        entry_side = maker_side if self.maker_entries else taker_side
+        tp_side = maker_side if self.maker_exits else taker_side
+        cost_accum = entry_side  # entry fills the full position once
 
         remaining = 1.0
         realized_r = 0.0
@@ -197,6 +204,8 @@ class SignalBacktester:
             if stop_hit:
                 r = ((cur_stop - entry) if is_long else (entry - cur_stop)) / risk
                 realized_r += remaining * r
+                cost_accum += taker_side * remaining   # stop exits at market
+                cost_r = cost_accum / stop_frac if stop_frac > 0 else 0.0
                 outcome = "BREAKEVEN" if moved_be else "LOSS"
                 return Trade(i, j, direction, entry, stop, realized_r - cost_r,
                              outcome, confidence, j - i)
@@ -212,12 +221,14 @@ class SignalBacktester:
                     alloc = tp.allocation_pct / 100.0
                     realized_r += alloc * tp.r_multiple
                     remaining -= alloc
+                    cost_accum += tp_side * alloc   # TP exit (limit if maker_exits)
                     hit[k] = True
                     if not moved_be:           # move to breakeven after first TP
                         cur_stop = entry
                         moved_be = True
 
             if remaining <= 1e-9:
+                cost_r = cost_accum / stop_frac if stop_frac > 0 else 0.0
                 return Trade(i, j, direction, entry, stop, realized_r - cost_r,
                              "WIN", confidence, j - i)
 
@@ -231,10 +242,12 @@ class SignalBacktester:
                     peak = min(peak, low)
                     cur_stop = min(cur_stop, peak + self.trailing_r * risk)
 
-        # Time stop: close remainder at last close
+        # Time stop: close remainder at last close (market = taker)
         last_close = float(ent_ind.iloc[last_j]["close"])
         r = ((last_close - entry) if is_long else (entry - last_close)) / risk
         realized_r += remaining * r
+        cost_accum += taker_side * remaining
+        cost_r = cost_accum / stop_frac if stop_frac > 0 else 0.0
         return Trade(i, last_j, direction, entry, stop, realized_r - cost_r,
                      "TIMEOUT", confidence, last_j - i)
 

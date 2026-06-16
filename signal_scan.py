@@ -69,6 +69,36 @@ def render(rows, top: int) -> None:
     console.print(t)
 
 
+def _render_portfolio(config, rows, account):
+    from src.signal.portfolio import PortfolioRiskManager
+
+    acct = account or config.get("signal", {}).get("account_size", 1000.0)
+    plan = PortfolioRiskManager(config).allocate(rows, acct)
+    if not plan.allocations:
+        console.print("\n[yellow]Portfolio: no ENTER setups to allocate.[/yellow]")
+        return
+    t = Table(title=f"Portfolio Allocation (account {acct:g})", box=box.ROUNDED)
+    t.add_column("Symbol", style="cyan")
+    t.add_column("Dir")
+    t.add_column("Risk%", justify="right")
+    t.add_column("Risk$", justify="right")
+    t.add_column("Size", justify="right")
+    t.add_column("Notional", justify="right")
+    t.add_column("Lev", justify="right")
+    for a in plan.allocations:
+        d = a.to_dict()
+        t.add_row(d["symbol"], a.direction, f"{d['risk_pct']}", f"{d['risk_amount']:g}",
+                  f"{d['size_units']:g}", f"{d['notional']:g}", f"{d['leverage']}x")
+    console.print(t)
+    console.print(
+        f"[bold]Total heat[/bold] {plan.total_risk_pct:.2f}% "
+        f"(long {plan.long_risk_pct:.2f}% / short {plan.short_risk_pct:.2f}%), "
+        f"gross leverage {plan.gross_leverage:.1f}x"
+    )
+    for n in plan.notes:
+        console.print(f"  [dim]• {n}[/dim]")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Signal market scanner")
     ap.add_argument("--config", "-c", default="config/config.yaml")
@@ -79,6 +109,8 @@ def main():
     ap.add_argument("--tf")
     ap.add_argument("--top", type=int, default=20)
     ap.add_argument("--only-enter", action="store_true", help="show only ENTER setups")
+    ap.add_argument("--portfolio", action="store_true",
+                    help="build a portfolio risk allocation across the ENTER setups")
     ap.add_argument("--account", type=float)
     ap.add_argument("--risk", type=float)
     ap.add_argument("--news", action="store_true", help="enable news overlay (slower)")
@@ -144,6 +176,8 @@ def main():
             enters = sum(1 for r in rows if r.decision == "ENTER")
             console.print(f"\n[bold]{enters}[/bold] ENTER setups found. "
                           f"[dim]Saved → {out_path}[/dim]")
+            if args.portfolio:
+                _render_portfolio(config, rows, args.account)
     console.print(
         "\n[dim]Ranked by setup quality (confluence + R:R + EV), not by who is "
         "pumping hardest. Decision-support only — manage your own risk.[/dim]"

@@ -29,8 +29,11 @@ signal:
   backtest:
     warmup: 210                  # candles needed before trading (EMA-200 + buffer)
     max_hold: 60                 # bars before a time-stop exit
-    fee_pct: 0.0005              # per-side taker fee (fraction of price): 0.05%
-    slippage_pct: 0.0003         # per-side slippage: 0.03%
+    fee_pct: 0.0005              # per-side TAKER fee (market orders): 0.05%
+    slippage_pct: 0.0003         # per-side taker slippage: 0.03%
+    maker_fee_pct: 0.0002        # per-side MAKER fee (limit orders): 0.02%
+    maker_entries: false         # enter with limit orders (cheaper, may miss fills)
+    maker_exits: false           # take profit with limit orders (cheaper)
     level_lookback: 500          # bars back to scan for S/R levels
     trailing_r: 2.5              # trail stop 2.5R behind the peak (A/B best; 0=off)
     cooldown_bars: 0             # bars to sit out after a loss (A/B: 0 best here)
@@ -41,6 +44,14 @@ signal:
     max_workers: 8
     quality_top_n: 0             # CSV mode: keep top-N most liquid (0=all). Set e.g. 10 for majors
     quality_min_bars: 250
+    use_regime: true             # BTC market-regime gate
+    regime_period: 200
+  portfolio:
+    base_risk_pct: 1.0           # risk per trade before portfolio caps
+    max_portfolio_heat_pct: 6.0  # total open risk cap across all positions
+    max_per_direction_heat_pct: 4.0  # cap net risk per side (crypto is correlated)
+    max_concurrent: 5            # max simultaneous positions
+    max_gross_leverage: 10.0
   account_size: 1000.0       # default MM account size
   risk_per_trade_pct: 1.0    # % of equity risked per trade
   max_leverage_cap: 10.0
