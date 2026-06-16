@@ -1,0 +1,109 @@
+name: Fetch Real Crypto Data
+
+# The sandbox where the signal code is developed cannot reach crypto exchange
+# APIs, but a GitHub Actions runner can. This job downloads real crypto OHLCV via
+# yfinance and commits the CSVs so the scanner / backtester can run on real data.
+#
+# Run it manually from the Actions tab (workflow_dispatch) or let the weekly
+# schedule refresh it. Output: data/real/crypto/<SYMBOL>.csv
+
+on:
+  workflow_dispatch:
+    inputs:
+      interval:
+        description: "Candle interval (1d, or 1h for the last ~2y)"
+        default: "1d"
+      start:
+        description: "Start date (YYYY-MM-DD, used for 1d)"
+        default: "2018-01-01"
+  schedule:
+    - cron: '0 8 * * 6'   # Saturdays 08:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/crypto-signal-system-kcf8vq
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Download real crypto OHLCV
+        env:
+          INTERVAL: ${{ github.event.inputs.interval || '1d' }}
+          START: ${{ github.event.inputs.start || '2018-01-01' }}
+        run: |
+          python - <<'EOF'
+          import os, pathlib
+          import yfinance as yf
+          import pandas as pd
+
+          out = pathlib.Path('data/real/crypto')
+          out.mkdir(parents=True, exist_ok=True)
+
+          interval = os.environ.get('INTERVAL', '1d')
+          start = os.environ.get('START', '2018-01-01')
+
+          uni_file = pathlib.Path('data/crypto_universe.txt')
+          if uni_file.exists():
+              tickers = [t.strip() for t in uni_file.read_text().splitlines() if t.strip()]
+          else:
+              tickers = [
+                  'BTC-USD','ETH-USD','BNB-USD','SOL-USD','XRP-USD','ADA-USD',
+                  'AVAX-USD','DOGE-USD','LINK-USD','DOT-USD','MATIC-USD','LTC-USD',
+                  'BCH-USD','ATOM-USD','UNI-USD','ETC-USD','XLM-USD','NEAR-USD',
+                  'APT-USD','ARB-USD','OP-USD','INJ-USD','SUI-USD','SEI-USD',
+                  'TIA-USD','RNDR-USD','IMX-USD','AAVE-USD','MKR-USD','FIL-USD',
+              ]
+
+          # 1h history is limited to ~730 days by Yahoo; daily goes back years.
+          kwargs = dict(interval=interval, auto_adjust=False, progress=False)
+          if interval == '1d':
+              kwargs['start'] = start
+          else:
+              kwargs['period'] = '730d'
+
+          ok, fail = [], []
+          for ticker in tickers:
+              try:
+                  df = yf.download(ticker, **kwargs)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open','High','Low','Close','Volume']].dropna()
+                  if len(df) >= 250:
+                      name = ticker.replace('-USD', 'USDT')   # BTC-USD -> BTCUSDT
+                      df.to_csv(out / f'{name}.csv')
+                      ok.append(name)
+                      print(f'  {name}: {len(df)} rows')
+                  else:
+                      fail.append(ticker)
+              except Exception as e:
+                  fail.append(ticker)
+                  print(f'  {ticker}: SKIP ({e})')
+
+          print(f'\nDone: {len(ok)} ok, {len(fail)} failed')
+          if fail:
+              print('Failed:', fail)
+          EOF
+
+      - name: Commit and push CSVs
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add data/real/crypto/
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "chore: refresh real crypto market data $(date +%Y-%m-%d)"
+            git push origin HEAD:claude/crypto-signal-system-kcf8vq
+          fi
