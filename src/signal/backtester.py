@@ -101,6 +101,9 @@ class SignalBacktester:
         self.warmup = bt.get("warmup", 210)        # need EMA-200 + buffer
         self.max_hold = bt.get("max_hold", 60)     # bars before time-stop
         self.min_trades = bt.get("min_trades", 8)  # for optimiser to trust a window
+        # transaction costs (per side, as a fraction of price)
+        self.fee_pct = bt.get("fee_pct", 0.0005)        # 0.05% taker (futures-ish)
+        self.slippage_pct = bt.get("slippage_pct", 0.0003)  # 0.03% slip
         self.params = self.engine.indicator_params
         self.p = self.engine.p
 
@@ -148,6 +151,14 @@ class SignalBacktester:
         if risk <= 0 or not tps:
             return None
 
+        # Round-trip transaction cost expressed in R. Cost as a fraction of price
+        # is (fee + slippage) per side; dividing by the stop distance fraction
+        # converts it to R, then x2 for entry + exit. Tight stops (small stop_frac)
+        # are hit hardest — exactly why high-frequency 1h setups must be fee-tested.
+        stop_frac = risk / entry if entry else 0.0
+        per_side = self.fee_pct + self.slippage_pct
+        cost_r = (2.0 * per_side / stop_frac) if stop_frac > 0 else 0.0
+
         remaining = 1.0
         realized_r = 0.0
         cur_stop = stop
@@ -167,7 +178,7 @@ class SignalBacktester:
                 r = ((cur_stop - entry) if is_long else (entry - cur_stop)) / risk
                 realized_r += remaining * r
                 outcome = "BREAKEVEN" if moved_be else "LOSS"
-                return Trade(i, j, direction, entry, stop, realized_r,
+                return Trade(i, j, direction, entry, stop, realized_r - cost_r,
                              outcome, confidence, j - i)
 
             # Take-profits
@@ -187,14 +198,14 @@ class SignalBacktester:
                         moved_be = True
 
             if remaining <= 1e-9:
-                return Trade(i, j, direction, entry, stop, realized_r,
+                return Trade(i, j, direction, entry, stop, realized_r - cost_r,
                              "WIN", confidence, j - i)
 
         # Time stop: close remainder at last close
         last_close = float(ent_ind.iloc[last_j]["close"])
         r = ((last_close - entry) if is_long else (entry - last_close)) / risk
         realized_r += remaining * r
-        return Trade(i, last_j, direction, entry, stop, realized_r,
+        return Trade(i, last_j, direction, entry, stop, realized_r - cost_r,
                      "TIMEOUT", confidence, last_j - i)
 
     # ---- metrics --------------------------------------------------------

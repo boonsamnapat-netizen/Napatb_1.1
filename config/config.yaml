@@ -23,6 +23,11 @@ signal:
   max_stop_atr: 4.0
   tp_allocations: [50, 30, 20]   # % closed at TP1/TP2/TP3
   max_tp_r: 8.0                  # cap take-profit distance in R (avoid unrealistic targets)
+  backtest:
+    warmup: 210                  # candles needed before trading (EMA-200 + buffer)
+    max_hold: 60                 # bars before a time-stop exit
+    fee_pct: 0.0005              # per-side taker fee (fraction of price): 0.05%
+    slippage_pct: 0.0003         # per-side slippage: 0.03%
   account_size: 1000.0       # default MM account size
   risk_per_trade_pct: 1.0    # % of equity risked per trade
   max_leverage_cap: 10.0
