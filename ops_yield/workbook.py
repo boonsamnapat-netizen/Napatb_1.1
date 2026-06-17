@@ -1,21 +1,26 @@
 """Write parsed production records into an Excel workbook.
 
-Three sheets:
+Sheets:
   * ``Records``      — one row per LINE message (the audit trail).
   * ``Daily Yield``  — matrix: rows = date, columns = each machine + รวม (All).
   * ``Weekly Yield`` — matrix: rows = ISO week, columns = each machine + รวม.
+  * ``Issue Log``    — time-series of reports that had a fail, with editable
+                       ``Action`` / ``Status`` columns the user fills in.
+  * ``By Shift`` / ``By Operator`` / ``Fail Causes`` — summaries.
 
 Yield cells aggregate by **summing pass and total** across every report for
 that machine/day (or week), then dividing — this is the correct way to combine
 yields, not by averaging percentages. A green→red colour scale makes low
 yield pop.
 
-We read existing ``Records`` rows back in before rewriting, so re-running on a
-new batch appends rather than clobbers (idempotent on the ``raw`` text).
+Re-running appends rather than clobbers: existing ``Records`` are read back
+(idempotent on ``raw`` text), and any ``Action`` / ``Status`` the user typed in
+``Issue Log`` is preserved by matching a stable per-report key.
 """
 
 from __future__ import annotations
 
+import hashlib
 import os
 from collections import defaultdict
 from datetime import date, datetime
@@ -24,8 +29,9 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
-from .analysis import by_operator, by_shift, cause_summary
+from .analysis import by_operator, by_shift, cause_summary, classify_causes
 from .parser import Record
 
 RECORD_HEADERS = [
@@ -102,9 +108,52 @@ def _row_key(row: list) -> tuple:
     return (row[0], row[2], row[14])
 
 
-def write_workbook(records: list[Record], path: str, *, append: bool = True) -> dict:
+def _issue_key(row: list) -> str:
+    """Stable string key for an Issue-Log row (survives regeneration)."""
+    raw = str(row[14] or "")
+    h = hashlib.md5(raw.encode("utf-8")).hexdigest()[:8]
+    return f"{row[0]}|{row[2]}|{row[5]}|{h}"
+
+
+def _read_existing_actions(path: str) -> dict:
+    """Map issue-key -> (Action, Status) from a prior Issue Log, to preserve
+    what the user typed when we rebuild the workbook."""
+    if not os.path.exists(path):
+        return {}
+    wb = load_workbook(path)
+    if "Issue Log" not in wb.sheetnames:
+        return {}
+    ws = wb["Issue Log"]
+    headers = [c.value for c in ws[1]]
+    try:
+        ik = headers.index("_key")
+        ia = headers.index("Action")
+        ist = headers.index("Status")
+    except ValueError:
+        return {}
+    out = {}
+    for r in ws.iter_rows(min_row=2, values_only=True):
+        key = r[ik]
+        if key and (r[ia] or r[ist]):
+            out[key] = (r[ia] or "", r[ist] or "")
+    return out
+
+
+ISSUE_HEADERS = [
+    "Date", "Week", "Machine", "Shift", "Total", "Fail L1", "Fail L2",
+    "Splash", "Fails", "Yield", "Cause", "Sender", "Note",
+    "Action", "Status", "_key",
+]
+_STATUS_CHOICES = '"Open,In progress,Done,Ignore"'
+
+
+def write_workbook(records: list[Record], path: str, *, append: bool = True,
+                   prior_actions: dict | None = None) -> dict:
     """Build/refresh the workbook at ``path`` from ``records``.
 
+    ``prior_actions`` (key -> (action, status)) lets a caller inject the
+    Action/Status a user typed elsewhere (e.g. in Google Sheets) so it survives
+    the rebuild; it is merged on top of any actions already in ``path``.
     Returns a small summary dict (counts) for logging.
     """
     new_rows = [_record_to_row(r) for r in records]
@@ -129,10 +178,15 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True) -> 
     # facts: (shift, total, passed, sender, notes)
     facts = [(r[5], r[6] or 0, r[10] or 0, r[15], r[12]) for r in all_rows]
 
+    actions = _read_existing_actions(path) if append else {}
+    if prior_actions:
+        actions.update(prior_actions)
+
     wb = Workbook()
     _build_records_sheet(wb, all_rows)
     machines = _build_matrix_sheet(wb, all_rows, "Daily Yield", key_index=0, key_title="Date")
     _build_matrix_sheet(wb, all_rows, "Weekly Yield", key_index=1, key_title="Week")
+    n_issues = _build_issue_log(wb, all_rows, actions)
     _build_shift_sheet(wb, facts)
     _build_operator_sheet(wb, facts)
     _build_cause_sheet(wb, facts)
@@ -142,6 +196,7 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True) -> 
         "records_total": len(all_rows),
         "records_added": len(new_rows),
         "machines": sorted(machines),
+        "issues": n_issues,
         "path": path,
     }
 
@@ -268,3 +323,48 @@ def _build_cause_sheet(wb: Workbook, facts) -> None:
     _style_header(ws, 3)
     for i, w in enumerate([24, 24, 16], start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
+
+
+def _build_issue_log(wb: Workbook, rows: list[list], prior_actions: dict) -> int:
+    """Chronological log of reports that had a fail, with editable Action /
+    Status columns whose prior values are carried over via ``prior_actions``."""
+    ws = wb.create_sheet("Issue Log")
+    ws.append(ISSUE_HEADERS)
+
+    issue_rows = [r for r in rows if (r[7] or 0) + (r[8] or 0) + (r[9] or 0) > 0]
+    issue_rows.sort(key=lambda r: (str(r[0]), str(r[5]), _machine_key(r[2])))
+
+    yield_col = ISSUE_HEADERS.index("Yield") + 1
+    for r in issue_rows:
+        l1, l2, sp = r[7] or 0, r[8] or 0, r[9] or 0
+        fails = l1 + l2 + sp
+        cause = ", ".join(classify_causes(r[12] or "")) or "—"
+        key = _issue_key(r)
+        action, status = prior_actions.get(key, ("", ""))
+        ws.append([
+            r[0], r[1], r[2], r[5], r[6], l1, l2, sp, fails, r[11],
+            cause, r[15], r[12], action, status, key,
+        ])
+        ws.cell(row=ws.max_row, column=yield_col).number_format = _PCT
+
+    _style_header(ws, len(ISSUE_HEADERS))
+    widths = [12, 9, 8, 7, 7, 7, 7, 7, 7, 8, 20, 14, 30, 30, 12, 1]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    # hide the internal matching key
+    ws.column_dimensions[get_column_letter(len(ISSUE_HEADERS))].hidden = True
+
+    if ws.max_row > 1:
+        ws.conditional_formatting.add(
+            f"J2:J{ws.max_row}",
+            ColorScaleRule(
+                start_type="num", start_value=0.8, start_color="F8696B",
+                mid_type="num", mid_value=0.95, mid_color="FFEB84",
+                end_type="num", end_value=1.0, end_color="63BE7B",
+            ),
+        )
+        dv = DataValidation(type="list", formula1=_STATUS_CHOICES, allow_blank=True)
+        ws.add_data_validation(dv)
+        status_col = get_column_letter(ISSUE_HEADERS.index("Status") + 1)
+        dv.add(f"{status_col}2:{status_col}{ws.max_row}")
+    return len(issue_rows)

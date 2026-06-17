@@ -16,16 +16,41 @@ Yield = Pass / Total
 หน้า Daily/Weekly รวมผลด้วยการ **บวก Pass และ Total ของทุกรายงานก่อนแล้วค่อยหาร**
 (ถูกต้องกว่าเอา % มาเฉลี่ยกัน) และมีแถบสี เขียว→แดง ให้เห็น yield ต่ำได้ทันที
 
-## 6 ชีตในไฟล์เดียว
+## 7 ชีตในไฟล์เดียว
 
 | ชีต | ดูอะไร |
 |---|---|
 | **Records** | ทุกรายงาน 1 บรรทัด (audit trail) + Sender + สาเหตุ + warning |
 | **Daily Yield** | matrix วัน × เครื่อง (+ คอลัมน์รวม) — ดูทุกเครื่องพร้อมกัน |
 | **Weekly Yield** | matrix สัปดาห์ × เครื่อง (+ รวม) |
+| **Issue Log** | time-series เฉพาะรายงานที่มี fail (รู้ว่าเหตุเกิดเมื่อไร) + คอลัมน์ **Action / Status** ให้กรอกเอง |
 | **By Shift** | เทียบ yield กะ Day vs Night |
 | **By Operator** | yield / จำนวนรายงาน รายคน (เรียงตามปริมาณงาน) |
 | **Fail Causes** | สาเหตุ fail ที่พบบ่อย (จับจากโน้ต เช่น OT/สลับเบรค, กาวไหลช้า, ซ่อมเครื่อง) + Fail units รวม |
+
+### Issue Log + Action (สำคัญ)
+คอลัมน์ **Action** (สิ่งที่ทำไปแก้) และ **Status** (Open/In progress/Done/Ignore — มี dropdown)
+เป็นช่องให้คุณกรอกเอง ระบบ **ไม่ลบทิ้งตอนสร้างไฟล์ใหม่** — จับคู่ด้วย key ที่ซ่อนไว้
+(`วันที่|เครื่อง|กะ|hash`) แล้วเติมกลับให้อัตโนมัติทุกครั้งที่ run ใหม่
+
+## เอาขึ้น Google Sheets (ดูผ่าน network บริษัท + กรอก Action ได้)
+
+ให้ Google Sheets เป็น "ตัวหลัก": ทีมเปิดดู/กรอก Action บน Sheets ผ่านเน็ตบริษัท
+ส่วนสคริปต์รันสิ้นวันแล้ว **push ทับเฉพาะข้อมูลที่คำนวณ แต่ดึง Action/Status ที่กรอก
+ไว้กลับมาก่อน** จึงไม่ทับของที่พิมพ์ไป
+
+ตั้งค่าครั้งเดียว:
+1. สร้าง Google Service Account (Google Cloud Console) → ดาวน์โหลด JSON key เป็น `service_account.json`
+2. เปิด Google Sheet ใหม่ → Share อีเมลของ service account (ใน JSON) แบบ **Editor**
+3. `pip install gspread`
+4. รันสิ้นวัน:
+```bash
+python ops_yield_cli.py --line-export chat.txt \
+    --out yield.xlsx \
+    --gsheet-url "https://docs.google.com/spreadsheets/d/XXXX/edit" \
+    --gsheet-creds service_account.json
+```
+ทีมที่ทำงานเปิด URL นี้ดู Daily/Weekly/Issue Log ได้เลย และพิมพ์ Action ลงไปได้
 
 ## รูปแบบข้อความที่รองรับ
 
@@ -103,6 +128,7 @@ Web App → เอา /exec URL ไปใส่เป็น Webhook URL → publ
 | `parser.py` | แปลงข้อความ 1 ข้อความ → `Record` (จับ field + คำนวณ pass/yield) |
 | `lineexport.py` | อ่านไฟล์ LINE export `.txt` → แยกข้อความ multi-line → `Record` |
 | `analysis.py` | aggregate รายกะ / รายคน / สาเหตุ fail (taxonomy เรียนจากข้อมูลจริง) |
+| `to_gsheet.py` | push ทุกชีตขึ้น Google Sheets ผ่าน gspread (คง Action/Status ที่กรอก) |
 | `workbook.py` | เขียน/อัปเดต `.xlsx` 3 ชีต: Records, Daily Yield, Weekly Yield |
 | `collector.gs` | Google Apps Script รับ webhook จาก LINE → เก็บลง Sheet |
 | `../ops_yield_cli.py` | CLI รวบข้อความทั้งวัน → workbook |

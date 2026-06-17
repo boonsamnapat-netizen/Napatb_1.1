@@ -43,8 +43,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--demo", action="store_true", help="use built-in sample data")
     ap.add_argument("--no-append", action="store_true",
                     help="overwrite instead of appending to existing workbook")
+    ap.add_argument("--gsheet-url", help="also publish to this Google Sheet URL")
+    ap.add_argument("--gsheet-creds", default="service_account.json",
+                    help="service-account JSON for --gsheet-url")
     args = ap.parse_args(argv)
 
+    # --- obtain records ----------------------------------------------------
     if args.export:
         from ops_yield.lineexport import parse_export
         with open(args.export, encoding="utf-8") as fh:
@@ -52,41 +56,47 @@ def main(argv: list[str] | None = None) -> int:
         if args.year:
             records = [r for r in records
                        if r.work_date and r.work_date.year == args.year]
-        if not records:
-            print("ไม่พบรายงานใน export", file=sys.stderr)
-            return 1
-        flagged = [r for r in records if r.warnings]
-        summary = write_workbook(records, args.out, append=not args.no_append)
-        print(f"อ่าน export ได้ {len(records)} รายงาน | เครื่อง: {summary['machines']}")
-        print(f"เขียนลง {summary['path']} (รวม {summary['records_total']} แถว) "
-              f"| ต้อง review {len(flagged)} รายงาน")
-        return 0
-
-    if args.demo:
-        text = DEMO
-    elif args.infile:
-        with open(args.infile, encoding="utf-8") as fh:
-            text = fh.read()
-    elif args.url:
-        from urllib.request import urlopen
-        with urlopen(args.url, timeout=30) as resp:
-            text = resp.read().decode("utf-8")
     else:
-        ap.error("ต้องระบุ --in <file>, --url <url> หรือ --demo")
-        return 2
+        if args.demo:
+            text = DEMO
+        elif args.infile:
+            with open(args.infile, encoding="utf-8") as fh:
+                text = fh.read()
+        elif args.url:
+            from urllib.request import urlopen
+            with urlopen(args.url, timeout=30) as resp:
+                text = resp.read().decode("utf-8")
+        else:
+            ap.error("ต้องระบุ --in <file>, --url <url>, --line-export หรือ --demo")
+            return 2
+        records = parse_messages(text)
 
-    records = parse_messages(text)
     if not records:
-        print("ไม่พบข้อความที่ parse ได้", file=sys.stderr)
+        print("ไม่พบรายงานที่ parse ได้", file=sys.stderr)
         return 1
 
-    flagged = [r for r in records if r.warnings]
-    summary = write_workbook(records, args.out, append=not args.no_append)
+    # --- pull back Action/Status from Google Sheets (master) ---------------
+    sh = None
+    prior = {}
+    if args.gsheet_url:
+        from ops_yield import to_gsheet
+        sh = to_gsheet.connect(args.gsheet_creds, args.gsheet_url)
+        prior = to_gsheet.read_actions(sh)
 
-    print(f"parse ได้ {len(records)} รายการ | เครื่อง: {summary['machines']}")
-    print(f"เขียนลง {summary['path']} (รวมทั้งหมด {summary['records_total']} แถว)")
-    for r in flagged:
-        print(f"  ⚠️  เครื่อง {r.machine} {r.work_date}: {'; '.join(r.warnings)}")
+    # --- build workbook ----------------------------------------------------
+    flagged = [r for r in records if r.warnings]
+    summary = write_workbook(records, args.out, append=not args.no_append,
+                             prior_actions=prior)
+    print(f"parse ได้ {len(records)} รายงาน | เครื่อง: {summary['machines']}")
+    print(f"เขียนลง {summary['path']} (รวม {summary['records_total']} แถว, "
+          f"{summary['issues']} เหตุการณ์ใน Issue Log) | ต้อง review {len(flagged)}")
+
+    # --- publish to Google Sheets ------------------------------------------
+    if sh is not None:
+        from ops_yield import to_gsheet
+        pushed = to_gsheet.push_workbook(sh, args.out)
+        print(f"publish ขึ้น Google Sheets แล้ว: {', '.join(pushed)} "
+              f"(คง Action เดิม {len(prior)} รายการ)")
     return 0
 
 
