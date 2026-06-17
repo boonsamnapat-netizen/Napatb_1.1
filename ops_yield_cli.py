@@ -34,6 +34,9 @@ DEMO = """\
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--in", dest="infile", help="text file of LINE messages")
+    ap.add_argument("--line-export", dest="export",
+                    help="raw LINE 'Save chat history' .txt export to learn from")
+    ap.add_argument("--year", type=int, help="with --line-export: keep only this year")
     ap.add_argument("--url", help="URL returning the day's messages (e.g. a "
                     "published Google Sheet CSV / Apps Script endpoint)")
     ap.add_argument("--out", default="yield.xlsx", help="workbook path")
@@ -41,6 +44,23 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-append", action="store_true",
                     help="overwrite instead of appending to existing workbook")
     args = ap.parse_args(argv)
+
+    if args.export:
+        from ops_yield.lineexport import parse_export
+        with open(args.export, encoding="utf-8") as fh:
+            records = parse_export(fh.read())
+        if args.year:
+            records = [r for r in records
+                       if r.work_date and r.work_date.year == args.year]
+        if not records:
+            print("ไม่พบรายงานใน export", file=sys.stderr)
+            return 1
+        flagged = [r for r in records if r.warnings]
+        summary = write_workbook(records, args.out, append=not args.no_append)
+        print(f"อ่าน export ได้ {len(records)} รายงาน | เครื่อง: {summary['machines']}")
+        print(f"เขียนลง {summary['path']} (รวม {summary['records_total']} แถว) "
+              f"| ต้อง review {len(flagged)} รายงาน")
+        return 0
 
     if args.demo:
         text = DEMO

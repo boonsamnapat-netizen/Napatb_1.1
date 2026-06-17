@@ -18,14 +18,28 @@ Yield = Pass / Total
 
 ## รูปแบบข้อความที่รองรับ
 
+เรียนรู้จาก LINE export จริง (กลุ่ม Super Underfill ปี 2022–2026) format ปัจจุบัน:
+
 ```
-@NapatB. Manual # (1) Underfill  Runได้ปกติค่ะ Jun 17 2026  Day
-✅️Run  95 Unit  ✅ไม่มี Fail L1  ✅ไม่มี Fail L2  ✅ไม่มี splash
+@NapatB. เครื่องAUTO Underfill #(5)
+Run ได้ปกติครับ
+Jun 17 2026 Day
+✅Run 79 Unit
+✅ไม่มี Fail L1
+❌มี Fail L2  2 Unit
+✅ไม่มี Splash
 ```
 
-parser จับ field เหล่านี้ (ทนต่อช่องว่าง/อิโมจิ/ลำดับที่เพี้ยน):
-หมายเลขเครื่อง `(1)`, Mode (Manual/Auto), Issue type, วันที่, กะ (Day/Night),
-จำนวนผลิต `95 Unit`, Fail L1, Fail L2, splash — `ไม่มี`→0, มีตัวเลข→ตัวเลขนั้น
+parser จับ field พวกนี้และทนต่อความหลากหลายจริงที่เจอในข้อมูล:
+- หมายเลขเครื่อง: `#(5)` / `# (1)` / `Manual# 2` / `(7)` หรือ**ข้อความไทย** `#(เคาท์ดาวน์)`
+- Mode `Manual` หรือ `AUTO` (มักติดกับไทย `เครื่องAUTO`)
+- จำนวนผลิต `✅Run 79 Unit` (ยึดกับคำว่า Run)
+- Fail L1 / Fail L2 / Splash — **ตัวเลขอยู่หลัง label**: `มี Fail L1 1 Unit`→1,
+  `ไม่มี ...`→0, label ที่ไม่มีในข้อความ→0, label เว้นวรรค `Fail L 2` ก็จับได้
+- ดักกับดัก `(ไม่มีทาง)มี Fail L1 1 Unit` → ได้ 1 (ตัวเลขชนะคำว่า "ไม่มี")
+
+**ความแม่นยำบนข้อมูลจริงปี 2026: parse สะอาด 96%** (1810/1888 รายงาน) ที่เหลือถูก
+flag ไว้ให้ตรวจเอง เช่นเขียน "มี" แต่ไม่ใส่ตัวเลข หรือหัวข้อความไม่มีเลขเครื่อง
 
 ## โครงสร้างทั้งระบบ
 
@@ -45,6 +59,10 @@ LINE กลุ่ม
 ## วิธีใช้
 
 ```bash
+# เรียนรู้/สร้างย้อนหลังจากไฟล์ LINE export (Save chat history) ทั้งไฟล์
+python ops_yield_cli.py --line-export chat.txt --out yield.xlsx
+python ops_yield_cli.py --line-export chat.txt --year 2026 --out yield.xlsx
+
 # ลองด้วยข้อมูลตัวอย่างในตัว
 python ops_yield_cli.py --demo --out yield.xlsx
 
@@ -71,6 +89,7 @@ Web App → เอา /exec URL ไปใส่เป็น Webhook URL → publ
 | ไฟล์ | หน้าที่ |
 |---|---|
 | `parser.py` | แปลงข้อความ 1 ข้อความ → `Record` (จับ field + คำนวณ pass/yield) |
+| `lineexport.py` | อ่านไฟล์ LINE export `.txt` → แยกข้อความ multi-line → `Record` |
 | `workbook.py` | เขียน/อัปเดต `.xlsx` 3 ชีต: Records, Daily Yield, Weekly Yield |
 | `collector.gs` | Google Apps Script รับ webhook จาก LINE → เก็บลง Sheet |
 | `../ops_yield_cli.py` | CLI รวบข้อความทั้งวัน → workbook |

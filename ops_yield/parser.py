@@ -1,23 +1,32 @@
 """Parse operator LINE messages into structured production records.
 
-A typical message (Thai mixed with English) looks like::
+Learned from a real LINE export (group "Super Underfill", 2022-2026). The
+*current* daily-report format (mid-2026) looks like::
 
-    @NapatB. Manual # (1) Underfill  Runได้ปกติค่ะ Jun 17 2026  Day
-    ✅️Run  95 Unit  ✅ไม่มี Fail L1  ✅ไม่มี Fail L2  ✅ไม่มี splash
+    @NapatB. เครื่องAUTO Underfill #(5)
+    Run ได้ปกติครับ
+    Jun 17 2026 Day
+    ✅Run 79 Unit
+    ✅ไม่มี Fail L1
+    ❌มี Fail L2  2 Unit
+    ✅ไม่มี Splash
 
-The parser is deliberately tolerant: operators type by hand, so spacing,
-emoji and ordering wobble. We anchor on stable keywords (machine number,
-``Unit``, ``Fail L1/L2``, ``splash`` and a date) and pull the value that
-sits next to each keyword.
+Real-world wobble this parser handles (all seen in the export):
+  * machine number in ``#(5)`` / ``# (1)`` / ``(7)`` — or Thai text ``#(เคาท์ดาวน์)``
+  * mode ``Manual`` or ``AUTO`` (often glued: ``เครื่องAUTO``)
+  * a *fail count comes AFTER the label*: ``มี Fail L1  1 Unit`` -> 1
+  * ``ไม่มี <label>`` -> 0 (none); the ✅/❌ emoji is NOT reliable
+  * label spacing/gluing: ``Fail L 2``, ``ไม่มีFail L2``, ``ไม่มีSplash``
+  * the ``(ไม่มีทาง)มี Fail L1 1 Unit`` trap — an explicit count wins over "ไม่มี"
 
-Yield is **Pass / Total** where ``Pass = Total - (Fail L1 + Fail L2 + splash)``.
+Yield = Pass / Total, Pass = Total - (Fail L1 + Fail L2 + Splash).
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 
 # ---------------------------------------------------------------------------
 # Date handling
@@ -28,57 +37,84 @@ _MONTHS = {
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
 
-# e.g. "Jun 17 2026"  or "17 Jun 2026"  or "2026-06-17"
-_DATE_MONTH_FIRST = re.compile(
-    r"\b([A-Za-z]{3,9})\.?\s+(\d{1,2})\s*,?\s+(\d{4})\b"
-)
-_DATE_DAY_FIRST = re.compile(
-    r"\b(\d{1,2})\s+([A-Za-z]{3,9})\.?\s+(\d{4})\b"
-)
+_DATE_MONTH_FIRST = re.compile(r"\b([A-Za-z]{3,9})\.?\s+(\d{1,2})\s*,?\s+(\d{4})\b")
+_DATE_DAY_FIRST = re.compile(r"\b(\d{1,2})\s+([A-Za-z]{3,9})\.?\s+(\d{4})\b")
 _DATE_ISO = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 
 
-def _find_date(text: str) -> tuple[date | None, int, int]:
-    """Return (date, start, end) for the first date found, else (None, -1, -1)."""
+def _parse_date(text: str) -> date | None:
     m = _DATE_ISO.search(text)
     if m:
-        return date(int(m.group(1)), int(m.group(2)), int(m.group(3))), m.start(), m.end()
+        return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
     m = _DATE_MONTH_FIRST.search(text)
     if m:
         mon = _MONTHS.get(m.group(1)[:3].lower())
         if mon:
-            return date(int(m.group(3)), mon, int(m.group(2))), m.start(), m.end()
+            return date(int(m.group(3)), mon, int(m.group(2)))
     m = _DATE_DAY_FIRST.search(text)
     if m:
         mon = _MONTHS.get(m.group(2)[:3].lower())
         if mon:
-            return date(int(m.group(3)), mon, int(m.group(1))), m.start(), m.end()
-    return None, -1, -1
+            return date(int(m.group(3)), mon, int(m.group(1)))
+    return None
 
 
 # ---------------------------------------------------------------------------
-# Field extraction helpers
+# Field extraction
 # ---------------------------------------------------------------------------
 
-_MACHINE = re.compile(r"#\s*\(?\s*(\d+)\s*\)?")
-_MODE = re.compile(r"\b(manual|auto|automatic)\b", re.IGNORECASE)
-_SHIFT = re.compile(r"\b(day|night|ด\s*ดึก|กลางวัน|กลางคืน)\b", re.IGNORECASE)
-_QTY = re.compile(r"(\d+)\s*(?:unit|units|ชิ้น|pcs)\b", re.IGNORECASE)
-_MACHINE_END = re.compile(r"#\s*\(?\s*\d+\s*\)?")
+# machine id inside parentheses, preferring the one near '#'
+_MACHINE_HASH = re.compile(r"#\s*\(\s*([^)\n]+?)\s*\)")
+_MACHINE_UF = re.compile(r"(?:Underfill|เครื่อง)\D{0,6}\(\s*([^)\n]+?)\s*\)")
+_MACHINE_NUM = re.compile(r"\(\s*(\d+)\s*\)")
+_MACHINE_HASH_BARE = re.compile(r"#\s*(\d+)\b")
+_PAREN = re.compile(r"\(\s*([^)\n]+?)\s*\)")
+
+_RUN_QTY = re.compile(r"Run\D{0,4}(\d+)\s*(?:Unit|unit|ชิ้น|ตัว)", re.IGNORECASE)
+_ANY_QTY = re.compile(r"(\d+)\s*(?:Unit|unit|ชิ้น|ตัว)", re.IGNORECASE)
+_SHIFT = re.compile(r"\b(day|night)\b|กลางวัน|กลางคืน|กะดึก|กะเช้า", re.IGNORECASE)
+_NUM_UNIT = re.compile(r"(\d+)\s*(?:Unit|unit|ชิ้น|ตัว)?", re.IGNORECASE)
+
+_LABELS = {
+    "fail_l1": re.compile(r"Fail\s*L\s*1", re.IGNORECASE),
+    "fail_l2": re.compile(r"Fail\s*L\s*2", re.IGNORECASE),
+    "splash": re.compile(r"splash", re.IGNORECASE),
+}
 
 
-def _count_for(label_pattern: str, text: str) -> int:
-    """Return the failure count that sits immediately before ``label``.
+def _count_label(label_re: re.Pattern, text: str) -> tuple[int, str]:
+    """Return ``(count, status)`` for a failure label.
 
-    The value must be *adjacent* to the label (only spaces between), so the
-    ``ไม่มี`` of one label can't bleed into the next. ``ไม่มี`` (none) -> 0,
-    an explicit number -> that number.
+    ``status`` is one of ``absent`` (label not in the message — operator didn't
+    track it, treated as 0), ``none`` (``ไม่มี`` -> 0), ``count`` (explicit
+    number) or ``ambiguous`` (``มี`` with no number — needs a human look).
+    The count always sits AFTER the label in this group's format.
     """
-    m = re.search(r"(ไม่มี|\d+)\s*" + label_pattern, text, re.IGNORECASE)
+    m = label_re.search(text)
     if not m:
-        return 0
-    val = m.group(1)
-    return 0 if val == "ไม่มี" else int(val)
+        return 0, "absent"
+
+    after = text[m.end():]
+    cut = len(after)
+    for other in _LABELS.values():
+        om = other.search(after)
+        if om:
+            cut = min(cut, om.start())
+    nl = after.find("\n")
+    if nl >= 0:
+        cut = min(cut, nl)
+    after = after[:cut]
+
+    num = _NUM_UNIT.search(after)
+    if num:
+        return int(num.group(1)), "count"
+
+    before = text[max(0, m.start() - 12):m.start()]
+    if "ไม่มี" in before:
+        return 0, "none"
+    if "มี" in before:
+        return 0, "ambiguous"
+    return 0, "none"
 
 
 @dataclass
@@ -86,7 +122,7 @@ class Record:
     """One parsed production report."""
 
     work_date: date | None
-    machine: int | None
+    machine: str
     mode: str
     issue_type: str
     shift: str
@@ -96,6 +132,7 @@ class Record:
     splash: int
     status_note: str
     raw: str
+    sender: str = ""
     warnings: list[str] = field(default_factory=list)
 
     @property
@@ -113,75 +150,85 @@ class Record:
         return self.passed / self.total
 
 
-def parse_message(text: str) -> Record:
+def parse_message(text: str, *, sender: str = "") -> Record:
     """Parse a single LINE message into a :class:`Record`."""
-
     raw = text.strip()
     warnings: list[str] = []
 
-    machine = None
-    m = _MACHINE.search(raw)
+    # --- machine -----------------------------------------------------------
+    # The machine id lives in parentheses in the header (first non-empty line):
+    # ``#(5)`` / ``# (1)`` / ``Manual(1)`` / ``Underfil (เคาท์ดาวน์)``.
+    machine = ""
+    first_line = next((l for l in raw.splitlines() if l.strip()), "")
+    m = (_MACHINE_NUM.search(first_line) or _PAREN.search(first_line)
+         or _MACHINE_HASH_BARE.search(first_line))
     if m:
-        machine = int(m.group(1))
+        machine = m.group(1).strip()
     else:
-        warnings.append("ไม่พบหมายเลขเครื่อง (machine #)")
+        for pat in (_MACHINE_HASH, _MACHINE_HASH_BARE, _MACHINE_UF, _MACHINE_NUM):
+            m = pat.search(raw)
+            if m:
+                machine = m.group(1).strip()
+                break
+    machine = machine.strip(" ()[].#-•·")
+    if "เคาท์ดาวน์" in machine or "เคาน์ดาวน์" in machine:
+        machine = "เคาท์ดาวน์"
+    if not machine or machine.lower() in {"emoji", "sticker", "photo"}:
+        machine = ""
+        warnings.append("ไม่พบหมายเลขเครื่อง")
 
-    mode = ""
-    m = _MODE.search(raw)
-    if m:
-        mode = m.group(1).capitalize()
-        if mode.lower() == "automatic":
-            mode = "Auto"
+    # --- mode --------------------------------------------------------------
+    low = raw.lower()
+    mode = "Manual" if "manual" in low else ("Auto" if "auto" in low else "")
 
+    # --- issue type --------------------------------------------------------
+    issue_type = "Underfill" if "underfill" in low else ""
+
+    # --- shift -------------------------------------------------------------
     shift = ""
     m = _SHIFT.search(raw)
     if m:
-        s = m.group(1).lower()
-        shift = "Day" if s in {"day", "กลางวัน"} else "Night"
+        token = (m.group(0) or "").lower()
+        shift = "Night" if token in {"night", "กลางคืน", "กะดึก"} else "Day"
 
-    work_date, date_start, _ = _find_date(raw)
+    # --- date --------------------------------------------------------------
+    work_date = _parse_date(raw)
     if work_date is None:
-        warnings.append("ไม่พบวันที่ (date)")
+        warnings.append("ไม่พบวันที่")
 
+    # --- run quantity (total) ---------------------------------------------
     total = 0
-    m = _QTY.search(raw)
+    m = _RUN_QTY.search(raw)
     if m:
         total = int(m.group(1))
     else:
-        warnings.append("ไม่พบจำนวนผลิต (Unit/total)")
-
-    fail_l1 = _count_for(r"Fail\s*L\s*1", raw)
-    fail_l2 = _count_for(r"Fail\s*L\s*2", raw)
-    splash = _count_for(r"splash", raw)
-
-    # The segment between the machine number and the date holds the issue
-    # type (a leading English word) followed by a free-text status note.
-    issue_type = ""
-    status_note = ""
-    mend = _MACHINE_END.search(raw)
-    seg_start = mend.end() if mend else 0
-    seg_end = date_start if date_start >= 0 else len(raw)
-    if seg_end > seg_start:
-        segment = raw[seg_start:seg_end].strip()
-        im = re.match(r"([A-Za-z][A-Za-z /]*?)(?:\s{2,}|\s(?=[฀-๿]))", segment)
-        if im:
-            issue_type = im.group(1).strip()
-            status_note = segment[im.end():].strip()
+        m = _ANY_QTY.search(raw)
+        if m:
+            total = int(m.group(1))
         else:
-            status_note = segment
+            warnings.append("ไม่พบจำนวนผลิต (Run/Unit)")
+
+    # --- failures ----------------------------------------------------------
+    # Missing labels are treated as 0 (operators don't always report every
+    # category); only an explicit "มี" with no number is worth flagging.
+    fail_l1, s1 = _count_label(_LABELS["fail_l1"], raw)
+    fail_l2, s2 = _count_label(_LABELS["fail_l2"], raw)
+    splash, ss = _count_label(_LABELS["splash"], raw)
+    for status, name in ((s1, "Fail L1"), (s2, "Fail L2"), (ss, "Splash")):
+        if status == "ambiguous":
+            warnings.append(f"{name}: เขียน 'มี' แต่ไม่ระบุจำนวน")
+
+    # --- status note -------------------------------------------------------
+    status_note = ""
+    for line in raw.splitlines():
+        if "ปกติ" in line:
+            status_note = re.sub(r"^[\s@.✅❌✓​️]+", "", line).strip()
+            break
 
     rec = Record(
-        work_date=work_date,
-        machine=machine,
-        mode=mode,
-        issue_type=issue_type,
-        shift=shift,
-        total=total,
-        fail_l1=fail_l1,
-        fail_l2=fail_l2,
-        splash=splash,
-        status_note=status_note,
-        raw=raw,
+        work_date=work_date, machine=machine, mode=mode, issue_type=issue_type,
+        shift=shift, total=total, fail_l1=fail_l1, fail_l2=fail_l2,
+        splash=splash, status_note=status_note, raw=raw, sender=sender,
         warnings=warnings,
     )
     if rec.passed < 0:
@@ -189,12 +236,14 @@ def parse_message(text: str) -> Record:
     return rec
 
 
-def parse_messages(text: str) -> list[Record]:
-    """Parse a blob of messages.
+def looks_like_report(text: str) -> bool:
+    """Heuristic: is this message a daily production report (current format)?"""
+    low = text.lower()
+    return ("fail l" in low or "splash" in low) and bool(_ANY_QTY.search(text))
 
-    Messages are separated by blank lines, or by a new ``@`` mention at the
-    start of a line (the LINE bot prefixes each report with a mention).
-    """
+
+def parse_messages(text: str) -> list[Record]:
+    """Parse a blob of messages separated by blank lines or new ``@`` mentions."""
     blocks: list[str] = []
     current: list[str] = []
     for line in text.splitlines():
@@ -210,5 +259,4 @@ def parse_messages(text: str) -> list[Record]:
             current.append(line)
     if current:
         blocks.append("\n".join(current))
-
     return [parse_message(b) for b in blocks if b.strip()]

@@ -43,6 +43,12 @@ def _iso_week(d: date) -> str:
     return f"{y}-W{w:02d}"
 
 
+def _machine_key(m):
+    """Natural sort: numeric machines first (1,2,..10), text after."""
+    s = str(m)
+    return (0, int(s)) if s.isdigit() else (1, s)
+
+
 def _style_header(ws, ncols: int) -> None:
     for c in range(1, ncols + 1):
         cell = ws.cell(row=1, column=c)
@@ -116,7 +122,7 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True) -> 
         all_rows.append(row)
 
     # sort by date then machine for a tidy sheet
-    all_rows.sort(key=lambda r: (str(r[0]), r[2] if r[2] is not None else 0))
+    all_rows.sort(key=lambda r: (str(r[0]), _machine_key(r[2])))
 
     wb = Workbook()
     _build_records_sheet(wb, all_rows)
@@ -167,7 +173,7 @@ def _build_matrix_sheet(
         machine = row[2]
         total = row[6] or 0
         passed = row[10] or 0
-        if not period or machine is None:
+        if not period or not machine:
             continue
         machines.add(machine)
         agg[period][machine][0] += passed
@@ -175,7 +181,7 @@ def _build_matrix_sheet(
         agg[period]["ALL"][0] += passed
         agg[period]["ALL"][1] += total
 
-    machine_cols = sorted(machines)
+    machine_cols = sorted(machines, key=_machine_key)
     ws = wb.create_sheet(title)
     header = [key_title] + [f"เครื่อง {m}" for m in machine_cols] + ["รวม (All)"]
     ws.append(header)
