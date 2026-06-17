@@ -178,6 +178,18 @@ def main():
     if args.tf:
         config["signal"]["entry_timeframe"] = args.tf
 
+    # Resolve the live account value: --account > Telegram-set file > config.
+    account_value = args.account
+    acct_file = Path(config.get("signal", {}).get("account_file", "data/account.json"))
+    if account_value is None and acct_file.exists():
+        try:
+            account_value = float(json.loads(acct_file.read_text()).get("account"))
+            console.print(f"[dim]มูลค่าพอร์ตจาก Telegram: ${account_value:g}[/dim]")
+        except Exception:  # noqa: BLE001
+            pass
+    if account_value is None:
+        account_value = config.get("signal", {}).get("account_size", 100.0)
+
     from src.signal.scanner import Scanner
 
     scanner = Scanner(config)
@@ -194,13 +206,13 @@ def main():
             console.print(f"[dim]Loaded {len(universe)} symbols from {args.csv_universe}[/dim]")
         rows = scanner.scan_universe(
             universe, htf_rule=args.htf, use_news=args.news,
-            account_size=args.account, risk_per_trade_pct=args.risk,
+            account_size=account_value, risk_per_trade_pct=args.risk,
         )
     else:
         try:
             rows = scanner.scan_live(
                 symbols=args.symbols, use_news=args.news,
-                account_size=args.account, risk_per_trade_pct=args.risk,
+                account_size=account_value, risk_per_trade_pct=args.risk,
             )
         except Exception as e:  # noqa: BLE001
             console.print(f"[red]Live scan failed:[/red] {e}")
@@ -232,19 +244,25 @@ def main():
             console.print(f"\n[bold]{enters}[/bold] ENTER setups found. "
                           f"[dim]Saved → {out_path}[/dim]")
             if args.portfolio:
-                _render_portfolio(config, rows, args.account)
+                _render_portfolio(config, rows, account_value)
 
-    if args.notify and any(r.decision == "ENTER" for r in rows):
+    enter_rows = [r for r in rows if r.decision == "ENTER"]
+    if args.notify and enter_rows:
         from src.signal.notifier import TelegramNotifier
 
-        plan = None
-        if args.portfolio:
-            from src.signal.portfolio import PortfolioRiskManager
-            acct = args.account or config.get("signal", {}).get("account_size", 1000.0)
-            plan = PortfolioRiskManager(config).allocate(rows, acct)
         tg = TelegramNotifier(config)
-        sent = tg.send(TelegramNotifier.format_scan(rows, plan))
-        console.print(f"[dim]Telegram: {'sent' if sent else 'dry-run/not configured'}[/dim]")
+        leverage = config.get("signal", {}).get("leverage", 10)
+        # one compact message per ENTER signal
+        for r in enter_rows:
+            tg.send(TelegramNotifier.format_signal_compact(r.signal, leverage))
+        # one portfolio overview message when sizing several positions together
+        if args.portfolio and len(enter_rows) > 1:
+            from src.signal.portfolio import PortfolioRiskManager
+            plan = PortfolioRiskManager(config).allocate(rows, account_value)
+            msg = TelegramNotifier.format_portfolio(plan)
+            if msg:
+                tg.send(msg)
+        console.print(f"[dim]Telegram: ส่ง {len(enter_rows)} สัญญาณ[/dim]")
 
     if args.summary and rows:
         _send_summary(config, scanner, rows, universe)

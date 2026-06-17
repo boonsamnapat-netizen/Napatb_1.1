@@ -102,6 +102,43 @@ class TelegramNotifier:
         lines.append(_DISCLAIMER)
         return "\n".join(lines)
 
+    # ---- compact single-signal alert ------------------------------------
+    @staticmethod
+    def format_signal_compact(sig, leverage: float = 10.0) -> str:
+        d = sig.to_dict()
+        pp = d.get("position_plan", {})
+        di = _DIR_EMOJI.get(d["direction"], "")
+        dir_th = _DIR_TH.get(d["direction"], d["direction"])
+        entry = d.get("entry") or 0.0
+
+        def mv(p):  # move % in the trade's favour direction
+            if not entry:
+                return 0.0
+            return (p - entry) / entry * 100 if d["direction"] == "LONG" \
+                else (entry - p) / entry * 100
+
+        lines = [
+            f"{_DEC_EMOJI['ENTER']} {di} {dir_th} {d['symbol']} · {d['entry_timeframe']} "
+            f"· มั่นใจ {d['confidence']}",
+            f"Entry: {entry:g}",
+            f"SL: {d['stop_loss']:g}  ({mv(d['stop_loss']):+.1f}%)",
+        ]
+        for i, tp in enumerate(pp.get("take_profits", []), 1):
+            lines.append(
+                f"TP{i}: {tp['price']:g}  ({mv(tp['price']):+.1f}%, ปิด {tp['allocation_pct']}%)"
+            )
+        notional = pp.get("position_value", 0.0) or 0.0
+        margin = notional / leverage if leverage else notional
+        lines.append(
+            f"Leverage: {leverage:g}x · Margin: ${margin:.2f} · "
+            f"ขนาด {pp.get('position_size_units')}"
+        )
+        lines.append(
+            f"Risk/trade: {pp.get('risk_per_trade_pct')}% (${pp.get('risk_amount')}) "
+            f"· R:R {pp.get('blended_rr')} · EV {pp.get('expected_value_r')}R"
+        )
+        return "\n".join(lines)
+
     # ---- daily market summary -------------------------------------------
     @staticmethod
     def _advice(overview, news, events, enters) -> list[str]:
@@ -170,6 +207,26 @@ class TelegramNotifier:
                 lines.append(f"  • {t}")
         lines.append("")
         lines.append(_DISCLAIMER)
+        return "\n".join(lines)
+
+    # ---- portfolio overview (multi-position) ----------------------------
+    @staticmethod
+    def format_portfolio(plan) -> str:
+        if not plan.allocations:
+            return ""
+        lines = [
+            f"\U0001F4E6 พอร์ตรวม: ความเสี่ยง {plan.total_risk_pct:.1f}% "
+            f"(ซื้อ {plan.long_risk_pct:.1f}/ขาย {plan.short_risk_pct:.1f}) · "
+            f"เลเวอเรจรวม {plan.gross_leverage:.1f}x"
+        ]
+        for a in plan.allocations:
+            ad = a.to_dict()
+            lines.append(
+                f"  {ad['symbol']} {_DIR_TH.get(a.direction, a.direction)}: "
+                f"เสี่ยง {ad['risk_pct']}% · ${ad['notional']:g}"
+            )
+        for n in plan.notes:
+            lines.append(f"  • {n}")
         return "\n".join(lines)
 
     # ---- scan ENTER digest ----------------------------------------------
