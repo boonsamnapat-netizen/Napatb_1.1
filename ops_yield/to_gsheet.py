@@ -56,6 +56,16 @@ def read_actions(spreadsheet) -> dict:
     return out
 
 
+def read_messages(spreadsheet, sheet_name: str = "Messages",
+                  text_col: str = "text") -> str:
+    """Pull the LINE messages collector.gs logged into the ``Messages`` tab and
+    return them as one blob (blank-line separated) for ``parse_messages``."""
+    ws = spreadsheet.worksheet(sheet_name)
+    rows = ws.get_all_records()  # first row = headers: timestamp, source, text
+    texts = [str(r.get(text_col, "")).strip() for r in rows]
+    return "\n\n".join(t for t in texts if t)
+
+
 def _sheet_values(ws) -> list[list]:
     """openpyxl worksheet -> 2D list of JSON-safe values for gspread."""
     out = []

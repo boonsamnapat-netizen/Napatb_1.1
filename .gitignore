@@ -16,3 +16,6 @@ data/exports/*.json
 # ops_yield generated workbooks
 yield.xlsx
 *.xlsx
+
+# ops_yield Google service-account key (never commit)
+service_account.json

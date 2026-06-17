@@ -46,7 +46,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--gsheet-url", help="also publish to this Google Sheet URL")
     ap.add_argument("--gsheet-creds", default="service_account.json",
                     help="service-account JSON for --gsheet-url")
+    ap.add_argument("--gsheet-source", action="store_true",
+                    help="read the day's messages from the 'Messages' tab of "
+                    "--gsheet-url (fed by collector.gs) instead of a file/url")
     args = ap.parse_args(argv)
+
+    # --- connect to Google Sheets (master) first, if requested -------------
+    sh = None
+    if args.gsheet_url:
+        from ops_yield import to_gsheet
+        sh = to_gsheet.connect(args.gsheet_creds, args.gsheet_url)
 
     # --- obtain records ----------------------------------------------------
     if args.export:
@@ -57,7 +66,13 @@ def main(argv: list[str] | None = None) -> int:
             records = [r for r in records
                        if r.work_date and r.work_date.year == args.year]
     else:
-        if args.demo:
+        if args.gsheet_source:
+            if sh is None:
+                ap.error("--gsheet-source ต้องใช้คู่กับ --gsheet-url")
+                return 2
+            from ops_yield import to_gsheet
+            text = to_gsheet.read_messages(sh)
+        elif args.demo:
             text = DEMO
         elif args.infile:
             with open(args.infile, encoding="utf-8") as fh:
@@ -67,7 +82,8 @@ def main(argv: list[str] | None = None) -> int:
             with urlopen(args.url, timeout=30) as resp:
                 text = resp.read().decode("utf-8")
         else:
-            ap.error("ต้องระบุ --in <file>, --url <url>, --line-export หรือ --demo")
+            ap.error("ต้องระบุ --in <file>, --url <url>, --line-export, "
+                     "--gsheet-source หรือ --demo")
             return 2
         records = parse_messages(text)
 
@@ -76,11 +92,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     # --- pull back Action/Status from Google Sheets (master) ---------------
-    sh = None
     prior = {}
-    if args.gsheet_url:
+    if sh is not None:
         from ops_yield import to_gsheet
-        sh = to_gsheet.connect(args.gsheet_creds, args.gsheet_url)
         prior = to_gsheet.read_actions(sh)
 
     # --- build workbook ----------------------------------------------------
