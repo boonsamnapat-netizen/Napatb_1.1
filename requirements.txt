@@ -8,3 +8,4 @@ aiohttp>=3.9.0
 tqdm>=4.66.0
 rich>=13.0.0
 feedparser>=6.0.0   # optional: news RSS overlay
+matplotlib>=3.7.0   # optional: setup charts in Telegram alerts

@@ -50,9 +50,20 @@ def main():
     cfg = yaml.safe_load(open("config/config.yaml"))
     leverage = cfg.get("signal", {}).get("leverage", 10)
     tg = TelegramNotifier(cfg)
+    sig = build_sample()
     body = "🧪 ตัวอย่างสัญญาณ (ไม่ใช่สัญญาณจริง)\n\n" + \
-        TelegramNotifier.format_signal_compact(build_sample(), leverage)
-    ok = tg.send(body)
+        TelegramNotifier.format_signal_compact(sig, leverage)
+
+    # try to attach a sample chart with the levels near the recent price
+    try:
+        from src.signal.charting import make_chart
+        from src.signal.market_data import generate_demo_ohlcv
+        df = generate_demo_ohlcv(bars=300, seed=5, trend=0.0006, vol=0.012,
+                                 start_price=61000, freq="4h")
+        path = make_chart("BTCUSDT", df, sig.to_dict(), "/tmp/sample_chart.png")
+        ok = tg.send_photo(path, body)
+    except Exception:  # noqa: BLE001
+        ok = tg.send(body)
     print("configured & sent" if ok else "DRY-RUN: secrets not set (or send failed)")
 
 

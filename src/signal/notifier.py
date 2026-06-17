@@ -62,6 +62,45 @@ class TelegramNotifier:
             logger.warning("Telegram send failed: %s", e)
             return False
 
+    def send_photo(self, image_path: str, caption: str = "") -> bool:
+        """Send a PNG with a caption via sendPhoto (multipart, stdlib only)."""
+        if not self.enabled:
+            logger.info("Telegram not configured (dry-run). Photo: %s\n%s",
+                        image_path, caption)
+            print(f"\n----- TELEGRAM PHOTO (dry-run): {image_path} -----\n" +
+                  caption + "\n------------------------------")
+            return False
+        try:
+            with open(image_path, "rb") as f:
+                img = f.read()
+        except OSError as e:
+            logger.warning("chart not found: %s", e)
+            return self.send(caption)
+
+        boundary = "----napatb" + os.urandom(8).hex()
+
+        def field(name: str, value: str) -> bytes:
+            return (f"--{boundary}\r\nContent-Disposition: form-data; "
+                    f'name="{name}"\r\n\r\n{value}\r\n').encode("utf-8")
+
+        body = field("chat_id", str(self.chat_id))
+        if caption:
+            body += field("caption", caption[:1024])
+        body += (f"--{boundary}\r\nContent-Disposition: form-data; "
+                 'name="photo"; filename="chart.png"\r\n'
+                 "Content-Type: image/png\r\n\r\n").encode("utf-8")
+        body += img + b"\r\n" + f"--{boundary}--\r\n".encode("utf-8")
+
+        url = f"https://api.telegram.org/bot{self.token}/sendPhoto"
+        req = Request(url, data=body, headers={
+            "Content-Type": f"multipart/form-data; boundary={boundary}"})
+        try:
+            urlopen(req, timeout=20)
+            return True
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Telegram sendPhoto failed: %s", e)
+            return self.send(caption)
+
     # ---- single signal (ENTER alert) ------------------------------------
     @staticmethod
     def format_signal(sig) -> str:

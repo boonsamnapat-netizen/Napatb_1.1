@@ -165,6 +165,8 @@ def main():
                     help="send a Telegram alert summarising ENTER setups")
     ap.add_argument("--summary", action="store_true",
                     help="send a daily market summary (regime, breadth, news, events) every run")
+    ap.add_argument("--charts", action="store_true",
+                    help="attach a setup chart (candles + EMA + Entry/SL/TP) to each ENTER alert")
     ap.add_argument("--account", type=float)
     ap.add_argument("--risk", type=float)
     ap.add_argument("--news", action="store_true", help="enable news overlay (slower)")
@@ -252,9 +254,22 @@ def main():
 
         tg = TelegramNotifier(config)
         leverage = config.get("signal", {}).get("leverage", 10)
-        # one compact message per ENTER signal
+        # one compact message (with optional chart) per ENTER signal
         for r in enter_rows:
-            tg.send(TelegramNotifier.format_signal_compact(r.signal, leverage))
+            caption = TelegramNotifier.format_signal_compact(r.signal, leverage)
+            chart_path = None
+            if args.charts and universe is not None and r.symbol in universe:
+                try:
+                    from src.signal.charting import make_chart
+                    chart_path = str(reports_dir / f"chart_{r.symbol}_{stamp}.png")
+                    make_chart(r.symbol, universe[r.symbol], r.signal.to_dict(), chart_path)
+                except Exception as e:  # noqa: BLE001
+                    console.print(f"[dim]chart failed for {r.symbol}: {e}[/dim]")
+                    chart_path = None
+            if chart_path:
+                tg.send_photo(chart_path, caption)
+            else:
+                tg.send(caption)
         # one portfolio overview message when sizing several positions together
         if args.portfolio and len(enter_rows) > 1:
             from src.signal.portfolio import PortfolioRiskManager
