@@ -48,11 +48,12 @@ def build_daily_summary(records: list[Record], prior_actions: dict,
     for r in day:
         agg[r.machine][0] += r.passed or 0
         agg[r.machine][1] += r.total or 0
-    low = []
-    for m, (p, t) in agg.items():
-        if t and p / t < _LOW_YIELD:
-            low.append((p / t, m))
-    low.sort()
+
+    def _machine_key(m: str):
+        # sort numeric machine ids ascending, text ids last (alpha)
+        import re
+        digits = re.findall(r"\d+", m)
+        return (0, int(digits[0])) if digits else (1, m)
 
     fail_reports = sum(1 for r in day if r.fails > 0)
     fail_units = sum(r.fails for r in day)
@@ -66,11 +67,19 @@ def build_daily_summary(records: list[Record], prior_actions: dict,
         f"📊 <b>สรุป Yield วันที่ {latest.isoformat()}</b>",
         f"รายงาน: {len(day)} ใบ | เครื่อง {len(agg)} เครื่อง",
         f"Yield รวมวันนี้: <b>{y*100:.1f}%</b>" if y is not None else "Yield รวม: —",
-        f"🔧 รายงานที่มี fail: {fail_reports} ใบ ({fail_units} units)",
+        "",
+        "<b>รายเครื่อง:</b>",
     ]
-    if low:
-        worst = ", ".join(f"{m} ({r*100:.0f}%)" for r, m in low[:5])
-        lines.append(f"⚠️ เครื่อง yield ต่ำ: {worst}")
+    for m in sorted(agg, key=_machine_key):
+        p, t = agg[m]
+        if not t:
+            lines.append(f"  • #{m}: — (ไม่มีจำนวน)")
+            continue
+        ratio = p / t
+        flag = " ⚠️" if ratio < _LOW_YIELD else ""
+        lines.append(f"  • #{m}: {ratio*100:.1f}% ({p}/{t}){flag}")
+    lines.append("")
+    lines.append(f"🔧 รายงานที่มี fail: {fail_reports} ใบ ({fail_units} units)")
     lines.append(f"📋 เหตุการณ์ค้างแก้ (ยังไม่ Done): {open_issues}")
     if sheet_url:
         lines.append(f'🔗 <a href="{sheet_url}">เปิด Google Sheet</a>')
