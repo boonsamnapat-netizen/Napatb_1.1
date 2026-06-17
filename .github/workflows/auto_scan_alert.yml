@@ -24,6 +24,9 @@ on:
       test_notify:
         description: "Send a test message to confirm Telegram works"
         default: "false"
+      sample_signal:
+        description: "Send a SAMPLE ENTER signal (preview, not a real signal)"
+        default: "false"
   schedule:
     - cron: '0 1 * * *'    # daily 01:00 UTC (08:00 Thailand), after the daily close
 
@@ -59,6 +62,13 @@ jobs:
           ok = tg.send("✅ Crypto signal bot connected — alerts are live. (test)")
           print("configured & sent" if ok else "DRY-RUN: secrets not set (or send failed)")
           EOF
+
+      - name: Send sample ENTER signal
+        if: ${{ github.event.inputs.sample_signal == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python examples/sample_alert.py
 
       - name: Fetch fresh daily data
         run: |
