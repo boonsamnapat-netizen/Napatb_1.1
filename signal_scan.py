@@ -107,17 +107,17 @@ def _build_overview(rows, market_regime) -> dict:
     for r in rows:
         decisions[r.decision] = decisions.get(r.decision, 0) + 1
     if bull > bear * 1.3:
-        bias = "LONG-leaning"
+        bias = "เอียงซื้อ (ขาขึ้น)"
     elif bear > bull * 1.3:
-        bias = "SHORT-leaning"
+        bias = "เอียงขาย (ขาลง)"
     else:
-        bias = "mixed / range"
+        bias = "ไม่ชัด / ออกข้าง"
     if market_regime is None:
-        regime_label = "n/a"
+        regime_label = "ไม่ทราบ"
     elif market_regime > 0:
-        regime_label = "\U0001F7E2 Risk-ON (BTC above 200-EMA)"
+        regime_label = "\U0001F7E2 แข็งแรง — BTC อยู่เหนือเส้นเฉลี่ย 200 วัน (เทรนด์ใหญ่ขาขึ้น)"
     else:
-        regime_label = "\U0001F534 Risk-OFF (BTC below 200-EMA)"
+        regime_label = "\U0001F534 อ่อนแอ — BTC อยู่ใต้เส้นเฉลี่ย 200 วัน (เทรนด์ใหญ่ขาลง)"
     return {
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "regime_label": regime_label,
