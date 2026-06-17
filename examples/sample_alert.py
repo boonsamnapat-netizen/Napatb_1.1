@@ -21,7 +21,7 @@ from src.signal.signal_engine import Signal
 def build_sample() -> Signal:
     entry, sl = 65000.0, 63200.0
     risk = entry - sl
-    account, risk_pct = 1000.0, 1.0
+    account, risk_pct = 100.0, 2.0
     risk_amount = account * risk_pct / 100
     size = risk_amount / risk
     tps = [
@@ -37,8 +37,10 @@ def build_sample() -> Signal:
         current_price=entry, entry=entry, entry_zone=[64600.0, 65000.0], stop_loss=sl,
     )
     sig.position_plan = {
-        "take_profits": tps, "risk_per_trade_pct": 1.0, "risk_amount": round(risk_amount, 2),
-        "position_size_units": round(size, 8), "suggested_leverage": 1.0,
+        "take_profits": tps, "risk_per_trade_pct": risk_pct,
+        "risk_amount": round(risk_amount, 2),
+        "position_size_units": round(size, 8),
+        "position_value": round(size * entry, 2), "suggested_leverage": 1.0,
         "blended_rr": round(blended, 2), "expected_value_r": 0.72,
     }
     return sig
@@ -46,9 +48,10 @@ def build_sample() -> Signal:
 
 def main():
     cfg = yaml.safe_load(open("config/config.yaml"))
+    leverage = cfg.get("signal", {}).get("leverage", 10)
     tg = TelegramNotifier(cfg)
     body = "🧪 ตัวอย่างสัญญาณ (ไม่ใช่สัญญาณจริง)\n\n" + \
-        TelegramNotifier.format_signal(build_sample())
+        TelegramNotifier.format_signal_compact(build_sample(), leverage)
     ok = tg.send(body)
     print("configured & sent" if ok else "DRY-RUN: secrets not set (or send failed)")
 
