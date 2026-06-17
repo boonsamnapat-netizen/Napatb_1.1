@@ -7,6 +7,11 @@ are illustrative — this is NOT a live trade signal.
 
 from datetime import datetime, timezone
 
+import sys
+import pathlib
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+
 import yaml
 
 from src.signal.notifier import TelegramNotifier
