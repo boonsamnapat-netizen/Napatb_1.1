@@ -7,6 +7,24 @@ description: Operational runbook for the Napatb crypto signal system (src/signal
 
 Read `CLAUDE.md` first for the map. This is the how-to for common tasks.
 
+## Hard-won findings — DON'T re-research (it costs many tokens)
+- **Network**: the dev sandbox reaches ONLY `raw.githubusercontent.com`. Blocked:
+  all exchanges (Binance/Kraken/Bybit/OKX/KuCoin…), Yahoo (query1/2), CoinGecko,
+  CoinCap, gist, api.github.com. Don't re-probe them. → real data via the
+  Actions+yfinance workflow (runner has internet) committed to `data/real/`.
+- **Data**: yfinance 1d goes back to 2018; 1h is limited to ~730d. Crypto OHLCV on
+  raw.github is mostly git-LFS (pointer only, unusable); coinmetrics csv is daily
+  close-only (no OHLC).
+- **Validated edge** (real data, net of fees, walk-forward OOS) — already measured,
+  reuse don't redo: 1h is NEGATIVE after fees; 4h ≈ +0.10R, 1d ≈ +0.20R in-sample;
+  majors OOS ≈ +0.087R; maker exits/entries → ≈ +0.137R; liquidity filter (majors)
+  +0.108R vs alts +0.058R. A/B winners: Supertrend (small+), ATR trailing 2.5R
+  (1.5R hurts), cooldown OFF, BTC regime gate (small+, protective). These are the
+  current defaults in `config/config.yaml`.
+- **OSS sources mined** (Freqtrade/Jesse): pairlist/liquidity filters, protections
+  (cooldown/stoploss-guard/max-drawdown), ATR trailing, regime filter, Supertrend.
+  Conclusion: edge is in risk/exit/universe, not the entry indicator.
+
 ## Run locally (sandbox: no exchange access → use CSV/demo)
 ```bash
 python signal_cli.py BTCUSDT --demo                 # one signal, offline

@@ -49,6 +49,17 @@ Account $100, risk 2%/trade, leverage 10 (display/margin only — risk is set by
   Secrets: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. Inputs: `test_notify`,
   `sample_signal`. Portfolio value: message the bot `/port 150` → `data/account.json`.
 
+## Gotchas — don't re-research (these cost the most tokens to rediscover)
+- **Sandbox network allows ONLY `raw.githubusercontent.com`.** Exchanges (Binance/
+  Kraken/Bybit/OKX), Yahoo, CoinGecko, gist, api.github are all blocked — do NOT
+  re-probe them. Real data comes from the Actions+yfinance workflow → committed
+  CSVs in `data/real/`; for ad-hoc use `--csv*` or `--demo`.
+- yfinance: 1d history is long (since 2018); 1h capped at ~730 days.
+- Scheduled/dispatch workflows must live on the **default branch** to run; checkout
+  inside the workflow uses the feature branch for code.
+- GitHub MCP `list_workflow_runs` output is huge → saved to a file; parse with python.
+- Full operational details + workarounds: skill `crypto-signal-ops`.
+
 ## More detail (read on demand, not by default)
 - `docs/SIGNAL_SYSTEM.md` — concise system reference
 - `docs/TELEGRAM_SETUP.md` — bot setup (token, chat id, /port)
