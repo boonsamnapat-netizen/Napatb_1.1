@@ -46,7 +46,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pandas numpy pyyaml rich yfinance feedparser
+        run: pip install pandas numpy pyyaml rich yfinance feedparser matplotlib
 
       - name: Send Telegram test message
         if: ${{ github.event.inputs.test_notify == 'true' }}
@@ -106,7 +106,7 @@ jobs:
           HTF: ${{ github.event.inputs.htf || 'W' }}
         run: |
           python signal_scan.py --csv-dir data/real/crypto --htf "$HTF" \
-            --portfolio --summary --notify --top 10
+            --portfolio --summary --notify --charts --top 10
 
       - name: Persist portfolio value
         run: |
