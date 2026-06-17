@@ -25,12 +25,13 @@ from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
+from .analysis import by_operator, by_shift, cause_summary
 from .parser import Record
 
 RECORD_HEADERS = [
     "Date", "Week", "Machine", "Mode", "Issue Type", "Shift",
     "Total", "Fail L1", "Fail L2", "Splash", "Pass", "Yield",
-    "Status Note", "Warnings", "Raw",
+    "Status Note", "Warnings", "Raw", "Sender",
 ]
 
 _HEADER_FILL = PatternFill("solid", fgColor="1F4E78")
@@ -92,6 +93,7 @@ def _record_to_row(rec: Record) -> list:
         rec.status_note,
         "; ".join(rec.warnings),
         rec.raw,
+        rec.sender,
     ]
 
 
@@ -124,10 +126,16 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True) -> 
     # sort by date then machine for a tidy sheet
     all_rows.sort(key=lambda r: (str(r[0]), _machine_key(r[2])))
 
+    # facts: (shift, total, passed, sender, notes)
+    facts = [(r[5], r[6] or 0, r[10] or 0, r[15], r[12]) for r in all_rows]
+
     wb = Workbook()
     _build_records_sheet(wb, all_rows)
     machines = _build_matrix_sheet(wb, all_rows, "Daily Yield", key_index=0, key_title="Date")
     _build_matrix_sheet(wb, all_rows, "Weekly Yield", key_index=1, key_title="Week")
+    _build_shift_sheet(wb, facts)
+    _build_operator_sheet(wb, facts)
+    _build_cause_sheet(wb, facts)
 
     wb.save(path)
     return {
@@ -147,7 +155,7 @@ def _build_records_sheet(wb: Workbook, rows: list[list]) -> None:
         ws.append(row)
         ws.cell(row=ws.max_row, column=yield_col).number_format = _PCT
     _style_header(ws, len(RECORD_HEADERS))
-    widths = [12, 9, 8, 8, 12, 7, 7, 8, 8, 8, 7, 8, 24, 22, 40]
+    widths = [12, 9, 8, 8, 12, 7, 7, 8, 8, 8, 7, 8, 24, 22, 40, 16]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
     if ws.max_row > 1:
@@ -212,3 +220,51 @@ def _build_matrix_sheet(
             ),
         )
     return machines
+
+
+def _summary_rows(ws, agg: dict, key_title: str, *, sort_by_reports: bool):
+    """Write a (key, reports, total, pass, fail, yield) table from an agg dict."""
+    ws.append([key_title, "Reports", "Total", "Pass", "Fail", "Yield"])
+    items = agg.items()
+    if sort_by_reports:
+        items = sorted(items, key=lambda kv: kv[1][0], reverse=True)
+    else:
+        items = sorted(items)
+    grand = [0, 0, 0]
+    yield_col = 6
+    for key, (reports, total, passed) in items:
+        ws.append([key, reports, total, passed, total - passed,
+                   passed / total if total else None])
+        ws.cell(row=ws.max_row, column=yield_col).number_format = _PCT
+        grand[0] += reports
+        grand[1] += total
+        grand[2] += passed
+    ws.append([])
+    r, t, p = grand
+    ws.append(["รวม (All)", r, t, p, t - p, p / t if t else None])
+    ws.cell(row=ws.max_row, column=yield_col).number_format = _PCT
+    ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+    _style_header(ws, 6)
+    for i, w in enumerate([18, 9, 8, 8, 8, 9], start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+
+def _build_shift_sheet(wb: Workbook, facts) -> None:
+    _summary_rows(wb.create_sheet("By Shift"), by_shift(facts), "Shift",
+                  sort_by_reports=False)
+
+
+def _build_operator_sheet(wb: Workbook, facts) -> None:
+    _summary_rows(wb.create_sheet("By Operator"), by_operator(facts), "Operator",
+                  sort_by_reports=True)
+
+
+def _build_cause_sheet(wb: Workbook, facts) -> None:
+    ws = wb.create_sheet("Fail Causes")
+    ws.append(["สาเหตุ (Cause)", "จำนวนรายงานที่กล่าวถึง", "Fail units รวม"])
+    rows = sorted(cause_summary(facts).items(), key=lambda kv: kv[1][1], reverse=True)
+    for cat, (reports, fail_units) in rows:
+        ws.append([cat, reports, fail_units])
+    _style_header(ws, 3)
+    for i, w in enumerate([24, 24, 16], start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w

@@ -67,8 +67,15 @@ def _parse_date(text: str) -> date | None:
 _MACHINE_HASH = re.compile(r"#\s*\(\s*([^)\n]+?)\s*\)")
 _MACHINE_UF = re.compile(r"(?:Underfill|เครื่อง)\D{0,6}\(\s*([^)\n]+?)\s*\)")
 _MACHINE_NUM = re.compile(r"\(\s*(\d+)\s*\)")
-_MACHINE_HASH_BARE = re.compile(r"#\s*(\d+)\b")
+_MACHINE_HASH_BARE = re.compile(r"#\s*(\d+)")
+# number glued to / after the word Underfil(l), no '#': "Underfill3", "Underfil 4"
+_MACHINE_AFTER_UF = re.compile(r"Underfil{1,2}\s*#?\s*(\d+)", re.IGNORECASE)
 _PAREN = re.compile(r"\(\s*([^)\n]+?)\s*\)")
+_NO_MORE = re.compile(r"ไม่\s*มี")  # "ไม่มี" / "ไม่ มี" -> none
+# lines that are part of the report structure (skipped when collecting notes)
+_STRUCT_LINE = re.compile(
+    r"@NapatB|\bRun\b|Unit|Fail\s*L|plash|\bDay\b|\bNight\b|Manual|AUTO"
+    r"|เครื่อง|Underfil|ปกติ|\d{4}", re.IGNORECASE)
 
 _RUN_QTY = re.compile(r"Run\D{0,4}(\d+)\s*(?:Unit|unit|ชิ้น|ตัว)", re.IGNORECASE)
 _ANY_QTY = re.compile(r"(\d+)\s*(?:Unit|unit|ชิ้น|ตัว)", re.IGNORECASE)
@@ -109,8 +116,8 @@ def _count_label(label_re: re.Pattern, text: str) -> tuple[int, str]:
     if num:
         return int(num.group(1)), "count"
 
-    before = text[max(0, m.start() - 12):m.start()]
-    if "ไม่มี" in before:
+    before = text[max(0, m.start() - 14):m.start()]
+    if _NO_MORE.search(before):
         return 0, "none"
     if "มี" in before:
         return 0, "ambiguous"
@@ -161,11 +168,13 @@ def parse_message(text: str, *, sender: str = "") -> Record:
     machine = ""
     first_line = next((l for l in raw.splitlines() if l.strip()), "")
     m = (_MACHINE_NUM.search(first_line) or _PAREN.search(first_line)
-         or _MACHINE_HASH_BARE.search(first_line))
+         or _MACHINE_HASH_BARE.search(first_line)
+         or _MACHINE_AFTER_UF.search(first_line))
     if m:
         machine = m.group(1).strip()
     else:
-        for pat in (_MACHINE_HASH, _MACHINE_HASH_BARE, _MACHINE_UF, _MACHINE_NUM):
+        for pat in (_MACHINE_HASH, _MACHINE_HASH_BARE, _MACHINE_AFTER_UF,
+                    _MACHINE_UF, _MACHINE_NUM):
             m = pat.search(raw)
             if m:
                 machine = m.group(1).strip()
@@ -218,12 +227,17 @@ def parse_message(text: str, *, sender: str = "") -> Record:
         if status == "ambiguous":
             warnings.append(f"{name}: เขียน 'มี' แต่ไม่ระบุจำนวน")
 
-    # --- status note -------------------------------------------------------
-    status_note = ""
+    # --- notes / cause lines ----------------------------------------------
+    # Keep the free-text lines that aren't structural (header/date/run/fail) —
+    # these carry the cause ("กาวไหลช้า", "OT สลับเบรค", "ซ่อมเครื่อง", ...).
+    note_lines = []
     for line in raw.splitlines():
-        if "ปกติ" in line:
-            status_note = re.sub(r"^[\s@.✅❌✓​️]+", "", line).strip()
-            break
+        if _STRUCT_LINE.search(line):
+            continue
+        cleaned = line.strip(" *#✅❌✓​️.()")
+        if cleaned:
+            note_lines.append(cleaned)
+    status_note = "; ".join(note_lines)
 
     rec = Record(
         work_date=work_date, machine=machine, mode=mode, issue_type=issue_type,
