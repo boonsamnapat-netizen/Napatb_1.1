@@ -12,10 +12,12 @@ name: ops-yield-daily
 #   GOOGLE_SERVICE_ACCOUNT_JSON — full contents of the service-account JSON key
 #                                 (the sheet must be Shared with that account as Editor)
 #   OPS_YIELD_GSHEET_URL        — the Google Sheet URL (Messages tab in, dashboards out)
+#   TELEGRAM_BOT_TOKEN          — (optional) for the end-of-day Telegram summary
+#   TELEGRAM_CHAT_ID            — (optional) chat to post the summary to
 
 on:
   schedule:
-    - cron: '0 13 * * *'   # 13:00 UTC = 20:00 Thailand (end of day)
+    - cron: '0 1 * * *'    # 01:00 UTC = 08:00 Thailand (morning recap)
   workflow_dispatch:
     inputs:
       ref:
@@ -44,14 +46,17 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > service_account.json
 
-      - name: Build workbook and publish to Google Sheets
+      - name: Build workbook, publish to Google Sheets, post Telegram summary
         env:
           OPS_YIELD_GSHEET_URL: ${{ secrets.OPS_YIELD_GSHEET_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python ops_yield_cli.py \
             --gsheet-source \
             --gsheet-url "$OPS_YIELD_GSHEET_URL" \
             --gsheet-creds service_account.json \
+            --telegram \
             --out yield.xlsx
 
       - name: Keep service-account key out of any artifact

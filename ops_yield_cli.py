@@ -14,6 +14,7 @@ collector writes this file; this CLI parses it and updates the workbook.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from ops_yield import parse_messages, write_workbook
@@ -49,6 +50,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--gsheet-source", action="store_true",
                     help="read the day's messages from the 'Messages' tab of "
                     "--gsheet-url (fed by collector.gs) instead of a file/url")
+    ap.add_argument("--telegram", action="store_true",
+                    help="send a Thai end-of-day summary to Telegram "
+                    "(uses env TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID)")
     args = ap.parse_args(argv)
 
     # --- connect to Google Sheets (master) first, if requested -------------
@@ -111,6 +115,19 @@ def main(argv: list[str] | None = None) -> int:
         pushed = to_gsheet.push_workbook(sh, args.out)
         print(f"publish ขึ้น Google Sheets แล้ว: {', '.join(pushed)} "
               f"(คง Action เดิม {len(prior)} รายการ)")
+
+    # --- Telegram end-of-day summary ---------------------------------------
+    if args.telegram:
+        from ops_yield import notify
+        msg = notify.build_daily_summary(records, prior, args.gsheet_url)
+        token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        chat = os.environ.get("TELEGRAM_CHAT_ID")
+        if token and chat:
+            notify.send_telegram(token, chat, msg)
+            print("ส่งสรุปเข้า Telegram แล้ว")
+        else:
+            print("(ไม่พบ TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID — แสดงสรุปแทน)")
+            print(msg)
     return 0
 
 
