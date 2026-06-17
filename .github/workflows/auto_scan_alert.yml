@@ -10,7 +10,9 @@ name: Auto Scan & Telegram Alert
 #     TELEGRAM_CHAT_ID     (your chat id)
 #   Without the secrets the job still runs and logs the message (dry-run).
 #
-# To verify the Telegram connection: Run workflow with test_notify = true.
+# Update your portfolio value any time by messaging the bot:  /port 150
+# Verify the connection: Run workflow with test_notify = true.
+# Preview an ENTER alert: Run workflow with sample_signal = true.
 
 on:
   workflow_dispatch:
@@ -18,9 +20,6 @@ on:
       htf:
         description: "Higher timeframe resample rule"
         default: "W"
-      account:
-        description: "Account size for sizing"
-        default: "1000"
       test_notify:
         description: "Send a test message to confirm Telegram works"
         default: "false"
@@ -31,7 +30,7 @@ on:
     - cron: '0 1 * * *'    # daily 01:00 UTC (08:00 Thailand), after the daily close
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   scan:
@@ -70,6 +69,11 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python examples/sample_alert.py
 
+      - name: Sync portfolio value from Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python examples/update_account.py
+
       - name: Fetch fresh daily data
         run: |
           python - <<'EOF'
@@ -100,7 +104,18 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           HTF: ${{ github.event.inputs.htf || 'W' }}
-          ACCOUNT: ${{ github.event.inputs.account || '1000' }}
         run: |
           python signal_scan.py --csv-dir data/real/crypto --htf "$HTF" \
-            --account "$ACCOUNT" --portfolio --summary --notify --top 10
+            --portfolio --summary --notify --top 10
+
+      - name: Persist portfolio value
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add data/account.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update portfolio value from Telegram"
+            git push origin HEAD:claude/crypto-signal-system-kcf8vq
+          else
+            echo "No account change to persist."
+          fi
