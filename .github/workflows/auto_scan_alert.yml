@@ -1,14 +1,16 @@
 name: Auto Scan & Telegram Alert
 
-# Runs the scanner on fresh daily data and pushes ENTER setups to Telegram —
-# fully hands-off. Daily timeframe is used because it has the strongest net-of-
-# fees edge (~+0.20R/trade) and is low-noise (one quiet run per day).
+# Runs the scanner on fresh daily data and pushes a market summary + any ENTER
+# setups to Telegram — fully hands-off. Daily timeframe is used because it has
+# the strongest net-of-fees edge (~+0.20R/trade) and is low-noise.
 #
 # Setup (one time):
 #   Repo Settings -> Secrets and variables -> Actions -> add:
 #     TELEGRAM_BOT_TOKEN   (from @BotFather)
 #     TELEGRAM_CHAT_ID     (your chat id)
 #   Without the secrets the job still runs and logs the message (dry-run).
+#
+# To verify the Telegram connection: Run workflow with test_notify = true.
 
 on:
   workflow_dispatch:
@@ -19,8 +21,11 @@ on:
       account:
         description: "Account size for sizing"
         default: "1000"
+      test_notify:
+        description: "Send a test message to confirm Telegram works"
+        default: "false"
   schedule:
-    - cron: '0 1 * * *'    # daily 01:00 UTC, just after the daily candle close
+    - cron: '0 1 * * *'    # daily 01:00 UTC (08:00 Thailand), after the daily close
 
 permissions:
   contents: read
@@ -39,7 +44,21 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pandas numpy pyyaml rich yfinance
+        run: pip install pandas numpy pyyaml rich yfinance feedparser
+
+      - name: Send Telegram test message
+        if: ${{ github.event.inputs.test_notify == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import yaml
+          from src.signal.notifier import TelegramNotifier
+          tg = TelegramNotifier(yaml.safe_load(open('config/config.yaml')))
+          ok = tg.send("✅ Crypto signal bot connected — alerts are live. (test)")
+          print("configured & sent" if ok else "DRY-RUN: secrets not set (or send failed)")
+          EOF
 
       - name: Fetch fresh daily data
         run: |
@@ -66,7 +85,7 @@ jobs:
                   print(f"  {t}: SKIP ({e})")
           EOF
 
-      - name: Scan and alert
+      - name: Scan, summary and alert
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -74,4 +93,4 @@ jobs:
           ACCOUNT: ${{ github.event.inputs.account || '1000' }}
         run: |
           python signal_scan.py --csv-dir data/real/crypto --htf "$HTF" \
-            --account "$ACCOUNT" --portfolio --notify --top 10
+            --account "$ACCOUNT" --portfolio --summary --notify --top 10
