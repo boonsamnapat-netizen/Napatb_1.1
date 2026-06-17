@@ -84,6 +84,43 @@ class TelegramNotifier:
         return "\n".join(lines)
 
     @staticmethod
+    def format_market_summary(overview: dict, top_rows, news=None, events=None) -> str:
+        b = overview.get("breadth", {})
+        c = overview.get("decisions", {})
+        lines = [
+            f"\U0001F4CA Daily Market Summary — {overview.get('date','')}",
+            f"Regime: {overview.get('regime_label','n/a')}",
+            f"Breadth: \U0001F7E2{b.get('bullish',0)} / \U0001F534{b.get('bearish',0)} / "
+            f"⚪{b.get('neutral',0)} of {b.get('total',0)}  →  bias {overview.get('bias','—')}",
+            f"Setups: {c.get('ENTER',0)} ENTER · {c.get('WAIT',0)} WAIT · {c.get('AVOID',0)} AVOID",
+        ]
+        if top_rows:
+            lines.append("Top watch:")
+            for r in top_rows:
+                d = r.to_dict()
+                di = _DIR_EMOJI.get(d["direction"], "")
+                rr = f"R:R {d['blended_rr']}" if d.get("entry") else ""
+                lines.append(
+                    f"  {di} {d['symbol']} {d['direction']} · conf {d['confidence']} "
+                    f"{rr} · {d['decision']}"
+                )
+        if news and news.get("summary"):
+            s = news.get("sentiment_score", 0.0)
+            mood = "bullish" if s > 0.15 else "bearish" if s < -0.15 else "neutral"
+            line = f"\U0001F4F0 News: {mood} ({s:+.2f}) — {news['summary']}"
+            if news.get("high_impact_event"):
+                line += "  ⚠️ high-impact"
+            lines.append(line)
+        if events:
+            lines.append("\U0001F4C5 Upcoming high-impact events:")
+            for e in events[:4]:
+                lines.append(f"  • {e.get('name')} @ {e.get('time')}")
+        if c.get("ENTER", 0) == 0:
+            lines.append("\nNo high-conviction ENTER today — stay patient.")
+        lines.append("\nDecision-support only. Manage your risk.")
+        return "\n".join(lines)
+
+    @staticmethod
     def format_scan(rows, plan=None, top: int = 5) -> str:
         enters = [r for r in rows if r.decision == "ENTER"]
         if not enters:

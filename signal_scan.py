@@ -99,6 +99,56 @@ def _render_portfolio(config, rows, account):
         console.print(f"  [dim]• {n}[/dim]")
 
 
+def _build_overview(rows, market_regime) -> dict:
+    bull = sum(1 for r in rows if r.composite > 0.1)
+    bear = sum(1 for r in rows if r.composite < -0.1)
+    neutral = len(rows) - bull - bear
+    decisions = {"ENTER": 0, "WAIT": 0, "AVOID": 0}
+    for r in rows:
+        decisions[r.decision] = decisions.get(r.decision, 0) + 1
+    if bull > bear * 1.3:
+        bias = "LONG-leaning"
+    elif bear > bull * 1.3:
+        bias = "SHORT-leaning"
+    else:
+        bias = "mixed / range"
+    if market_regime is None:
+        regime_label = "n/a"
+    elif market_regime > 0:
+        regime_label = "\U0001F7E2 Risk-ON (BTC above 200-EMA)"
+    else:
+        regime_label = "\U0001F534 Risk-OFF (BTC below 200-EMA)"
+    return {
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "regime_label": regime_label,
+        "bias": bias,
+        "breadth": {"bullish": bull, "bearish": bear, "neutral": neutral, "total": len(rows)},
+        "decisions": decisions,
+    }
+
+
+def _send_summary(config, scanner, rows, universe):
+    from src.signal.notifier import TelegramNotifier
+
+    market_regime = scanner._market_regime(universe) if universe else None
+    overview = _build_overview(rows, market_regime)
+
+    news = None
+    try:
+        na = scanner.engine.news_provider.assess("BTC")
+        news = na.to_dict()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        events = [e.to_dict() for e in scanner.engine.calendar.upcoming("BTC", within_hours=48)]
+    except Exception:  # noqa: BLE001
+        events = []
+
+    msg = TelegramNotifier.format_market_summary(overview, rows[:5], news, events)
+    sent = TelegramNotifier(config).send(msg)
+    console.print(f"[dim]Telegram summary: {'sent' if sent else 'dry-run/not configured'}[/dim]")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Signal market scanner")
     ap.add_argument("--config", "-c", default="config/config.yaml")
@@ -113,6 +163,8 @@ def main():
                     help="build a portfolio risk allocation across the ENTER setups")
     ap.add_argument("--notify", action="store_true",
                     help="send a Telegram alert summarising ENTER setups")
+    ap.add_argument("--summary", action="store_true",
+                    help="send a daily market summary (regime, breadth, news, events) every run")
     ap.add_argument("--account", type=float)
     ap.add_argument("--risk", type=float)
     ap.add_argument("--news", action="store_true", help="enable news overlay (slower)")
@@ -129,6 +181,7 @@ def main():
     from src.signal.scanner import Scanner
 
     scanner = Scanner(config)
+    universe = None
 
     if args.csv_dir or args.csv_universe:
         from src.signal.market_data import load_csv_dir, load_csv_universe
@@ -192,6 +245,10 @@ def main():
         tg = TelegramNotifier(config)
         sent = tg.send(TelegramNotifier.format_scan(rows, plan))
         console.print(f"[dim]Telegram: {'sent' if sent else 'dry-run/not configured'}[/dim]")
+
+    if args.summary and rows:
+        _send_summary(config, scanner, rows, universe)
+
     console.print(
         "\n[dim]Ranked by setup quality (confluence + R:R + EV), not by who is "
         "pumping hardest. Decision-support only — manage your own risk.[/dim]"
