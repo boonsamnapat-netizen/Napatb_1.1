@@ -13,3 +13,6 @@ reports/*.md
 !reports/.gitkeep
 data/exports/*.json
 !data/exports/sample_export.json
+# ops_yield generated workbooks
+yield.xlsx
+*.xlsx

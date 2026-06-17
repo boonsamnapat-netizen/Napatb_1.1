@@ -1,0 +1,5 @@
+@NapatB. Manual # (1) Underfill  Runได้ปกติค่ะ Jun 17 2026  Day  ✅️Run  95 Unit  ✅ไม่มี Fail L1  ✅ไม่มี Fail L2  ✅ไม่มี splash
+
+@NapatB. Manual # (2) Underfill  Runปกติ Jun 17 2026  Day  ✅️Run  120 Unit  ❌ 3 Fail L1  ✅ไม่มี Fail L2  ❌ 2 splash
+
+@NapatB. Auto # (3) Crack  มีปัญหานิดหน่อย Jun 17 2026  Night  ✅️Run  80 Unit  ✅ไม่มี Fail L1  ❌ 5 Fail L2  ✅ไม่มี splash
