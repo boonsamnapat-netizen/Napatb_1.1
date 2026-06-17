@@ -9,6 +9,8 @@ name: Auto Scan & Telegram Alert
 #     TELEGRAM_BOT_TOKEN   (from @BotFather)
 #     TELEGRAM_CHAT_ID     (your chat id)
 #   Without the secrets the job still runs and logs the message (dry-run).
+#
+# To verify the Telegram connection: Run workflow with test_notify = true.
 
 on:
   workflow_dispatch:
@@ -19,6 +21,9 @@ on:
       account:
         description: "Account size for sizing"
         default: "1000"
+      test_notify:
+        description: "Send a test message to confirm Telegram works"
+        default: "false"
   schedule:
     - cron: '0 1 * * *'    # daily 01:00 UTC, just after the daily candle close
 
@@ -40,6 +45,20 @@ jobs:
 
       - name: Install dependencies
         run: pip install pandas numpy pyyaml rich yfinance
+
+      - name: Send Telegram test message
+        if: ${{ github.event.inputs.test_notify == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import yaml
+          from src.signal.notifier import TelegramNotifier
+          tg = TelegramNotifier(yaml.safe_load(open('config/config.yaml')))
+          ok = tg.send("✅ Crypto signal bot connected — alerts are live. (test)")
+          print("configured & sent" if ok else "DRY-RUN: secrets not set (or send failed)")
+          EOF
 
       - name: Fetch fresh daily data
         run: |
