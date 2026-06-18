@@ -28,7 +28,7 @@ from collections import defaultdict
 from datetime import date, datetime
 
 from openpyxl import Workbook, load_workbook
-from openpyxl.chart import LineChart, Reference
+from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -193,6 +193,7 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True,
     _build_matrix_sheet(wb, all_rows, "Quarterly Yield",
                         period_func=fiscal.quarter, key_title="Quarter (FY)",
                         chart=True)
+    _build_dashboard_sheet(wb, all_rows)
     n_issues = _build_issue_log(wb, all_rows, actions)
     _build_shift_sheet(wb, facts)
     _build_operator_sheet(wb, facts)
@@ -315,6 +316,126 @@ def _add_trend_chart(ws, title: str, *, n_rows: int, all_col: int) -> None:
     ch.set_categories(cats)
     anchor = f"{get_column_letter(all_col + 2)}2"
     ws.add_chart(ch, anchor)
+
+
+# Fixed layout for the Dashboard tab (both the openpyxl charts below and the
+# Google-Sheets native charts in to_gsheet.py rely on these positions).
+DASH_T1_COL = 1          # per-machine table: A..D  (Machine, Pass, Fail, Yield)
+DASH_T2_COL = 6          # root-cause table:  F..L  (Date, L1, L2, Splash, 3×%MA)
+DASH_ROOT_DAYS = 30      # how many recent active days the root-cause table covers
+_MA_WINDOW = 7
+
+
+def _moving_avg(vals: list, w: int = _MA_WINDOW) -> list:
+    out = []
+    for i in range(len(vals)):
+        window = vals[max(0, i - w + 1):i + 1]
+        out.append(sum(window) / len(window) if window else 0.0)
+    return out
+
+
+def _build_dashboard_sheet(wb: Workbook, rows: list[list]) -> None:
+    """A visual tab: per-machine pass/fail+yield (latest day) and a root-cause
+    time series, each backed by a small table and an embedded combo chart."""
+    ws = wb.create_sheet("Dashboard")
+
+    # ---- Table 1: per-machine pass/fail/yield for the latest day -----------
+    dates = [str(r[0]) for r in rows if r[0]]
+    latest = max(dates) if dates else ""
+    agg: dict = defaultdict(lambda: [0, 0])  # machine -> [pass, fail]
+    for r in rows:
+        if str(r[0]) != latest or not r[2]:
+            continue
+        passed = r[10] or 0
+        fails = (r[7] or 0) + (r[8] or 0) + (r[9] or 0)
+        agg[r[2]][0] += passed
+        agg[r[2]][1] += fails
+    machine_cols = sorted(agg, key=_machine_key)
+
+    ws.cell(row=1, column=DASH_T1_COL, value=f"เครื่อง ({latest})")
+    ws.cell(row=1, column=DASH_T1_COL + 1, value="Pass")
+    ws.cell(row=1, column=DASH_T1_COL + 2, value="Fail")
+    ws.cell(row=1, column=DASH_T1_COL + 3, value="Yield")
+    for i, m in enumerate(machine_cols, start=2):
+        p, fl = agg[m]
+        ws.cell(row=i, column=DASH_T1_COL, value=m)
+        ws.cell(row=i, column=DASH_T1_COL + 1, value=p)
+        ws.cell(row=i, column=DASH_T1_COL + 2, value=fl)
+        c = ws.cell(row=i, column=DASH_T1_COL + 3,
+                    value=(p / (p + fl) if (p + fl) else None))
+        c.number_format = _PCT
+    t1_last = len(machine_cols) + 1
+
+    # ---- Table 2: root-cause counts + %defect-rate MA, last N active days --
+    byday: dict = defaultdict(lambda: [0, 0, 0, 0])  # date -> [L1, L2, Splash, total]
+    for r in rows:
+        if not r[0]:
+            continue
+        d = str(r[0])
+        byday[d][0] += r[7] or 0
+        byday[d][1] += r[8] or 0
+        byday[d][2] += r[9] or 0
+        byday[d][3] += r[6] or 0
+    days = sorted(byday)[-DASH_ROOT_DAYS:]
+    tot = [byday[d][3] or 1 for d in days]
+    ma = {j: _moving_avg([byday[d][j] / t for d, t in zip(days, tot)])
+          for j in range(3)}
+
+    heads2 = ["Date", "Fail L1", "Fail L2", "Splash",
+              "L1 %def (MA7)", "L2 %def (MA7)", "Splash %def (MA7)"]
+    for j, h in enumerate(heads2):
+        ws.cell(row=1, column=DASH_T2_COL + j, value=h)
+    for i, d in enumerate(days, start=2):
+        ws.cell(row=i, column=DASH_T2_COL, value=d)
+        for j in range(3):
+            ws.cell(row=i, column=DASH_T2_COL + 1 + j, value=byday[d][j])
+        for j in range(3):
+            c = ws.cell(row=i, column=DASH_T2_COL + 4 + j, value=ma[j][i - 2])
+            c.number_format = _PCT
+    t2_last = len(days) + 1
+
+    _style_header(ws, DASH_T2_COL + len(heads2) - 1)
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions[get_column_letter(DASH_T2_COL)].width = 12
+
+    # ---- Chart 1: clustered Pass/Fail columns + Yield line (2nd axis) -------
+    bar = BarChart()
+    bar.type = "col"
+    bar.grouping = "clustered"
+    bar.title = f"Per-machine pass/fail + yield — {latest}"
+    bar.height, bar.width = 9, 20
+    bar.add_data(Reference(ws, min_col=DASH_T1_COL + 1, max_col=DASH_T1_COL + 2,
+                           min_row=1, max_row=t1_last), titles_from_data=True)
+    bar.set_categories(Reference(ws, min_col=DASH_T1_COL, min_row=2, max_row=t1_last))
+    yline = LineChart()
+    yline.add_data(Reference(ws, min_col=DASH_T1_COL + 3, min_row=1, max_row=t1_last),
+                   titles_from_data=True)
+    yline.y_axis.axId = 200
+    yline.y_axis.title = "Yield"
+    yline.y_axis.numFmt = "0%"
+    bar.y_axis.crosses = "max"
+    bar += yline
+    ws.add_chart(bar, f"A{t1_last + 3}")
+
+    # ---- Chart 2: stacked root-cause columns + %defect MA lines (2nd axis) --
+    sbar = BarChart()
+    sbar.type = "col"
+    sbar.grouping = "stacked"
+    sbar.overlap = 100
+    sbar.title = "Root-cause tracker — fail units & %defect rate (MA7)"
+    sbar.height, sbar.width = 9, 24
+    sbar.add_data(Reference(ws, min_col=DASH_T2_COL + 1, max_col=DASH_T2_COL + 3,
+                            min_row=1, max_row=t2_last), titles_from_data=True)
+    sbar.set_categories(Reference(ws, min_col=DASH_T2_COL, min_row=2, max_row=t2_last))
+    rline = LineChart()
+    rline.add_data(Reference(ws, min_col=DASH_T2_COL + 4, max_col=DASH_T2_COL + 6,
+                             min_row=1, max_row=t2_last), titles_from_data=True)
+    rline.y_axis.axId = 201
+    rline.y_axis.title = "% defect (MA7)"
+    rline.y_axis.numFmt = "0%"
+    sbar.y_axis.crosses = "max"
+    sbar += rline
+    ws.add_chart(sbar, f"A{t1_last + 21}")
 
 
 def _summary_rows(ws, agg: dict, key_title: str, *, sort_by_reports: bool):

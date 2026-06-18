@@ -82,7 +82,8 @@ def push_workbook(spreadsheet, xlsx_path: str) -> list[str]:
     """Overwrite each tab of ``spreadsheet`` with the xlsx's sheets."""
     wb = load_workbook(xlsx_path)
     pushed = []
-    chart_specs: dict[str, tuple[int, int]] = {}
+    line_specs: dict[str, tuple[int, int]] = {}
+    dash_spec = None
     for name in wb.sheetnames:
         values = _sheet_values(wb[name])
         rows = max(len(values), 1)
@@ -95,20 +96,37 @@ def push_workbook(spreadsheet, xlsx_path: str) -> list[str]:
         if values:
             ws.update(values, value_input_option="USER_ENTERED")
         if name in _CHART_TABS and len(values) > 1:
-            chart_specs[name] = (len(values), cols)
+            line_specs[name] = (len(values), cols)
+        if name == "Dashboard":
+            sx = wb["Dashboard"]
+            m_rows = sum(1 for r in range(2, sx.max_row + 1) if sx.cell(r, 1).value not in (None, ""))
+            d_rows = sum(1 for r in range(2, sx.max_row + 1) if sx.cell(r, 6).value not in (None, ""))
+            dash_spec = (m_rows, d_rows)
         pushed.append(name)
-    if chart_specs:
-        _rebuild_charts(spreadsheet, chart_specs)
+    _rebuild_charts(spreadsheet, line_specs, dash_spec)
     return pushed
 
 
-def _rebuild_charts(spreadsheet, specs: dict[str, tuple[int, int]]) -> None:
-    """(Re)create the embedded yield-trend chart on each period tab.
+def _src(sid, r0, r1, c0, c1):
+    return {"sheetId": sid, "startRowIndex": r0, "endRowIndex": r1,
+            "startColumnIndex": c0, "endColumnIndex": c1}
 
-    ``ws.clear()`` wipes cell values but leaves old charts behind, so we delete
-    any existing charts on these tabs first, then add a fresh LINE chart of the
-    รวม (All) column over the period labels. ``specs`` maps tab -> (n_rows, n_cols)
-    where n_rows includes the header and the All series is the last column.
+
+def _series(sid, r1, col, ctype, axis):
+    """One chart series = a single column ``col`` (0-based), rows 0..r1."""
+    return {"series": {"sourceRange": {"sources": [_src(sid, 0, r1, col, col + 1)]}},
+            "type": ctype, "targetAxis": axis}
+
+
+def _rebuild_charts(spreadsheet, line_specs: dict, dash_spec) -> None:
+    """(Re)create every embedded chart. ``ws.clear()`` wipes values but leaves
+    charts behind, so we delete existing charts on the touched tabs first.
+
+    * ``line_specs`` maps a period tab -> (n_rows, n_cols): a LINE chart of the
+      last column (รวม/All) over column A.
+    * ``dash_spec`` = (m_rows, d_rows) for the Dashboard tab: a COMBO of
+      clustered Pass/Fail columns + a Yield line, and a COMBO of stacked
+      root-cause columns + %defect-rate lines.
     """
     meta = spreadsheet.fetch_sheet_metadata(
         params={"fields": "sheets(properties(sheetId,title),charts(chartId))"})
@@ -121,31 +139,82 @@ def _rebuild_charts(spreadsheet, specs: dict[str, tuple[int, int]]) -> None:
         )
 
     requests: list[dict] = []
-    for name, (n_rows, n_cols) in specs.items():
+
+    def _wipe(name):
+        if name in by_title:
+            for cid in by_title[name][1]:
+                requests.append({"deleteEmbeddedObject": {"objectId": cid}})
+
+    # --- period line charts -------------------------------------------------
+    for name, (n_rows, n_cols) in line_specs.items():
         if name not in by_title:
             continue
-        sid, old_charts = by_title[name]
-        for cid in old_charts:
-            requests.append({"deleteEmbeddedObject": {"objectId": cid}})
+        sid = by_title[name][0]
+        _wipe(name)
         requests.append({"addChart": {"chart": {
             "spec": {
                 "title": f"{name} — รวม (All) yield trend",
                 "basicChart": {
-                    "chartType": "LINE",
-                    "legendPosition": "NO_LEGEND",
+                    "chartType": "LINE", "legendPosition": "NO_LEGEND",
                     "axis": [{"position": "LEFT_AXIS", "title": "Yield"}],
-                    "domains": [{"domain": {"sourceRange": {"sources": [{
-                        "sheetId": sid, "startRowIndex": 0, "endRowIndex": n_rows,
-                        "startColumnIndex": 0, "endColumnIndex": 1}]}}}],
+                    "domains": [{"domain": {"sourceRange": {
+                        "sources": [_src(sid, 0, n_rows, 0, 1)]}}}],
                     "series": [{"targetAxis": "LEFT_AXIS", "series": {"sourceRange": {
-                        "sources": [{
-                            "sheetId": sid, "startRowIndex": 0, "endRowIndex": n_rows,
-                            "startColumnIndex": n_cols - 1, "endColumnIndex": n_cols}]}}}],
+                        "sources": [_src(sid, 0, n_rows, n_cols - 1, n_cols)]}}}],
                     "headerCount": 1,
-                },
-            },
+                }},
             "position": {"overlayPosition": {"anchorCell": {
                 "sheetId": sid, "rowIndex": 1, "columnIndex": n_cols + 1}}},
+        }}})
+
+    # --- Dashboard combo charts --------------------------------------------
+    if dash_spec and "Dashboard" in by_title:
+        sid = by_title["Dashboard"][0]
+        m_rows, d_rows = dash_spec
+        _wipe("Dashboard")
+        t1, t2 = m_rows + 1, d_rows + 1  # endRowIndex (header + data)
+        # 1) per-machine pass/fail columns + yield line
+        requests.append({"addChart": {"chart": {
+            "spec": {
+                "title": "Per-machine pass/fail + yield (latest day)",
+                "basicChart": {
+                    "chartType": "COMBO", "legendPosition": "BOTTOM_LEGEND",
+                    "stackedType": "NOT_STACKED",
+                    "axis": [{"position": "BOTTOM_AXIS"},
+                             {"position": "LEFT_AXIS", "title": "Units"},
+                             {"position": "RIGHT_AXIS", "title": "Yield"}],
+                    "domains": [{"domain": {"sourceRange": {
+                        "sources": [_src(sid, 0, t1, 0, 1)]}}}],
+                    "series": [_series(sid, t1, 1, "COLUMN", "LEFT_AXIS"),
+                               _series(sid, t1, 2, "COLUMN", "LEFT_AXIS"),
+                               _series(sid, t1, 3, "LINE", "RIGHT_AXIS")],
+                    "headerCount": 1,
+                }},
+            "position": {"overlayPosition": {"anchorCell": {
+                "sheetId": sid, "rowIndex": m_rows + 2, "columnIndex": 0}}},
+        }}})
+        # 2) stacked root-cause columns + %defect-rate lines
+        requests.append({"addChart": {"chart": {
+            "spec": {
+                "title": "Root-cause tracker — fail units & %defect rate (MA7)",
+                "basicChart": {
+                    "chartType": "COMBO", "legendPosition": "BOTTOM_LEGEND",
+                    "stackedType": "STACKED",
+                    "axis": [{"position": "BOTTOM_AXIS"},
+                             {"position": "LEFT_AXIS", "title": "Fail units"},
+                             {"position": "RIGHT_AXIS", "title": "% defect (MA7)"}],
+                    "domains": [{"domain": {"sourceRange": {
+                        "sources": [_src(sid, 0, t2, 5, 6)]}}}],
+                    "series": [_series(sid, t2, 6, "COLUMN", "LEFT_AXIS"),
+                               _series(sid, t2, 7, "COLUMN", "LEFT_AXIS"),
+                               _series(sid, t2, 8, "COLUMN", "LEFT_AXIS"),
+                               _series(sid, t2, 9, "LINE", "RIGHT_AXIS"),
+                               _series(sid, t2, 10, "LINE", "RIGHT_AXIS"),
+                               _series(sid, t2, 11, "LINE", "RIGHT_AXIS")],
+                    "headerCount": 1,
+                }},
+            "position": {"overlayPosition": {"anchorCell": {
+                "sheetId": sid, "rowIndex": m_rows + 20, "columnIndex": 0}}},
         }}})
 
     if requests:
