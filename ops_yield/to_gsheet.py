@@ -74,10 +74,15 @@ def _sheet_values(ws) -> list[list]:
     return out
 
 
+# Tabs that get a native "All yield trend" line chart embedded next to the table.
+_CHART_TABS = ("Weekly Yield", "Monthly Yield", "Quarterly Yield")
+
+
 def push_workbook(spreadsheet, xlsx_path: str) -> list[str]:
     """Overwrite each tab of ``spreadsheet`` with the xlsx's sheets."""
     wb = load_workbook(xlsx_path)
     pushed = []
+    chart_specs: dict[str, tuple[int, int]] = {}
     for name in wb.sheetnames:
         values = _sheet_values(wb[name])
         rows = max(len(values), 1)
@@ -89,5 +94,59 @@ def push_workbook(spreadsheet, xlsx_path: str) -> list[str]:
             ws = spreadsheet.add_worksheet(title=name, rows=rows + 10, cols=cols + 2)
         if values:
             ws.update(values, value_input_option="USER_ENTERED")
+        if name in _CHART_TABS and len(values) > 1:
+            chart_specs[name] = (len(values), cols)
         pushed.append(name)
+    if chart_specs:
+        _rebuild_charts(spreadsheet, chart_specs)
     return pushed
+
+
+def _rebuild_charts(spreadsheet, specs: dict[str, tuple[int, int]]) -> None:
+    """(Re)create the embedded yield-trend chart on each period tab.
+
+    ``ws.clear()`` wipes cell values but leaves old charts behind, so we delete
+    any existing charts on these tabs first, then add a fresh LINE chart of the
+    รวม (All) column over the period labels. ``specs`` maps tab -> (n_rows, n_cols)
+    where n_rows includes the header and the All series is the last column.
+    """
+    meta = spreadsheet.fetch_sheet_metadata(
+        params={"fields": "sheets(properties(sheetId,title),charts(chartId))"})
+    by_title = {}
+    for sh in meta.get("sheets", []):
+        props = sh.get("properties", {})
+        by_title[props.get("title")] = (
+            props.get("sheetId"),
+            [c.get("chartId") for c in sh.get("charts", [])],
+        )
+
+    requests: list[dict] = []
+    for name, (n_rows, n_cols) in specs.items():
+        if name not in by_title:
+            continue
+        sid, old_charts = by_title[name]
+        for cid in old_charts:
+            requests.append({"deleteEmbeddedObject": {"objectId": cid}})
+        requests.append({"addChart": {"chart": {
+            "spec": {
+                "title": f"{name} — รวม (All) yield trend",
+                "basicChart": {
+                    "chartType": "LINE",
+                    "legendPosition": "NO_LEGEND",
+                    "axis": [{"position": "LEFT_AXIS", "title": "Yield"}],
+                    "domains": [{"domain": {"sourceRange": {"sources": [{
+                        "sheetId": sid, "startRowIndex": 0, "endRowIndex": n_rows,
+                        "startColumnIndex": 0, "endColumnIndex": 1}]}}}],
+                    "series": [{"targetAxis": "LEFT_AXIS", "series": {"sourceRange": {
+                        "sources": [{
+                            "sheetId": sid, "startRowIndex": 0, "endRowIndex": n_rows,
+                            "startColumnIndex": n_cols - 1, "endColumnIndex": n_cols}]}}}],
+                    "headerCount": 1,
+                },
+            },
+            "position": {"overlayPosition": {"anchorCell": {
+                "sheetId": sid, "rowIndex": 1, "columnIndex": n_cols + 1}}},
+        }}})
+
+    if requests:
+        spreadsheet.batch_update({"requests": requests})

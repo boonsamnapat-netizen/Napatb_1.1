@@ -28,6 +28,7 @@ from collections import defaultdict
 from datetime import date, datetime
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.chart import LineChart, Reference
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -185,11 +186,13 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True,
     machines = _build_matrix_sheet(wb, all_rows, "Daily Yield",
                                    period_func=fiscal.day, key_title="Date")
     _build_matrix_sheet(wb, all_rows, "Weekly Yield",
-                        period_func=fiscal.week, key_title="Work week (Sat–Fri)")
+                        period_func=fiscal.week, key_title="Work week (Sat–Fri)",
+                        chart=True)
     _build_matrix_sheet(wb, all_rows, "Monthly Yield",
-                        period_func=fiscal.month, key_title="Month")
+                        period_func=fiscal.month, key_title="Month", chart=True)
     _build_matrix_sheet(wb, all_rows, "Quarterly Yield",
-                        period_func=fiscal.quarter, key_title="Quarter (FY)")
+                        period_func=fiscal.quarter, key_title="Quarter (FY)",
+                        chart=True)
     n_issues = _build_issue_log(wb, all_rows, actions)
     _build_shift_sheet(wb, facts)
     _build_operator_sheet(wb, facts)
@@ -229,7 +232,8 @@ def _build_records_sheet(wb: Workbook, rows: list[list]) -> None:
 
 
 def _build_matrix_sheet(
-    wb: Workbook, rows: list[list], title: str, *, period_func, key_title: str
+    wb: Workbook, rows: list[list], title: str, *, period_func, key_title: str,
+    chart: bool = False,
 ) -> set:
     """Aggregate pass/total into a period x machine yield matrix.
 
@@ -289,7 +293,28 @@ def _build_matrix_sheet(
                 end_type="num", end_value=1.0, end_color="63BE7B",
             ),
         )
+
+    if chart and ws.max_row > 1:
+        _add_trend_chart(ws, title, n_rows=ws.max_row, all_col=len(header))
     return machines
+
+
+def _add_trend_chart(ws, title: str, *, n_rows: int, all_col: int) -> None:
+    """Embed a line chart of the รวม (All) yield trend to the right of the table."""
+    ch = LineChart()
+    ch.title = f"{title} — รวม (All)"
+    ch.style = 12
+    ch.height = 8
+    ch.width = 22
+    ch.y_axis.title = "Yield"
+    ch.y_axis.numFmt = "0%"
+    ch.x_axis.title = ws.cell(row=1, column=1).value
+    data = Reference(ws, min_col=all_col, min_row=1, max_row=n_rows)
+    cats = Reference(ws, min_col=1, min_row=2, max_row=n_rows)
+    ch.add_data(data, titles_from_data=True)
+    ch.set_categories(cats)
+    anchor = f"{get_column_letter(all_col + 2)}2"
+    ws.add_chart(ch, anchor)
 
 
 def _summary_rows(ws, agg: dict, key_title: str, *, sort_by_reports: bool):
