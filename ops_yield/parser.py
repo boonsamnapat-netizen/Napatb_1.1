@@ -182,6 +182,8 @@ def parse_message(text: str, *, sender: str = "") -> Record:
     machine = machine.strip(" ()[].#-•·")
     if "เคาท์ดาวน์" in machine or "เคาน์ดาวน์" in machine:
         machine = "เคาท์ดาวน์"
+    elif machine.isdigit():
+        machine = str(int(machine))  # drop human-typed leading zeros: 01 -> 1
     if not machine or machine.lower() in {"emoji", "sticker", "photo"}:
         machine = ""
         warnings.append("ไม่พบหมายเลขเครื่อง")
