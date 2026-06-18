@@ -1,15 +1,17 @@
 """Write parsed production records into an Excel workbook.
 
 Sheets:
-  * ``Records``      — one row per LINE message (the audit trail).
-  * ``Daily Yield``  — matrix: rows = date, columns = each machine + รวม (All).
-  * ``Weekly Yield`` — matrix: rows = ISO week, columns = each machine + รวม.
-  * ``Issue Log``    — time-series of reports that had a fail, with editable
-                       ``Action`` / ``Status`` columns the user fills in.
+  * ``Records``         — one row per LINE message (the audit trail).
+  * ``Daily Yield``     — matrix: rows = date, columns = each machine + รวม (All).
+  * ``Weekly Yield``    — matrix: rows = Sat→Fri work week (see ``fiscal``).
+  * ``Monthly Yield``   — matrix: rows = calendar month.
+  * ``Quarterly Yield`` — matrix: rows = fiscal quarter (Q1 FY27 = 4 Jul 2026).
+  * ``Issue Log``       — time-series of reports that had a fail, with editable
+                          ``Action`` / ``Status`` columns the user fills in.
   * ``By Shift`` / ``By Operator`` / ``Fail Causes`` — summaries.
 
 Yield cells aggregate by **summing pass and total** across every report for
-that machine/day (or week), then dividing — this is the correct way to combine
+that machine/period, then dividing — this is the correct way to combine
 yields, not by averaging percentages. A green→red colour scale makes low
 yield pop.
 
@@ -31,6 +33,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
+from . import fiscal
 from .analysis import by_operator, by_shift, cause_summary, classify_causes
 from .parser import Record
 
@@ -43,11 +46,6 @@ RECORD_HEADERS = [
 _HEADER_FILL = PatternFill("solid", fgColor="1F4E78")
 _HEADER_FONT = Font(color="FFFFFF", bold=True)
 _PCT = "0.0%"
-
-
-def _iso_week(d: date) -> str:
-    y, w, _ = d.isocalendar()
-    return f"{y}-W{w:02d}"
 
 
 def _machine_key(m):
@@ -85,7 +83,7 @@ def _record_to_row(rec: Record) -> list:
     d = rec.work_date
     return [
         d.isoformat() if d else "",
-        _iso_week(d) if d else "",
+        fiscal.week(d)[1] if d else "",
         rec.machine,
         rec.mode,
         rec.issue_type,
@@ -184,8 +182,14 @@ def write_workbook(records: list[Record], path: str, *, append: bool = True,
 
     wb = Workbook()
     _build_records_sheet(wb, all_rows)
-    machines = _build_matrix_sheet(wb, all_rows, "Daily Yield", key_index=0, key_title="Date")
-    _build_matrix_sheet(wb, all_rows, "Weekly Yield", key_index=1, key_title="Week")
+    machines = _build_matrix_sheet(wb, all_rows, "Daily Yield",
+                                   period_func=fiscal.day, key_title="Date")
+    _build_matrix_sheet(wb, all_rows, "Weekly Yield",
+                        period_func=fiscal.week, key_title="Work week (Sat–Fri)")
+    _build_matrix_sheet(wb, all_rows, "Monthly Yield",
+                        period_func=fiscal.month, key_title="Month")
+    _build_matrix_sheet(wb, all_rows, "Quarterly Yield",
+                        period_func=fiscal.quarter, key_title="Quarter (FY)")
     n_issues = _build_issue_log(wb, all_rows, actions)
     _build_shift_sheet(wb, facts)
     _build_operator_sheet(wb, facts)
@@ -225,43 +229,54 @@ def _build_records_sheet(wb: Workbook, rows: list[list]) -> None:
 
 
 def _build_matrix_sheet(
-    wb: Workbook, rows: list[list], title: str, *, key_index: int, key_title: str
+    wb: Workbook, rows: list[list], title: str, *, period_func, key_title: str
 ) -> set:
-    """Aggregate pass/total into a period x machine yield matrix."""
-    # agg[period][machine] = [pass_sum, total_sum]
-    agg: dict[str, dict] = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    """Aggregate pass/total into a period x machine yield matrix.
+
+    ``period_func(date) -> (sort_key, label)`` groups each record's date into a
+    period (day/week/month/quarter). Rows sort by ``sort_key`` so chronological
+    order holds even when labels (e.g. "Q1 FY28") wouldn't sort alphabetically.
+    """
+    # agg[sort_key][machine] = [pass_sum, total_sum]; labels[sort_key] = label
+    agg: dict = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    labels: dict = {}
     machines: set = set()
     for row in rows:
-        period = row[key_index]
+        ds = row[0]
         machine = row[2]
+        if not ds or not machine:
+            continue
+        d = date.fromisoformat(str(ds)[:10])
         total = row[6] or 0
         passed = row[10] or 0
-        if not period or not machine:
-            continue
+        sort_key, label = period_func(d)
+        labels[sort_key] = label
         machines.add(machine)
-        agg[period][machine][0] += passed
-        agg[period][machine][1] += total
-        agg[period]["ALL"][0] += passed
-        agg[period]["ALL"][1] += total
+        agg[sort_key][machine][0] += passed
+        agg[sort_key][machine][1] += total
+        agg[sort_key]["ALL"][0] += passed
+        agg[sort_key]["ALL"][1] += total
 
     machine_cols = sorted(machines, key=_machine_key)
     ws = wb.create_sheet(title)
     header = [key_title] + [f"เครื่อง {m}" for m in machine_cols] + ["รวม (All)"]
     ws.append(header)
 
-    for period in sorted(agg):
-        line = [period]
+    for sk in sorted(agg):
+        line = [labels[sk]]
         for m in machine_cols:
-            p, t = agg[period].get(m, [0, 0])
+            p, t = agg[sk].get(m, [0, 0])
             line.append(p / t if t else None)
-        p, t = agg[period]["ALL"]
+        p, t = agg[sk]["ALL"]
         line.append(p / t if t else None)
         ws.append(line)
         for c in range(2, len(header) + 1):
             ws.cell(row=ws.max_row, column=c).number_format = _PCT
 
     _style_header(ws, len(header))
-    ws.column_dimensions["A"].width = 12
+    ws.column_dimensions["A"].width = max(12, len(key_title) + 2,
+                                          *(len(str(lbl)) + 2 for lbl in labels.values())) \
+        if labels else 12
     for i in range(2, len(header) + 1):
         ws.column_dimensions[get_column_letter(i)].width = 11
     if ws.max_row > 1 and len(header) > 1:
