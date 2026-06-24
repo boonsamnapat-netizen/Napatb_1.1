@@ -7,6 +7,7 @@ a deterministic demo series for offline testing/preview.
 from __future__ import annotations
 
 import pathlib
+import zlib
 
 import numpy as np
 import pandas as pd
@@ -48,7 +49,9 @@ def demo_series(symbol: str = "BTCUSDT", bars: int = 320) -> pd.DataFrame:
     regular bullish divergence. Useful for previews and tests without network.
     The seed (from the symbol) only adds light, reproducible noise.
     """
-    seed = abs(hash(symbol)) % (2**32)
+    # Stable per-symbol seed (Python's hash() is process-randomised, so use a
+    # deterministic hash to keep demo data reproducible across runs/tests).
+    seed = zlib.crc32(symbol.encode())
     rng = np.random.default_rng(seed)
     base = 100 + (seed % 5000)
 

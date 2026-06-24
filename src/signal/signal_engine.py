@@ -49,6 +49,7 @@ def build_signal(
     tp_r_multiples: tuple[float, float, float] = (1.0, 2.0, 3.0),
     min_stop_pct: float = 0.3,
     entry_price: float | None = None,
+    atr_value: float | None = None,
 ) -> Signal | None:
     """Build a Signal from a (detected or supplied) divergence.
 
@@ -57,6 +58,8 @@ def build_signal(
     SL     = beyond the divergence swing, padded by `atr_buffer` * ATR
              (floored at `min_stop_pct` of price so tiny ranges can't blow up).
     TP1-3  = Entry +/- R * tp_r_multiples, where R = |Entry - SL|.
+
+    `atr_value` lets a backtest pass a precomputed ATR so this stays O(1).
     """
     if div is None:
         div = detect(df, indicator=indicator)
@@ -64,7 +67,8 @@ def build_signal(
         return None
 
     entry = float(entry_price if entry_price is not None else df["close"].iloc[-1])
-    atr = float(indicators.atr(df, atr_period).iloc[-1])
+    atr = float(atr_value if atr_value is not None
+                else indicators.atr(df, atr_period).iloc[-1])
     pad = atr * atr_buffer
     floor = entry * (min_stop_pct / 100.0)
 

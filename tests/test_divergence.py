@@ -103,6 +103,32 @@ def test_backtest_runs_and_is_consistent():
     assert min(res.rs) >= -1.5
 
 
+def test_fast_detect_matches_reference():
+    """The backtester's O(1)-per-bar detector must agree with divergence.detect
+    (kind/indicator/status and the SL-relevant swing) at every bar."""
+    from src.signal import indicators
+    from src.signal.backtester import _detect_at
+    from src.signal.divergence import _pivot_highs, _pivot_lows
+
+    df = resample(market_data.demo_series("ETHUSDT", bars=500), "1d")
+    n = len(df)
+    osc_rsi = indicators.rsi(df["close"]).to_numpy()
+    osc_macd = indicators.macd(df["close"])["macd"].to_numpy()
+    low_arr, high_arr = df["low"].to_numpy(), df["high"].to_numpy()
+    lows, highs = _pivot_lows(df["low"], 5), _pivot_highs(df["high"], 5)
+
+    for i in range(60, n - 1):
+        ref = detect(df.iloc[: i + 1], indicator="auto", pivot_window=5)
+        fast = _detect_at("auto", osc_rsi, osc_macd, lows, highs,
+                          low_arr, high_arr, df.index, i, 5, 90)
+        assert (ref is None) == (fast is None)
+        if ref is not None:
+            assert (ref.kind, ref.indicator, ref.status) == \
+                   (fast.kind, fast.indicator, fast.status)
+            used = "swing_low" if ref.kind == "bullish" else "swing_high"
+            assert abs(getattr(ref, used) - getattr(fast, used)) < 1e-9
+
+
 def test_resample_coarsens():
     df = market_data.demo_series("BTCUSDT", bars=400)
     weekly = resample(df, "1w")
