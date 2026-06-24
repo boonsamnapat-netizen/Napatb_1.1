@@ -123,7 +123,7 @@ def divergence_signals(
     highs = _pivot_highs(df["high"], pivot_window)
     index = df.index
 
-    for i in range(60, n - 1):
+    for i in range(60, n):
         div = _detect_at(indicator, osc_rsi, osc_macd, lows, highs,
                          low_arr, high_arr, index, i, pivot_window, 90)
         if div is None:
@@ -152,7 +152,7 @@ def donchian_signals(
     hh = df["high"].rolling(period).max().shift(1).to_numpy()
     ll = df["low"].rolling(period).min().shift(1).to_numpy()
     atr_arr = indicators.atr(df, 14).to_numpy()
-    for i in range(period + 1, n - 1):
+    for i in range(period + 1, n):
         if not (np.isfinite(hh[i]) and np.isfinite(hh[i - 1])):
             continue
         if close[i] > hh[i] and close[i - 1] <= hh[i - 1]:
@@ -173,7 +173,7 @@ def ema_cross_signals(
     ef = indicators.ema(df["close"], fast).to_numpy()
     es = indicators.ema(df["close"], slow).to_numpy()
     atr_arr = indicators.atr(df, 14).to_numpy()
-    for i in range(slow + 1, n - 1):
+    for i in range(slow + 1, n):
         if ef[i] > es[i] and ef[i - 1] <= es[i - 1]:
             side[i] = 1
             riskdist[i] = atr_mult * atr_arr[i]
@@ -192,7 +192,7 @@ def supertrend_signals(
     st = indicators.supertrend(df, period, mult)
     d = st["dir"].to_numpy()
     atr_arr = indicators.atr(df, 14).to_numpy()
-    for i in range(period + 1, n - 1):
+    for i in range(period + 1, n):
         if d[i] == 1 and d[i - 1] == -1:
             side[i] = 1
             riskdist[i] = atr_mult * atr_arr[i]
@@ -226,7 +226,7 @@ def ema_pullback_signals(
     low = df["low"].to_numpy()
     high = df["high"].to_numpy()
     atr_arr = indicators.atr(df, 14).to_numpy()
-    for i in range(trend + 1, n - 1):
+    for i in range(trend + 1, n):
         up = es[i] > et[i] and close[i] > et[i]
         dn = es[i] < et[i] and close[i] < et[i]
         # close crosses back above fast EMA after dipping to it -> resume up
@@ -258,7 +258,7 @@ def bos_retest_signals(
 
     pend_long: tuple[float, int] | None = None   # (level, expiry_bar)
     pend_short: tuple[float, int] | None = None
-    for i in range(window + 2, n - 1):
+    for i in range(window + 2, n):
         sh_pos = _recent_confirmed(highs, i, window)
         sl_pos = _recent_confirmed(lows, i, window)
         # arm a pending retest on a fresh BOS
@@ -307,7 +307,7 @@ def liquidity_sweep_signals(
     close = df["close"].to_numpy()
     atr_arr = indicators.atr(df, 14).to_numpy()
 
-    for i in range(window + 2, n - 1):
+    for i in range(window + 2, n):
         sl_pos = _recent_confirmed(lows, i, window)
         sh_pos = _recent_confirmed(highs, i, window)
         if sl_pos is not None and 0 < (i - sl_pos) <= max_gap:
@@ -342,3 +342,34 @@ def backtest_strategy(
 ) -> BacktestResult:
     side, riskdist = STRATEGIES[name](df)
     return run(df, side, riskdist, symbol, name, **kw)
+
+
+def latest_setup(
+    df: pd.DataFrame,
+    name: str,
+    tp_r: tuple[float, float, float] = (2.0, 3.0, 4.0),
+    fresh_bars: int = 1,
+) -> dict | None:
+    """Return the most recent live setup if the strategy triggered within the
+    last `fresh_bars` closed bars. Entry = last close (proxy for next open);
+    SL = entry -/+ riskdist; TP1-3 = entry +/- tp_r * riskdist.
+    """
+    side, riskdist = STRATEGIES[name](df)
+    n = len(df)
+    close = df["close"].to_numpy()
+    for i in range(n - 1, max(n - 1 - fresh_bars, -1), -1):
+        if side[i] != 0 and np.isfinite(riskdist[i]) and riskdist[i] > 0:
+            entry = float(close[i])
+            risk = max(float(riskdist[i]), entry * MIN_STOP_PCT / 100.0)
+            long = side[i] > 0
+            tps = [entry + m * risk if long else entry - m * risk for m in tp_r]
+            return {
+                "side": "LONG" if long else "SHORT",
+                "entry": entry,
+                "sl": entry - risk if long else entry + risk,
+                "tps": tps,
+                "rr": tp_r,
+                "risk": risk,
+                "bar_time": df.index[i],
+            }
+    return None
