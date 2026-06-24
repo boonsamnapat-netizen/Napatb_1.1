@@ -202,12 +202,138 @@ def supertrend_signals(
     return side, riskdist
 
 
+# --------------------------------------------------------------------------- #
+# Discretionary "screen-watcher" playbooks, codified
+# --------------------------------------------------------------------------- #
+def _recent_confirmed(positions: list[int], i: int, window: int) -> int | None:
+    """Most recent pivot position confirmed as of bar i (pos <= i - window)."""
+    k = bisect.bisect_right(positions, i - window)
+    return positions[k - 1] if k else None
+
+
+def ema_pullback_signals(
+    df: pd.DataFrame, fast: int = 20, slow: int = 50, trend: int = 200,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Trend-continuation: in an established trend (EMA50 vs EMA200), buy the
+    pullback when price closes back above the fast EMA (mirror for shorts).
+    Stop sits just beyond the pullback wick — the classic discretionary entry."""
+    n = len(df)
+    side, riskdist = _empty(n)
+    ef = indicators.ema(df["close"], fast).to_numpy()
+    es = indicators.ema(df["close"], slow).to_numpy()
+    et = indicators.ema(df["close"], trend).to_numpy()
+    close = df["close"].to_numpy()
+    low = df["low"].to_numpy()
+    high = df["high"].to_numpy()
+    atr_arr = indicators.atr(df, 14).to_numpy()
+    for i in range(trend + 1, n - 1):
+        up = es[i] > et[i] and close[i] > et[i]
+        dn = es[i] < et[i] and close[i] < et[i]
+        # close crosses back above fast EMA after dipping to it -> resume up
+        if up and close[i] > ef[i] and close[i - 1] <= ef[i - 1]:
+            stop = min(low[i], low[i - 1]) - 0.2 * atr_arr[i]
+            side[i] = 1
+            riskdist[i] = max(close[i] - stop, 0.0)
+        elif dn and close[i] < ef[i] and close[i - 1] >= ef[i - 1]:
+            stop = max(high[i], high[i - 1]) + 0.2 * atr_arr[i]
+            side[i] = -1
+            riskdist[i] = max(stop - close[i], 0.0)
+    return side, riskdist
+
+
+def bos_retest_signals(
+    df: pd.DataFrame, window: int = 5, retest_bars: int = 6,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Break of structure + retest: price closes through the last confirmed
+    swing high/low (BOS), then we wait for a pullback that retests the broken
+    level and holds, and enter in the breakout direction."""
+    n = len(df)
+    side, riskdist = _empty(n)
+    highs = _pivot_highs(df["high"], window)
+    lows = _pivot_lows(df["low"], window)
+    high_arr = df["high"].to_numpy()
+    low_arr = df["low"].to_numpy()
+    close = df["close"].to_numpy()
+    atr_arr = indicators.atr(df, 14).to_numpy()
+
+    pend_long: tuple[float, int] | None = None   # (level, expiry_bar)
+    pend_short: tuple[float, int] | None = None
+    for i in range(window + 2, n - 1):
+        sh_pos = _recent_confirmed(highs, i, window)
+        sl_pos = _recent_confirmed(lows, i, window)
+        # arm a pending retest on a fresh BOS
+        if sh_pos is not None:
+            lvl = high_arr[sh_pos]
+            if close[i] > lvl and close[i - 1] <= lvl:
+                pend_long = (lvl, i + retest_bars)
+        if sl_pos is not None:
+            lvl = low_arr[sl_pos]
+            if close[i] < lvl and close[i - 1] >= lvl:
+                pend_short = (lvl, i + retest_bars)
+        # fire on retest that holds
+        if pend_long is not None:
+            lvl, exp = pend_long
+            if i > exp:
+                pend_long = None
+            elif low_arr[i] <= lvl and close[i] > lvl:
+                stop = min(low_arr[i], lvl) - 0.2 * atr_arr[i]
+                side[i] = 1
+                riskdist[i] = max(close[i] - stop, 0.0)
+                pend_long = None
+        if pend_short is not None and side[i] == 0:
+            lvl, exp = pend_short
+            if i > exp:
+                pend_short = None
+            elif high_arr[i] >= lvl and close[i] < lvl:
+                stop = max(high_arr[i], lvl) + 0.2 * atr_arr[i]
+                side[i] = -1
+                riskdist[i] = max(stop - close[i], 0.0)
+                pend_short = None
+    return side, riskdist
+
+
+def liquidity_sweep_signals(
+    df: pd.DataFrame, window: int = 5, max_gap: int = 60,
+) -> tuple[np.ndarray, np.ndarray]:
+    """ICT-style stop hunt: price wicks through a recent confirmed swing low to
+    grab liquidity but CLOSES back above it -> long (mirror for shorts). Stop
+    goes beyond the sweep wick."""
+    n = len(df)
+    side, riskdist = _empty(n)
+    highs = _pivot_highs(df["high"], window)
+    lows = _pivot_lows(df["low"], window)
+    high_arr = df["high"].to_numpy()
+    low_arr = df["low"].to_numpy()
+    close = df["close"].to_numpy()
+    atr_arr = indicators.atr(df, 14).to_numpy()
+
+    for i in range(window + 2, n - 1):
+        sl_pos = _recent_confirmed(lows, i, window)
+        sh_pos = _recent_confirmed(highs, i, window)
+        if sl_pos is not None and 0 < (i - sl_pos) <= max_gap:
+            lvl = low_arr[sl_pos]
+            if low_arr[i] < lvl and close[i] > lvl:   # swept low, closed back up
+                stop = low_arr[i] - 0.2 * atr_arr[i]
+                side[i] = 1
+                riskdist[i] = max(close[i] - stop, 0.0)
+        if side[i] == 0 and sh_pos is not None and 0 < (i - sh_pos) <= max_gap:
+            lvl = high_arr[sh_pos]
+            if high_arr[i] > lvl and close[i] < lvl:  # swept high, closed back down
+                stop = high_arr[i] + 0.2 * atr_arr[i]
+                side[i] = -1
+                riskdist[i] = max(stop - close[i], 0.0)
+    return side, riskdist
+
+
 STRATEGIES = {
     "divergence": lambda df: divergence_signals(df),
     "divergence+trend": lambda df: divergence_signals(df, trend_filter="ema200"),
     "donchian": lambda df: donchian_signals(df),
     "ema_cross": lambda df: ema_cross_signals(df),
     "supertrend": lambda df: supertrend_signals(df),
+    "ema_pullback": lambda df: ema_pullback_signals(df),
+    "bos_retest": lambda df: bos_retest_signals(df),
+    "liq_sweep": lambda df: liquidity_sweep_signals(df),
 }
 
 
