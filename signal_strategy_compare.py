@@ -57,6 +57,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--tf", default="4h", help="timeframe to test on")
     p.add_argument("--days", type=int, default=365, help="lookback window in days")
     p.add_argument("--target-r", type=float, default=2.0)
+    p.add_argument("--trail-atr", type=float, default=None,
+                   help="use an ATR trailing stop (e.g. 3.0) instead of fixed TP")
     p.add_argument("--max-hold", type=int, default=30)
     p.add_argument("--fee-pct", type=float, default=0.05)
     p.add_argument("--per-coin", action="store_true", help="also print per-coin")
@@ -81,7 +83,8 @@ def main(argv: list[str] | None = None) -> int:
         print("No data loaded.")
         return 1
 
-    kw = dict(target_r=args.target_r, max_hold=args.max_hold, fee_pct=args.fee_pct)
+    kw = dict(target_r=args.target_r, max_hold=args.max_hold,
+              fee_pct=args.fee_pct, trail_atr=args.trail_atr)
     by_strat: dict[str, list[BacktestResult]] = defaultdict(list)
     per_coin: list[dict] = []
     for sym, df in bases.items():

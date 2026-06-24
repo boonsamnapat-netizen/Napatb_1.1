@@ -43,7 +43,13 @@ def run(
     max_hold: int = 30,
     fee_pct: float = 0.05,
     warmup: int = 210,
+    trail_atr: float | None = None,
 ) -> BacktestResult:
+    """Trade the signals. Exit is either a fixed `target_r` take-profit, or —
+    when `trail_atr` is set — an ATR chandelier trailing stop (no fixed TP):
+    the stop ratchets to high_since_entry - trail_atr*ATR (mirror for shorts).
+    Either way the initial 1R risk is `riskdist`, so results stay R-comparable.
+    """
     res = BacktestResult(tf=name, symbol=symbol)
     n = len(df)
     if n < warmup + 10:
@@ -52,6 +58,7 @@ def run(
     high_arr = df["high"].to_numpy()
     low_arr = df["low"].to_numpy()
     close_arr = df["close"].to_numpy()
+    atr_arr = indicators.atr(df, 14).to_numpy() if trail_atr else None
     fee_frac = fee_pct / 100.0
 
     i = warmup
@@ -69,20 +76,27 @@ def run(
 
         outcome = None
         exit_j = min(i + 1 + max_hold, n - 1)
+        extreme = entry  # highest high (long) / lowest low (short) since entry
         for j in range(i + 1, exit_j + 1):
             hi, lo = float(high_arr[j]), float(low_arr[j])
             if long:
                 if lo <= stop:
-                    outcome = -1.0
+                    outcome = (stop - entry) / risk
                     break
-                if hi >= target:
+                if trail_atr:
+                    extreme = max(extreme, hi)
+                    stop = max(stop, extreme - trail_atr * float(atr_arr[j]))
+                elif hi >= target:
                     outcome = target_r
                     break
             else:
                 if hi >= stop:
-                    outcome = -1.0
+                    outcome = (entry - stop) / risk
                     break
-                if lo <= target:
+                if trail_atr:
+                    extreme = min(extreme, lo)
+                    stop = min(stop, extreme + trail_atr * float(atr_arr[j]))
+                elif lo <= target:
                     outcome = target_r
                     break
         if outcome is None:
