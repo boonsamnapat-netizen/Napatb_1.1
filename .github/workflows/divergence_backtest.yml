@@ -1,0 +1,102 @@
+name: Divergence TF Backtest
+
+# Fetches real OHLCV via yfinance (1h, last ~2y) for the universe, resamples to
+# several timeframes, runs the divergence walk-forward backtest over the last N
+# days, and reports which timeframe performed best — to the Actions log, a
+# committed results file, and (optionally) Telegram.
+#
+# yfinance caps intraday history (~730d for 1h), which is exactly what we need
+# for a 1-year intraday-vs-daily comparison.
+#
+# NOTE: dispatch only works from the DEFAULT branch. The checkout below pulls
+# the feature branch for the code.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tfs:
+        description: "Comma list of timeframes to compare"
+        default: "1h,2h,4h,6h,12h,1d"
+      days:
+        description: "Lookback window in days"
+        default: "365"
+      target_r:
+        description: "Take-profit in R"
+        default: "2.0"
+      notify:
+        description: "Send the ranked summary to Telegram (true/false)"
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/crypto-divergent-signals-bot-7rpx6g
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy yfinance
+
+      - name: Fetch real 1h OHLCV (max intraday history)
+        run: |
+          python - <<'EOF'
+          import pathlib
+          import pandas as pd
+          import yfinance as yf
+
+          out = pathlib.Path('data/real/crypto_1h'); out.mkdir(parents=True, exist_ok=True)
+          uni = pathlib.Path('data/crypto_universe.txt')
+          tickers = [t.strip() for t in uni.read_text().splitlines() if t.strip()] \
+              if uni.exists() else \
+              ['BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 'BNB-USD', 'ADA-USD']
+          for t in tickers:
+              try:
+                  df = yf.download(t, period='730d', interval='1h',
+                                   auto_adjust=False, progress=False)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+                  if len(df) >= 500:
+                      df.index.name = 'date'
+                      df.to_csv(out / f"{t.replace('-USD','USDT')}.csv")
+                      print(f"  {t}: {len(df)} 1h rows")
+              except Exception as e:
+                  print(f"  {t}: SKIP ({e})")
+          EOF
+
+      - name: Run TF sweep
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TFS: ${{ github.event.inputs.tfs || '1h,2h,4h,6h,12h,1d' }}
+          DAYS: ${{ github.event.inputs.days || '365' }}
+          TARGET_R: ${{ github.event.inputs.target_r || '2.0' }}
+          NOTIFY: ${{ github.event.inputs.notify || 'false' }}
+        run: |
+          mkdir -p reports
+          NOTIFY_FLAG=""
+          if [ "$NOTIFY" = "true" ]; then NOTIFY_FLAG="--notify"; fi
+          python signal_divergence_backtest.py --csv-dir data/real/crypto_1h \
+            --tfs "$TFS" --days "$DAYS" --target-r "$TARGET_R" \
+            --out reports/divergence_tf_backtest.json $NOTIFY_FLAG
+
+      - name: Commit results
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add reports/divergence_tf_backtest.json data/real/crypto_1h 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: divergence TF backtest results"
+            git push origin HEAD:claude/crypto-divergent-signals-bot-7rpx6g
+          else
+            echo "No results to persist."
+          fi

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from src.signal import indicators, market_data
+from src.signal.backtester import backtest, resample
 from src.signal.divergence import detect
 from src.signal.notifier import format_signal
 from src.signal.signal_engine import build_signal
@@ -89,6 +90,26 @@ def test_no_divergence_returns_none():
     sig = build_signal("XYZUSDT", df, indicator="rsi")
     # Either no divergence at all, or at least not a clean bullish setup.
     assert sig is None or sig.side in ("LONG", "SHORT")
+
+
+def test_backtest_runs_and_is_consistent():
+    df = market_data.demo_series("BTCUSDT", bars=400)
+    res = backtest(df, "BTCUSDT", "1d", target_r=2.0, max_hold=30)
+    assert res.trades >= 1
+    assert res.wins <= res.trades
+    # avg_R is the mean of recorded R-multiples
+    assert abs(res.avg_r - (sum(res.rs) / len(res.rs))) < 1e-9
+    # losses are bounded near -1R (minus fee); nothing should be far worse
+    assert min(res.rs) >= -1.5
+
+
+def test_resample_coarsens():
+    df = market_data.demo_series("BTCUSDT", bars=400)
+    weekly = resample(df, "1w")
+    assert len(weekly) < len(df)
+    assert set(["open", "high", "low", "close", "volume"]).issubset(weekly.columns)
+    # weekly high must be >= the closes it aggregates over (basic OHLC sanity)
+    assert (weekly["high"] >= weekly["close"]).all()
 
 
 if __name__ == "__main__":
