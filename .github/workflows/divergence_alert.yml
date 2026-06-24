@@ -1,0 +1,88 @@
+name: Divergence Signal Alert
+
+# Fetches fresh daily OHLCV, scans the universe for RSI/MACD regular divergence
+# (with overbought/oversold status), and pushes Thai-language Entry/SL/TP/RR
+# alerts to Telegram — fully hands-off.
+#
+# Setup (one time):
+#   Repo Settings -> Secrets and variables -> Actions -> add:
+#     TELEGRAM_BOT_TOKEN   (from @BotFather)
+#     TELEGRAM_CHAT_ID     (your chat id)
+#   Without the secrets the job still runs and logs the messages (dry-run).
+#
+# NOTE: scheduled/dispatch workflows only run from the DEFAULT branch. To go
+# live, copy this file to the default branch too (the checkout below pulls the
+# feature branch for the code).
+
+on:
+  workflow_dispatch:
+    inputs:
+      indicator:
+        description: "Oscillator: auto | rsi | macd"
+        default: "auto"
+      sample:
+        description: "Send a SAMPLE alert (preview, not a real signal)"
+        default: "false"
+  schedule:
+    - cron: '0 1 * * *'    # daily 01:00 UTC (08:00 Thailand), after the daily close
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/crypto-divergent-signals-bot-7rpx6g
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy yfinance
+
+      - name: Send sample alert
+        if: ${{ github.event.inputs.sample == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python signal_divergence.py --sample --notify
+
+      - name: Fetch fresh daily data
+        run: |
+          python - <<'EOF'
+          import pathlib
+          import pandas as pd
+          import yfinance as yf
+
+          out = pathlib.Path('data/real/crypto'); out.mkdir(parents=True, exist_ok=True)
+          uni = pathlib.Path('data/crypto_universe.txt')
+          tickers = [t.strip() for t in uni.read_text().splitlines() if t.strip()] \
+              if uni.exists() else \
+              ['BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 'BNB-USD', 'ADA-USD']
+          for t in tickers:
+              try:
+                  df = yf.download(t, start='2022-01-01', interval='1d',
+                                   auto_adjust=False, progress=False)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open', 'High', 'Low', 'Close', 'Volume']].dropna()
+                  if len(df) >= 120:
+                      df.to_csv(out / f"{t.replace('-USD','USDT')}.csv")
+                      print(f"  {t}: {len(df)} rows")
+              except Exception as e:
+                  print(f"  {t}: SKIP ({e})")
+          EOF
+
+      - name: Scan for divergence and alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INDICATOR: ${{ github.event.inputs.indicator || 'auto' }}
+        run: |
+          python signal_divergence.py --csv-dir data/real/crypto \
+            --indicator "$INDICATOR" --notify --summary
