@@ -6,6 +6,7 @@ frames.
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 
@@ -54,3 +55,42 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
         axis=1,
     ).max(axis=1)
     return tr.ewm(alpha=1 / period, adjust=False).mean()
+
+
+def supertrend(df: pd.DataFrame, period: int = 10, mult: float = 3.0) -> pd.DataFrame:
+    """Supertrend line + direction (+1 uptrend / -1 downtrend).
+
+    Causal: bar i depends only on data up to i. Returns columns
+    'supertrend' (the active band) and 'dir'.
+    """
+    atr_ = atr(df, period)
+    hl2 = (df["high"] + df["low"]) / 2.0
+    upper = hl2 + mult * atr_
+    lower = hl2 - mult * atr_
+
+    close = df["close"].to_numpy()
+    up = upper.to_numpy()
+    lo = lower.to_numpy()
+    n = len(df)
+    final_up = np.full(n, np.nan)
+    final_lo = np.full(n, np.nan)
+    direction = np.ones(n, dtype=int)
+
+    for i in range(n):
+        if i == 0:
+            final_up[i] = up[i]
+            final_lo[i] = lo[i]
+            direction[i] = 1
+            continue
+        # carry the tighter band unless price closes through it
+        final_up[i] = up[i] if (up[i] < final_up[i - 1] or close[i - 1] > final_up[i - 1]) else final_up[i - 1]
+        final_lo[i] = lo[i] if (lo[i] > final_lo[i - 1] or close[i - 1] < final_lo[i - 1]) else final_lo[i - 1]
+        if close[i] > final_up[i - 1]:
+            direction[i] = 1
+        elif close[i] < final_lo[i - 1]:
+            direction[i] = -1
+        else:
+            direction[i] = direction[i - 1]
+
+    line = np.where(direction == 1, final_lo, final_up)
+    return pd.DataFrame({"supertrend": line, "dir": direction}, index=df.index)
