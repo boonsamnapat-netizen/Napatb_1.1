@@ -73,6 +73,9 @@ the feature branch; only workflow-yaml changes need the default-branch mirror.
 - Secrets `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (repo → Settings → Actions secrets).
 - Portfolio value: user messages the bot `/port 150`; `examples/update_account.py`
   reads it via getUpdates → `data/account.json` (committed by the workflow).
+- Trade journal: user messages `/trade SYM dir entry stop [tp]`, `/close SYM exit`
+  (auto-computes R), `/journal` (stats reply). `examples/update_journal.py` reads
+  getUpdates → `data/trade_journal.json`; dedup by update_id; confirms each action.
 - Test: run workflow with `test_notify=true`; preview a signal with `sample_signal=true`.
 - Setup guide for the user: `docs/TELEGRAM_SETUP.md`.
 
