@@ -114,14 +114,14 @@ jobs:
           python signal_scan.py --csv-dir data/real/crypto --htf "$HTF" \
             --portfolio --summary --notify --charts --top 10
 
-      - name: Persist portfolio value and trade journal
+      - name: Persist portfolio, journal and signal log
         run: |
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
-          git add data/account.json data/trade_journal.json 2>/dev/null || true
+          git add data/account.json data/trade_journal.json data/signals_log.json 2>/dev/null || true
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update portfolio value / trade journal from Telegram"
+            git commit -m "chore: update portfolio / trade journal / signal log"
             git push origin HEAD:claude/crypto-signal-system-kcf8vq
           else
-            echo "No account or journal change to persist."
+            echo "Nothing to persist."
           fi

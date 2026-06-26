@@ -1,0 +1,99 @@
+{
+  "signals": [
+    {
+      "date": "2026-06-20",
+      "symbol": "AVAXUSDT",
+      "direction": "SHORT",
+      "confidence": 58.7,
+      "entry": 6.23344183,
+      "stop": 6.84478999,
+      "tps": [
+        5.5,
+        5.0,
+        4.5
+      ],
+      "entry_note": "reproduced end-of-day (live used forming bar)",
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-06-20T01:00:00+00:00"
+    },
+    {
+      "date": "2026-06-25",
+      "symbol": "DOGEUSDT",
+      "direction": "SHORT",
+      "confidence": 60.1,
+      "entry": 0.07611,
+      "stop": 0.08136003,
+      "tps": [
+        0.07,
+        0.06951854,
+        0.065
+      ],
+      "entry_note": "reproduced end-of-day (live used forming bar)",
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-06-25T01:00:00+00:00"
+    },
+    {
+      "date": "2026-06-26",
+      "symbol": "XRPUSDT",
+      "direction": "SHORT",
+      "confidence": 63.7,
+      "entry": 1.07410002,
+      "stop": 1.14421705,
+      "tps": [
+        1.0,
+        0.97020501,
+        0.96561003
+      ],
+      "entry_note": "reproduced end-of-day (live used forming bar)",
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-06-26T01:00:00+00:00"
+    },
+    {
+      "date": "2026-06-26",
+      "symbol": "DOGEUSDT",
+      "direction": "SHORT",
+      "confidence": 59.7,
+      "entry": 0.07611,
+      "stop": 0.08136003,
+      "tps": [
+        0.07,
+        0.06951854,
+        0.065
+      ],
+      "entry_note": "reproduced end-of-day (live used forming bar)",
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-06-26T01:00:00+00:00"
+    },
+    {
+      "date": "2026-06-26",
+      "symbol": "DOTUSDT",
+      "direction": "SHORT",
+      "confidence": 55.2,
+      "entry": 0.88599998,
+      "stop": 0.96039637,
+      "tps": [
+        0.8,
+        0.75,
+        0.7
+      ],
+      "entry_note": "reproduced end-of-day (live used forming bar)",
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-06-26T01:00:00+00:00"
+    }
+  ]
+}

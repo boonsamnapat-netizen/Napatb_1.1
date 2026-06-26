@@ -249,6 +249,22 @@ def main():
                 _render_portfolio(config, rows, account_value)
 
     enter_rows = [r for r in rows if r.decision == "ENTER"]
+
+    # Record every ENTER (what gets pushed to Telegram) into a persistent
+    # forward-test log, and grade any earlier open signals against fresh data.
+    if args.csv_dir or args.csv_universe:
+        try:
+            from src.signal import signal_log
+
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            added = signal_log.append_enters(enter_rows, today)
+            graded = signal_log.update_outcomes(args.csv_dir or "data/real/crypto")
+            if added or graded:
+                console.print(f"[dim]Signal log: +{added} new, {graded} graded "
+                              f"→ data/signals_log.json[/dim]")
+        except Exception as e:  # noqa: BLE001
+            console.print(f"[dim]signal log skipped: {e}[/dim]")
+
     if args.notify and enter_rows:
         from src.signal.notifier import TelegramNotifier
 
