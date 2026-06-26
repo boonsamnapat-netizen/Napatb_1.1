@@ -76,6 +76,12 @@ the feature branch; only workflow-yaml changes need the default-branch mirror.
 - Trade journal: user messages `/trade SYM dir entry stop [tp]`, `/close SYM exit`
   (auto-computes R), `/journal` (stats reply). `examples/update_journal.py` reads
   getUpdates → `data/trade_journal.json`; dedup by update_id; confirms each action.
+- Signal log (auto): `src/signal/signal_log.py` records every ENTER pushed by the
+  scan → `data/signals_log.json` (dedup date+symbol), grades open ones first-touch
+  SL vs TP1 from later OHLC. `signal_scan.py` calls it each run; persisted by the
+  workflow. Seed/backfill from run logs: `examples/seed_signals_from_log.py` (the
+  live runs use the forming bar + yfinance revises, so end-of-day reproduction of
+  exact sent entries drifts a few % — confidences are exact from the logs).
 - Test: run workflow with `test_notify=true`; preview a signal with `sample_signal=true`.
 - Setup guide for the user: `docs/TELEGRAM_SETUP.md`.
 
