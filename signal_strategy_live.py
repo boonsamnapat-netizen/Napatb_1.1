@@ -35,7 +35,21 @@ _LABEL = {
 }
 
 
-def _to_signal(symbol: str, name: str, tf: str, s: dict) -> Signal:
+def _trail_line(s: dict, mult: float) -> str | None:
+    """Trailing-stop management hint. The 4H walk-forward study showed the real
+    edge comes from an ATR chandelier trail, not fixed TPs — so for trend
+    strategies we tell the trader to ratchet the SL by mult*ATR and let winners
+    run (TP levels stay as R-distance references)."""
+    atr = s.get("atr")
+    if not atr or atr <= 0:
+        return None
+    dist = _round(mult * atr)
+    return (f"📌 บริหารไม้: trailing stop {mult:g}×ATR (≈ {dist}) — "
+            f"เลื่อน SL ตามกำไร แทนปิดที่ TP ตายตัว, ปล่อยกำไรวิ่ง")
+
+
+def _to_signal(symbol: str, name: str, tf: str, s: dict,
+               trail_mult: float | None = None) -> Signal:
     tp1, tp2, tp3 = (_round(x) for x in s["tps"])
     return Signal(
         symbol=symbol,
@@ -48,6 +62,7 @@ def _to_signal(symbol: str, name: str, tf: str, s: dict) -> Signal:
         rr=tuple(s["rr"]),
         risk_per_unit=_round(s["risk"]),
         price_now=_round(s["entry"]),
+        trail=_trail_line(s, trail_mult) if trail_mult else None,
     )
 
 
@@ -60,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--tf", default="4h", help="timeframe to scan")
     p.add_argument("--fresh-bars", type=int, default=1,
                    help="how many of the last closed bars count as 'fresh'")
+    p.add_argument("--trail-atr", type=float, default=3.0,
+                   help="ATR multiple for the trailing-stop hint (0 = hide it)")
     p.add_argument("--notify", action="store_true", help="send to Telegram")
     args = p.parse_args(argv)
 
@@ -88,7 +105,8 @@ def main(argv: list[str] | None = None) -> int:
         if not s:
             continue
         found += 1
-        sig = _to_signal(sym, args.strategy, args.tf, s)
+        sig = _to_signal(sym, args.strategy, args.tf, s,
+                         trail_mult=args.trail_atr or None)
         print("\n" + format_signal(sig))
         if args.notify:
             print("  -> sent" if tg.send_signal(sig) else "  -> dry-run / not sent")

@@ -23,6 +23,7 @@ class Signal:
     rr: tuple[float, float, float]  # reward:risk at each TP
     risk_per_unit: float
     price_now: float
+    trail: str | None = None  # optional trailing-stop guidance line
 
     @property
     def rr_text(self) -> str:

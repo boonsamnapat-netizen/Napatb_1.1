@@ -32,6 +32,8 @@ def format_signal(sig: Signal) -> str:
         f"TP3: {sig.tp3}",
         f"RR: {sig.rr_text}",
     ]
+    if sig.trail:
+        lines.append(sig.trail)
     return "\n".join(lines)
 
 

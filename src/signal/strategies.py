@@ -371,6 +371,7 @@ def latest_setup(
     side, riskdist = STRATEGIES[name](df)
     n = len(df)
     close = df["close"].to_numpy()
+    atr_arr = indicators.atr(df, 14).to_numpy()
     for i in range(n - 1, max(n - 1 - fresh_bars, -1), -1):
         if side[i] != 0 and np.isfinite(riskdist[i]) and riskdist[i] > 0:
             entry = float(close[i])
@@ -384,6 +385,7 @@ def latest_setup(
                 "tps": tps,
                 "rr": tp_r,
                 "risk": risk,
+                "atr": float(atr_arr[i]),
                 "bar_time": df.index[i],
             }
     return None
