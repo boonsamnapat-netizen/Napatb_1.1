@@ -1,0 +1,170 @@
+{
+  "config": "live default (4h-style/W, Supertrend, ATR trail 2.5R, fees on)",
+  "pooled_oos_trades": 877,
+  "pooled_win_rate": 0.4515,
+  "pooled_avg_r": 0.0094,
+  "pooled_total_r": 8.28,
+  "coins": 20,
+  "per_coin": [
+    {
+      "symbol": "INJUSDT",
+      "trades": 26,
+      "win_rate": 0.6923,
+      "avg_r": 0.546,
+      "total_r": 14.2,
+      "max_dd_r": -2.0278
+    },
+    {
+      "symbol": "APTUSDT",
+      "trades": 13,
+      "win_rate": 0.6154,
+      "avg_r": 0.377,
+      "total_r": 4.9,
+      "max_dd_r": -2.1593
+    },
+    {
+      "symbol": "ETHUSDT",
+      "trades": 52,
+      "win_rate": 0.5577,
+      "avg_r": 0.352,
+      "total_r": 18.33,
+      "max_dd_r": -4.0915
+    },
+    {
+      "symbol": "BTCUSDT",
+      "trades": 51,
+      "win_rate": 0.5294,
+      "avg_r": 0.286,
+      "total_r": 14.61,
+      "max_dd_r": -4.5642
+    },
+    {
+      "symbol": "OPUSDT",
+      "trades": 14,
+      "win_rate": 0.5714,
+      "avg_r": 0.218,
+      "total_r": 3.05,
+      "max_dd_r": -4.2023
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "trades": 61,
+      "win_rate": 0.5246,
+      "avg_r": 0.189,
+      "total_r": 11.54,
+      "max_dd_r": -9.4355
+    },
+    {
+      "symbol": "XRPUSDT",
+      "trades": 58,
+      "win_rate": 0.4828,
+      "avg_r": 0.108,
+      "total_r": 6.26,
+      "max_dd_r": -7.8996
+    },
+    {
+      "symbol": "AAVEUSDT",
+      "trades": 39,
+      "win_rate": 0.5385,
+      "avg_r": 0.051,
+      "total_r": 2.0,
+      "max_dd_r": -4.4462
+    },
+    {
+      "symbol": "ADAUSDT",
+      "trades": 76,
+      "win_rate": 0.4474,
+      "avg_r": 0.022,
+      "total_r": 1.65,
+      "max_dd_r": -11.5483
+    },
+    {
+      "symbol": "DOTUSDT",
+      "trades": 32,
+      "win_rate": 0.4688,
+      "avg_r": 0.001,
+      "total_r": 0.02,
+      "max_dd_r": -5.0881
+    },
+    {
+      "symbol": "MKRUSDT",
+      "trades": 55,
+      "win_rate": 0.3818,
+      "avg_r": -0.026,
+      "total_r": -1.42,
+      "max_dd_r": -8.7926
+    },
+    {
+      "symbol": "NEARUSDT",
+      "trades": 32,
+      "win_rate": 0.4375,
+      "avg_r": -0.031,
+      "total_r": -1.0,
+      "max_dd_r": -8.6204
+    },
+    {
+      "symbol": "SOLUSDT",
+      "trades": 35,
+      "win_rate": 0.4286,
+      "avg_r": -0.045,
+      "total_r": -1.56,
+      "max_dd_r": -7.6086
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "trades": 33,
+      "win_rate": 0.4545,
+      "avg_r": -0.061,
+      "total_r": -2.02,
+      "max_dd_r": -6.9547
+    },
+    {
+      "symbol": "BNBUSDT",
+      "trades": 67,
+      "win_rate": 0.3881,
+      "avg_r": -0.082,
+      "total_r": -5.49,
+      "max_dd_r": -9.8314
+    },
+    {
+      "symbol": "LINKUSDT",
+      "trades": 63,
+      "win_rate": 0.4286,
+      "avg_r": -0.085,
+      "total_r": -5.37,
+      "max_dd_r": -12.3754
+    },
+    {
+      "symbol": "ATOMUSDT",
+      "trades": 49,
+      "win_rate": 0.4286,
+      "avg_r": -0.089,
+      "total_r": -4.36,
+      "max_dd_r": -11.8859
+    },
+    {
+      "symbol": "LTCUSDT",
+      "trades": 57,
+      "win_rate": 0.2982,
+      "avg_r": -0.342,
+      "total_r": -19.47,
+      "max_dd_r": -24.8638
+    },
+    {
+      "symbol": "UNIUSDT",
+      "trades": 20,
+      "win_rate": 0.4,
+      "avg_r": -0.407,
+      "total_r": -8.15,
+      "max_dd_r": -9.3579
+    },
+    {
+      "symbol": "ARBUSDT",
+      "trades": 44,
+      "win_rate": 0.2727,
+      "avg_r": -0.442,
+      "total_r": -19.43,
+      "max_dd_r": -20.9169
+    }
+  ]
+}
