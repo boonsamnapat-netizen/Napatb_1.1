@@ -336,6 +336,80 @@ class SignalBacktester:
             "calibrated_win_rate": round(combined.win_rate, 3) if combined.trades else None,
         }
 
+    def walk_forward_collect(
+        self,
+        entry_df: pd.DataFrame,
+        htf_df: pd.DataFrame | None,
+        *,
+        train: int = 500,
+        test: int = 250,
+        risk_per_trade_pct: float = 1.0,
+        objective: str = "expectancy_r",
+        symbol: str = "",
+    ) -> tuple[dict, list[dict]]:
+        """Walk-forward like `walk_forward`, but also return every out-of-sample
+        trade enriched with entry/exit dates + symbol so the performance
+        analytics layer can build equity curves, R-distributions, etc.
+
+        Returns ``(result_dict, trade_dicts)`` where ``result_dict`` mirrors
+        :meth:`walk_forward` and each trade dict adds ``symbol``/``entry_date``/
+        ``exit_date`` to :class:`Trade`'s fields. The calibration path
+        (:meth:`walk_forward`) is left untouched.
+        """
+        ent_ind, htf_aligned = self.prepare(entry_df, htf_df)
+        grid = _weight_grid()
+        n = len(ent_ind)
+        idx = ent_ind.index
+
+        oos_trades_all: list[Trade] = []
+        trade_dicts: list[dict] = []
+        windows = []
+        start = self.warmup
+        while start + train + test <= n:
+            tr_s, tr_e = start, start + train
+            te_s, te_e = tr_e, tr_e + test
+
+            best, best_m = None, None
+            for w in grid:
+                m = self.backtest_range(ent_ind, htf_aligned, w, tr_s, tr_e, risk_per_trade_pct)
+                if m.trades < self.min_trades:
+                    continue
+                score = getattr(m, objective)
+                if best_m is None or score > getattr(best_m, objective):
+                    best, best_m = w, m
+            if best is None:
+                best = DEFAULTS["weights"]
+
+            oos = self.backtest_range(ent_ind, htf_aligned, best, te_s, te_e, risk_per_trade_pct)
+            windows.append({
+                "train_range": [tr_s, tr_e],
+                "test_range": [te_s, te_e],
+                "chosen_weights": {k: round(v, 3) for k, v in best.items()},
+                "oos": oos.to_dict(),
+            })
+            wtrades = self._collect_trades(ent_ind, htf_aligned, best, te_s, te_e)
+            oos_trades_all += wtrades
+            for t in wtrades:
+                d = t.to_dict()
+                ei, xi = int(t.entry_index), int(t.exit_index)
+                d["symbol"] = symbol
+                d["entry_date"] = (
+                    idx[ei].strftime("%Y-%m-%d") if 0 <= ei < len(idx) else None
+                )
+                d["exit_date"] = (
+                    idx[min(xi, len(idx) - 1)].strftime("%Y-%m-%d") if len(idx) else None
+                )
+                trade_dicts.append(d)
+            start += test
+
+        combined = self._metrics(oos_trades_all, {}, risk_per_trade_pct)
+        result = {
+            "windows": windows,
+            "combined_oos": combined.to_dict(),
+            "calibrated_win_rate": round(combined.win_rate, 3) if combined.trades else None,
+        }
+        return result, trade_dicts
+
     def _collect_trades(self, ent_ind, htf_aligned, weights, start, end) -> list[Trade]:
         # Mirror backtest_range but return trades (kept separate to keep that hot
         # loop returning metrics only).

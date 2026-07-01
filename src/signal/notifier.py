@@ -298,3 +298,46 @@ class TelegramNotifier:
                 )
         lines.append("\n" + _DISCLAIMER)
         return "\n".join(lines)
+
+    # ---- weekly performance scorecard -----------------------------------
+    @staticmethod
+    def format_performance_scorecard(report: dict) -> str:
+        """Thai weekly scorecard from a `analytics.build_report` payload."""
+        s = report.get("summary", {})
+        if not s or s.get("trades", 0) == 0:
+            return "📊 ผลย้อนหลัง: ยังไม่มี trade พอจะสรุป"
+        exp = s.get("expectancy_r", 0.0)
+        mood = "บวก ✅" if exp > 0 else "ลบ ⚠️"
+        pf = s.get("profit_factor")
+        lines = [
+            f"\U0001F4CA สรุปผลระบบ (walk-forward OOS · หักค่าธรรมเนียมแล้ว)",
+            f"สถานะ edge: {mood}  ·  {report.get('generated_at','')}",
+            "",
+            f"• จำนวนไม้: {s['trades']}  (ชนะ {s['wins']} / แพ้ {s['losses']})",
+            f"• อัตราชนะ: {s['win_rate']*100:.1f}%",
+            f"• กำไรคาดหวังต่อไม้: {exp:+.3f}R  ← ตัวเลขหลักที่ควรดู",
+            f"• กำไรสะสม (Total R): {s['total_r']:+.1f}R",
+            f"• Profit factor: {pf if pf is not None else '—'}  ·  "
+            f"Payoff {s.get('payoff_ratio','—')}",
+            f"• Sharpe/ไม้: {s.get('sharpe','—')}  ·  ชนะติดกันสูงสุด "
+            f"{s['longest_win_streak']} / แพ้ {s['longest_loss_streak']}",
+            f"• DD รวม (เรียงไม้เดียว, worst-case): {s['max_drawdown_r']:.0f}R "
+            f"— จริงต่อเหรียญราว −5..−24R",
+        ]
+        top = report.get("by_symbol", [])[:3]
+        if top:
+            lines.append("")
+            lines.append("🏆 เหรียญเด่น: " + ", ".join(
+                f"{c['key']} {c['total_r']:+.1f}R" for c in top))
+        fwd = report.get("forward")
+        if fwd and fwd.get("closed"):
+            d = fwd.get("delta_r")
+            tag = "" if d is None else (f" (ต่าง {d:+.2f}R จาก backtest)")
+            lines.append(
+                f"🔎 สัญญาณจริงที่ปิดแล้ว {fwd['closed']} ไม้: "
+                f"เฉลี่ย {fwd.get('live_avg_r','—')}R{tag}")
+        elif fwd:
+            lines.append(f"🔎 Forward-test: เปิดอยู่ {fwd.get('open',0)} ไม้ (กำลังสะสมสถิติ)")
+        lines.append("")
+        lines.append(_DISCLAIMER)
+        return "\n".join(lines)

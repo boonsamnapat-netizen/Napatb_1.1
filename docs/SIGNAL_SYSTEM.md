@@ -36,10 +36,12 @@ scanner           รัน engine ทั้ง universe → จัดอัน�
 backtester        walk-forward + fee model (maker/taker) + trailing/cooldown
 calendar          ปฏิทิน event (FOMC/CPI...) → blackout window
 news              RSS/keyword sentiment (Claude ถ้ามี ANTHROPIC_API_KEY)
-notifier          Telegram (text/photo) ภาษาไทย + คำแนะนำ
+notifier          Telegram (text/photo) ภาษาไทย + คำแนะนำ + weekly scorecard
 charting          กราฟ PNG (candles + EMA + Entry/SL/TP) แนบ alert
+analytics         คำนวณผลจาก trade: equity/drawdown/R-dist/Sharpe/Sortino/Kelly + breakdown เหรียญ/ทิศ/confidence/เดือน
+dashboard         เรนเดอร์ HTML dashboard (inline SVG ไม่พึ่ง dep ภายนอก) + export PNG
 ```
-CLI: `signal_cli.py` (ทีละเหรียญ) · `signal_scan.py` (สแกน+แจ้งเตือน) · `signal_backtest.py` (backtest/จูน)
+CLI: `signal_cli.py` (ทีละเหรียญ) · `signal_scan.py` (สแกน+แจ้งเตือน) · `signal_backtest.py` (backtest/จูน) · `signal_report.py` (dashboard วัดผล)
 
 ---
 
@@ -53,6 +55,9 @@ python signal_scan.py --csv-dir data/real/crypto --htf W --portfolio --summary -
 
 # backtest บนข้อมูลจริง + walk-forward + เขียน calibrated_win_rate กลับ config
 python signal_backtest.py BTCUSDT --csv data/real/crypto/BTCUSDT.csv --htf-rule W --optimize --apply
+
+# วัดผลรวมทั้ง universe → HTML dashboard + PNG + JSON (+ ส่ง scorecard ไทยเข้า Telegram)
+python signal_report.py --csv-dir data/real/crypto --htf-rule W --notify
 ```
 > sandbox ต่อ exchange ไม่ได้ → ใช้ `--csv*`/`--demo`; บนเครื่องที่ต่อ Binance ได้ใช้ live ccxt
 
@@ -79,5 +84,16 @@ fetch (yfinance) → scan → ยิงสรุปไทย + สัญญา�
 - workflow ต้องอยู่บน **default branch** ถึงจะ schedule/dispatch ได้ → แก้ทั้ง 2 branch
 - ข้อมูล: `data/real/crypto/*.csv` (1d), `data/real/crypto_1h/` (1h); universe = `data/crypto_universe.txt`
 
+## Performance dashboard (`signal_report.py` → `reports/`)
+รัน walk-forward ทั้ง universe → เก็บ trade รายไม้ (พร้อมวันที่) → ให้คะแนน forward-test log →
+สร้าง `reports/performance.html` (KPI + equity/drawdown/R-dist + ตารางรายเหรียญ/confidence/ทิศ/เดือน) +
+`performance.json` + PNG. รันเองทุกสัปดาห์ผ่าน `.github/workflows/weekly_report.yml` (Sun 09:00 ไทย)
+- ทุกตัวเลขเป็น walk-forward **OOS หักค่าธรรมเนียม/slippage** แล้ว; Sharpe/Sortino = ต่อไม้ (info ratio) ไม่ใช่รายปี
+- Equity/Drawdown/Compounded รวม = ต่อทุกไม้ทุกเหรียญเรียงกัน (มุมมองแย่สุด ไม่นับกระจายพอร์ต) →
+  max DD รวมเกินจริง; DD จริงต่อเหรียญดูคอลัมน์ “Max DD” ในตารางรายเหรียญ
+- ค่าที่เชื่อได้สุด: **expectancy/ไม้** + **Total R** + **breakdown ตาม confidence** (75+ = edge ชัดสุด)
+
 ## งานที่ทำต่อได้
-เพิ่มเหรียญ (universe.txt) · เปลี่ยน cron · เพิ่ม RSI/Volume panel ในกราฟ · ปฏิทิน event แบบ feed · เชื่อม auto-trade เข้า exchange · จูน weights จาก backtest จริง
+เพิ่มเหรียญ (universe.txt) · เปลี่ยน cron · เพิ่ม RSI/Volume panel ในกราฟ · ปฏิทิน event แบบ feed ·
+เชื่อม auto-trade เข้า exchange · จูน weights จาก backtest จริง ·
+publish `reports/performance.html` ขึ้น GitHub Pages · เพิ่ม rolling 90-วันใน dashboard

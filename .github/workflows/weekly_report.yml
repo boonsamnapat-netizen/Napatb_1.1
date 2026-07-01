@@ -1,0 +1,93 @@
+name: Weekly Performance Report
+
+# Closes the feedback loop: re-runs the walk-forward backtest across the CSV
+# universe, grades the live forward-test log, builds the HTML performance
+# dashboard (committed to reports/) and pushes a Thai scorecard to Telegram.
+#
+# Everything runs offline on committed CSVs — no exchange access needed.
+#
+# NOTE: GitHub only *schedules* workflows that live on the repository's DEFAULT
+# branch. This file runs fine via "Run workflow" (workflow_dispatch) from this
+# feature branch today; to activate the weekly schedule, sync this file onto the
+# default branch too (same as the other workflows in this repo).
+
+on:
+  workflow_dispatch:
+    inputs:
+      htf:
+        description: "Higher timeframe resample rule"
+        default: "W"
+      notify:
+        description: "Push the Thai scorecard to Telegram"
+        default: "true"
+  schedule:
+    - cron: '0 2 * * 0'    # Sundays 02:00 UTC (09:00 Thailand)
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/project-research-planning-9dy2wh
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy pyyaml rich yfinance feedparser matplotlib
+
+      - name: Fetch fresh daily data
+        run: |
+          python - <<'EOF'
+          import pathlib
+          import yfinance as yf
+          import pandas as pd
+
+          out = pathlib.Path('data/real/crypto'); out.mkdir(parents=True, exist_ok=True)
+          uni = pathlib.Path('data/crypto_universe.txt')
+          tickers = [t.strip() for t in uni.read_text().splitlines() if t.strip()] \
+              if uni.exists() else ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','BNB-USD']
+          for t in tickers:
+              try:
+                  df = yf.download(t, start='2018-01-01', interval='1d',
+                                   auto_adjust=False, progress=False)
+                  if isinstance(df.columns, pd.MultiIndex):
+                      df.columns = df.columns.get_level_values(0)
+                  df = df[['Open','High','Low','Close','Volume']].dropna()
+                  if len(df) >= 250:
+                      df.to_csv(out / f"{t.replace('-USD','USDT')}.csv")
+                      print(f"  {t}: {len(df)} rows")
+              except Exception as e:
+                  print(f"  {t}: SKIP ({e})")
+          EOF
+
+      - name: Build performance dashboard + scorecard
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HTF: ${{ github.event.inputs.htf || 'W' }}
+          NOTIFY: ${{ github.event.inputs.notify || 'true' }}
+        run: |
+          ARGS="--csv-dir data/real/crypto --htf-rule $HTF --out-dir reports"
+          if [ "$NOTIFY" = "true" ]; then ARGS="$ARGS --notify"; fi
+          python signal_report.py $ARGS
+
+      - name: Commit the refreshed dashboard
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add reports/performance.html reports/performance.json \
+                  reports/equity.png reports/r_distribution.png \
+                  data/signals_log.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh weekly performance dashboard"
+            git push origin HEAD:claude/project-research-planning-9dy2wh
+          else
+            echo "Nothing to update."
+          fi

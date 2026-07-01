@@ -30,12 +30,16 @@ guarantee — always quote honest, net-of-fees, out-of-sample numbers.
 `signal_engine` (the brain) · `money_management` · `portfolio` (heat / per-
 direction correlation caps) · `scanner` (rank a universe) · `backtester`
 (walk-forward + fees) · `calendar` (event blackout) · `news` (RSS/keyword) ·
-`notifier` (Telegram text/photo, Thai) · `charting` (matplotlib PNG)
+`notifier` (Telegram text/photo, Thai) · `charting` (matplotlib PNG) ·
+`analytics` (perf metrics from trades: equity/DD/R-dist/Sharpe/Kelly/breakdowns) ·
+`dashboard` (self-contained HTML dashboard + PNGs, no external deps)
 
 ## CLIs (sandbox can't reach exchanges → use CSVs or `--demo`)
 - `python signal_cli.py BTCUSDT [--demo] [--notify]` — one-symbol signal
 - `python signal_scan.py --csv-dir data/real/crypto --htf W [--portfolio --summary --notify --charts]`
 - `python signal_backtest.py BTCUSDT --csv data/real/crypto/BTCUSDT.csv --htf-rule W [--optimize --apply]`
+- `python signal_report.py --csv-dir data/real/crypto --htf-rule W [--notify]` — walk-forward
+  perf dashboard → `reports/performance.{html,json}` + equity/R-dist PNGs (+ Thai Telegram scorecard)
 
 ## Config — `config/config.yaml` (`signal:` block)
 Account $100, risk 2%/trade, leverage 10 (display/margin only — risk is set by
@@ -48,6 +52,9 @@ Account $100, risk 2%/trade, leverage 10 (display/margin only — risk is set by
   fetch → scan → Telegram summary + per-signal compact alerts (+charts).
   Secrets: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. Inputs: `test_notify`,
   `sample_signal`. Portfolio value: message the bot `/port 150` → `data/account.json`.
+- **`.github/workflows/weekly_report.yml`** — Sun 02:00 UTC (09:00 TH): fetch → walk-forward →
+  grade forward-log → commit `reports/performance.*` + Telegram scorecard. (Schedule activates
+  only once synced to the default branch, like the other workflows.)
 
 ## Gotchas — don't re-research (these cost the most tokens to rediscover)
 - **Sandbox network allows ONLY `raw.githubusercontent.com`.** Exchanges (Binance/
