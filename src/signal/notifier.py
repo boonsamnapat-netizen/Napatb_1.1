@@ -324,6 +324,10 @@ class TelegramNotifier:
             f"• DD รวม (เรียงไม้เดียว, worst-case): {s['max_drawdown_r']:.0f}R "
             f"— จริงต่อเหรียญราว −5..−24R",
         ]
+        sweep = report.get("threshold_sweep") or {}
+        if sweep.get("recommended"):
+            lines.append(f"💡 ข้อเสนอ: ขยับ min_confidence → {sweep['recommended']} "
+                         f"(expectancy/ไม้ ดีขึ้นจากข้อมูลย้อนหลัง)")
         top = report.get("by_symbol", [])[:3]
         if top:
             lines.append("")

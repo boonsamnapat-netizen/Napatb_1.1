@@ -215,6 +215,49 @@ def by_month(trades: list[dict], risk_pct: float = 2.0) -> list[dict]:
     return sorted(rows, key=lambda r: r["key"])
 
 
+# ----------------------------------------------- confidence threshold sweep --
+def threshold_sweep(
+    trades: list[dict],
+    thresholds: list[int] | None = None,
+    risk_pct: float = 2.0,
+    min_trades: int = 30,
+) -> dict:
+    """'What if we only took signals with confidence >= X?'
+
+    Filters the *already-realised* OOS trades by confidence (their outcomes are
+    unchanged) at each threshold — a first-order estimate of raising
+    ``min_confidence``. It does NOT re-run the backtest, so it ignores the small
+    knock-on effect of skipped trades on cooldown/sequencing (negligible while
+    cooldown is off). Honest, actionable, and cheap.
+
+    Returns the per-threshold rows plus a ``recommended`` threshold: the one with
+    the best expectancy that still keeps a meaningful sample (>= ``min_trades``).
+    """
+    thresholds = thresholds or [55, 60, 65, 70, 75, 80]
+    rows = []
+    for th in thresholds:
+        sub = [t for t in trades if float(t.get("confidence") or 0) >= th]
+        m = summary_metrics(sub, risk_pct) if sub else {"trades": 0}
+        rows.append({
+            "threshold": th,
+            "trades": m.get("trades", 0),
+            "win_rate": m.get("win_rate"),
+            "expectancy_r": m.get("expectancy_r"),
+            "total_r": m.get("total_r"),
+            "profit_factor": m.get("profit_factor"),
+        })
+    eligible = [r for r in rows if r["trades"] >= min_trades and r["expectancy_r"] is not None]
+    base = rows[0] if rows else None
+    best = max(eligible, key=lambda r: r["expectancy_r"]) if eligible else None
+    rec = None
+    if best and base and base.get("expectancy_r") is not None:
+        # only recommend a change if it's a real improvement over the current floor
+        if best["threshold"] != base["threshold"] and best["expectancy_r"] > base["expectancy_r"] + 0.02:
+            rec = best["threshold"]
+    return {"rows": rows, "recommended": rec,
+            "current": base["threshold"] if base else None}
+
+
 # --------------------------------------------------- forward-test tracking ---
 def forward_tracker(forward_summary: dict, expectancy_r: float | None) -> dict:
     """Compare the live forward-test log (graded ENTER signals actually pushed)
@@ -260,6 +303,7 @@ def build_report(
         "by_direction": by_direction(trades, risk_per_trade_pct),
         "by_confidence": by_confidence(trades, risk_per_trade_pct),
         "by_month": by_month(trades, risk_per_trade_pct),
+        "threshold_sweep": threshold_sweep(trades, risk_pct=risk_per_trade_pct),
     }
     if forward_summary is not None:
         report["forward"] = forward_tracker(forward_summary, summ.get("expectancy_r"))

@@ -206,6 +206,7 @@ def render_html(report: dict) -> str:
     mon_tbl = _table(["เดือน", "ไม้", "Total R", "Exp/ไม้"], mon_rows)
 
     fwd_html = _forward_section(report.get("forward"))
+    sweep_html = _threshold_section(report.get("threshold_sweep"))
 
     body = f"""
     <section class='kpis'>{kpis}</section>
@@ -224,6 +225,8 @@ def render_html(report: dict) -> str:
       <div class='card'><h2>การกระจาย R ต่อไม้</h2>{_bars_svg(hist.get('labels', []), hist.get('counts', []))}</div>
     </div>
 
+    {sweep_html}
+
     {fwd_html}
 
     <div class='grid2'>
@@ -237,6 +240,46 @@ def render_html(report: dict) -> str:
     <div class='card'><h2>รายเดือน</h2>{mon_tbl}</div>
     """
     return _shell(body, report)
+
+
+def _threshold_section(sweep: dict | None) -> str:
+    if not sweep or not sweep.get("rows"):
+        return ""
+    rows = []
+    rec = sweep.get("recommended")
+    cur = sweep.get("current")
+    for r in sweep["rows"]:
+        mark = ""
+        if r["threshold"] == rec:
+            mark = " ⭐"
+        elif r["threshold"] == cur:
+            mark = " (ปัจจุบัน)"
+        rows.append([
+            f"≥ {r['threshold']}{mark}", str(r["trades"]),
+            (_fmt((r["win_rate"] or 0) * 100, pct=True) if r["win_rate"] is not None else "—", ""),
+            _tone_cell(r["expectancy_r"], r=True),
+            _tone_cell(r["total_r"], r=True),
+            (_fmt(r.get("profit_factor")), ""),
+        ])
+    tbl = _table(["min confidence", "ไม้", "WR", "Exp/ไม้", "Total R", "PF"], rows)
+    if rec:
+        banner = (
+            f"<div class='rec'>💡 <b>ข้อเสนอ:</b> ขยับ <code>min_confidence</code> เป็น "
+            f"<b>{rec}</b> — จากข้อมูลย้อนหลัง ให้ expectancy/ไม้ ดีกว่าค่าปัจจุบัน "
+            f"(แลกกับจำนวนไม้ที่น้อยลง)</div>"
+        )
+    else:
+        banner = (
+            "<div class='rec muted'>ค่า <code>min_confidence</code> ปัจจุบันสมเหตุสมผลแล้ว — "
+            "การขยับ threshold ไม่ได้ช่วย expectancy อย่างมีนัยสำคัญ</div>"
+        )
+    return f"""
+    <div class='card'>
+      <h2>ปรับ min_confidence ได้ไหม? (กรอง trade ที่เกิดจริงตาม confidence)</h2>
+      {banner}{tbl}
+      <p class='muted' style='margin-top:8px;font-size:12px'>*กรองจากไม้ที่เกิดขึ้นจริง (ผลลัพธ์ไม่เปลี่ยน)
+      ไม่ได้ re-backtest — เป็นการประมาณอันดับแรก เพราะ cooldown ปิดอยู่ผลกระทบด้าน sequencing จึงน้อย</p>
+    </div>"""
 
 
 def _forward_section(fwd: dict | None) -> str:
@@ -301,6 +344,11 @@ def _shell(body: str, report: dict) -> str:
   .note {{ background:rgba(210,153,34,0.08); border:1px solid {AMBER}; border-radius:10px;
     padding:12px 16px; font-size:13px; color:{FG}; line-height:1.6; margin:0 0 16px; }}
   .note b {{ color:{AMBER}; }}
+  .rec {{ background:rgba(88,166,255,0.10); border:1px solid {BLUE}; border-radius:10px;
+    padding:12px 16px; font-size:14px; margin:0 0 14px; line-height:1.6; }}
+  .rec.muted {{ background:rgba(139,148,158,0.08); border-color:{GRID}; }}
+  .rec b {{ color:{BLUE}; }}
+  code {{ background:{BG}; padding:1px 6px; border-radius:5px; font-size:12px; color:{AMBER}; }}
   footer {{ color:{MUTED}; font-size:12px; padding:0 26px 40px; max-width:1200px; margin:0 auto; }}
 </style></head><body>
 <header>

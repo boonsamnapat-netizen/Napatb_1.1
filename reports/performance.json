@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01 15:31 UTC",
+  "generated_at": "2026-07-01 15:43 UTC",
   "config_label": "live default (4h/1d, Supertrend, ATR trail 2.5R, fees on)",
   "risk_per_trade_pct": 2.0,
   "summary": {
@@ -5408,6 +5408,60 @@
       "profit_factor": 22.0141
     }
   ],
+  "threshold_sweep": {
+    "rows": [
+      {
+        "threshold": 55,
+        "trades": 881,
+        "win_rate": 0.4472,
+        "expectancy_r": 0.0084,
+        "total_r": 7.4392,
+        "profit_factor": 1.0153
+      },
+      {
+        "threshold": 60,
+        "trades": 514,
+        "win_rate": 0.43,
+        "expectancy_r": 0.0094,
+        "total_r": 4.8491,
+        "profit_factor": 1.0167
+      },
+      {
+        "threshold": 65,
+        "trades": 285,
+        "win_rate": 0.4526,
+        "expectancy_r": 0.0993,
+        "total_r": 28.2955,
+        "profit_factor": 1.1834
+      },
+      {
+        "threshold": 70,
+        "trades": 160,
+        "win_rate": 0.4813,
+        "expectancy_r": 0.2826,
+        "total_r": 45.2145,
+        "profit_factor": 1.5646
+      },
+      {
+        "threshold": 75,
+        "trades": 65,
+        "win_rate": 0.5077,
+        "expectancy_r": 0.4596,
+        "total_r": 29.8731,
+        "profit_factor": 1.9738
+      },
+      {
+        "threshold": 80,
+        "trades": 26,
+        "win_rate": 0.5,
+        "expectancy_r": 0.6529,
+        "total_r": 16.9746,
+        "profit_factor": 2.2855
+      }
+    ],
+    "recommended": 75,
+    "current": 55
+  },
   "forward": {
     "total": 5,
     "open": 5,

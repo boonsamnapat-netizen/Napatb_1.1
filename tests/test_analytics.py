@@ -96,6 +96,32 @@ def test_r_histogram_counts_all_trades():
     assert len(h["counts"]) == len(h["labels"])
 
 
+def test_threshold_sweep_recommends_higher_when_better():
+    # low-confidence trades lose, high-confidence trades win -> raising the
+    # threshold should improve expectancy and be recommended.
+    trades = []
+    for i in range(40):
+        trades.append({"realized_r": -1.0, "outcome": "LOSS", "confidence": 56,
+                       "exit_date": f"2024-01-{i%28+1:02d}", "symbol": "X", "direction": "LONG"})
+    for i in range(40):
+        trades.append({"realized_r": 2.0, "outcome": "WIN", "confidence": 78,
+                       "exit_date": f"2024-02-{i%28+1:02d}", "symbol": "X", "direction": "LONG"})
+    sw = analytics.threshold_sweep(trades, thresholds=[55, 75], min_trades=10)
+    assert sw["current"] == 55
+    assert sw["recommended"] == 75
+    rows = {r["threshold"]: r for r in sw["rows"]}
+    assert rows[55]["trades"] == 80 and rows[75]["trades"] == 40
+    assert rows[75]["expectancy_r"] > rows[55]["expectancy_r"]
+
+
+def test_threshold_sweep_no_recommendation_when_flat():
+    trades = [{"realized_r": 0.3, "outcome": "WIN", "confidence": 60 + (i % 20),
+               "exit_date": f"2024-01-{i%28+1:02d}", "symbol": "X", "direction": "LONG"}
+              for i in range(60)]
+    sw = analytics.threshold_sweep(trades, thresholds=[55, 60, 65], min_trades=5)
+    assert sw["recommended"] is None   # uniformly good -> no reason to raise
+
+
 def test_forward_tracker_delta():
     fwd = {"total": 4, "open": 2, "closed": 2, "wins": 1,
            "win_rate": 0.5, "total_r": 0.5}
