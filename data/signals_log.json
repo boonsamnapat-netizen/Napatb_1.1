@@ -13,10 +13,10 @@
         4.5
       ],
       "entry_note": "reproduced end-of-day (live used forming bar)",
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 6.84478999,
+      "result_r": -1.0,
+      "closed_date": "2026-07-02",
       "logged_at": "2026-06-20T01:00:00+00:00"
     },
     {
@@ -32,10 +32,10 @@
         0.065
       ],
       "entry_note": "reproduced end-of-day (live used forming bar)",
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.07,
+      "result_r": 1.164,
+      "closed_date": "2026-06-30",
       "logged_at": "2026-06-25T01:00:00+00:00"
     },
     {
@@ -51,10 +51,10 @@
         0.96561003
       ],
       "entry_note": "reproduced end-of-day (live used forming bar)",
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 1.14421705,
+      "result_r": -1.0,
+      "closed_date": "2026-07-04",
       "logged_at": "2026-06-26T01:00:00+00:00"
     },
     {
@@ -70,10 +70,10 @@
         0.065
       ],
       "entry_note": "reproduced end-of-day (live used forming bar)",
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.07,
+      "result_r": 1.164,
+      "closed_date": "2026-06-30",
       "logged_at": "2026-06-26T01:00:00+00:00"
     },
     {
@@ -89,10 +89,10 @@
         0.7
       ],
       "entry_note": "reproduced end-of-day (live used forming bar)",
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.8,
+      "result_r": 1.156,
+      "closed_date": "2026-06-28",
       "logged_at": "2026-06-26T01:00:00+00:00"
     }
   ]

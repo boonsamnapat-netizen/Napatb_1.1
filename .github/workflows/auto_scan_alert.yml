@@ -118,7 +118,11 @@ jobs:
         run: |
           git config user.email "actions@github.com"
           git config user.name "github-actions[bot]"
-          git add data/account.json data/trade_journal.json data/signals_log.json 2>/dev/null || true
+          # Stage each file on its own: a single `git add a b c` aborts and
+          # stages NOTHING if any path is missing (e.g. no trade journal yet).
+          for f in data/account.json data/trade_journal.json data/signals_log.json; do
+            [ -f "$f" ] && git add "$f"
+          done
           if ! git diff --cached --quiet; then
             git commit -m "chore: update portfolio / trade journal / signal log"
             git push origin HEAD:claude/crypto-signal-system-kcf8vq
