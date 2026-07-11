@@ -144,7 +144,14 @@ def _send_summary(config, scanner, rows, universe):
     except Exception:  # noqa: BLE001
         events = []
 
-    msg = TelegramNotifier.format_market_summary(overview, rows[:5], news, events)
+    track = None
+    try:
+        from src.signal import signal_log
+        track = signal_log.summary()
+    except Exception:  # noqa: BLE001
+        pass
+
+    msg = TelegramNotifier.format_market_summary(overview, rows[:5], news, events, track)
     sent = TelegramNotifier(config).send(msg)
     console.print(f"[dim]Telegram summary: {'sent' if sent else 'dry-run/not configured'}[/dim]")
 

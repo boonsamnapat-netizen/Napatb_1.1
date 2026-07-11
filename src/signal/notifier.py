@@ -204,7 +204,21 @@ class TelegramNotifier:
         return tips
 
     @staticmethod
-    def format_market_summary(overview: dict, top_rows, news=None, events=None) -> str:
+    def format_track_record(track: dict) -> str:
+        """One compact Thai line of cumulative signal-log performance."""
+        if not track or not track.get("closed"):
+            return ""
+        wr = (track.get("win_rate") or 0) * 100
+        line = (f"📈 ผลงานสะสม (สัญญาณระบบ): {track['closed']} ไม้ · "
+                f"ชนะ {track['wins']} ({wr:.0f}%) · รวม {track['total_r']:+.2f}R · "
+                f"เฉลี่ย {track['avg_r']:+.2f}R/ไม้")
+        if track.get("open"):
+            line += f" · กำลังถือ {track['open']}"
+        return line
+
+    @staticmethod
+    def format_market_summary(overview: dict, top_rows, news=None, events=None,
+                              track=None) -> str:
         b = overview.get("breadth", {})
         c = overview.get("decisions", {})
         enters = c.get("ENTER", 0)
@@ -244,6 +258,10 @@ class TelegramNotifier:
             lines.append("💡 คำแนะนำวันนี้:")
             for t in tips:
                 lines.append(f"  • {t}")
+        track_line = TelegramNotifier.format_track_record(track)
+        if track_line:
+            lines.append("")
+            lines.append(track_line)
         lines.append("")
         lines.append(_DISCLAIMER)
         return "\n".join(lines)
