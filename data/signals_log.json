@@ -102,12 +102,17 @@
       "confidence": 56.9,
       "entry": 1316.68444824,
       "stop": 1633.89354516,
-      "tps": [],
+      "tps": [
+        1000.0,
+        500.0,
+        47.84806056
+      ],
       "status": "open",
       "exit": null,
       "result_r": null,
       "closed_date": null,
-      "logged_at": "2026-07-24T04:17:31.577852+00:00"
+      "logged_at": "2026-07-24T04:17:31.577852+00:00",
+      "tp_note": "reconstructed with engine levels as-of signal date (logged before the TP-capture fix)"
     }
   ]
 }
