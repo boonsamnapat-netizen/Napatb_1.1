@@ -48,6 +48,13 @@ def append_enters(rows, date_str: str, path: str = DEFAULT_PATH) -> int:
         key = (date_str, d["symbol"])
         if key in seen:
             continue
+        # Scanner rows drop `signal` from to_dict(), so the position plan (and
+        # therefore the take-profits) only lives on the underlying Signal. Without
+        # it every logged signal would have no TP and could only ever close as SL.
+        plan_src = d
+        sig_obj = getattr(r, "signal", None)
+        if sig_obj is not None and hasattr(sig_obj, "to_dict"):
+            plan_src = sig_obj.to_dict()
         data["signals"].append({
             "date": date_str,
             "symbol": d["symbol"],
@@ -55,7 +62,7 @@ def append_enters(rows, date_str: str, path: str = DEFAULT_PATH) -> int:
             "confidence": d.get("confidence"),
             "entry": d.get("entry"),
             "stop": d.get("stop_loss"),
-            "tps": _tp_prices(d),
+            "tps": _tp_prices(plan_src),
             "status": "open",
             "exit": None,
             "result_r": None,
