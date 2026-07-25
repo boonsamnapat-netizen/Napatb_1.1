@@ -113,6 +113,24 @@
       "closed_date": null,
       "logged_at": "2026-07-24T04:17:31.577852+00:00",
       "tp_note": "reconstructed with engine levels as-of signal date (logged before the TP-capture fix)"
+    },
+    {
+      "date": "2026-07-25",
+      "symbol": "ATOMUSDT",
+      "direction": "SHORT",
+      "confidence": 56.1,
+      "entry": 1.38399994,
+      "stop": 1.50680331,
+      "tps": [
+        1.13096297,
+        1.0,
+        0.5
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-07-25T04:13:26.534311+00:00"
     }
   ]
 }
