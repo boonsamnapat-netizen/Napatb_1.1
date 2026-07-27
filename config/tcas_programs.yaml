@@ -1,0 +1,128 @@
+# คณะในระบบ กสพท — ใช้จัดอันดับและประเมินโอกาส
+#
+# ⚠️⚠️ สำคัญมาก: ค่า `cutoffs` ด้านล่างเป็น **ค่าประมาณจากความจำของโมเดล**
+#    ไม่ใช่ข้อมูลที่ดึงมาจากประกาศจริง (sandbox นี้ต่อเน็ตออกไม่ได้)
+#    ทุกรายการตั้ง verified: false ไว้ — ก่อนใช้ตัดสินใจจริงต้องแทนที่ด้วย
+#    "คะแนนต่ำสุด กสพท" ที่ประกาศจริงย้อนหลัง 3 ปี แล้วตั้ง verified: true
+#    วิธีแก้: แก้ตัวเลขในไฟล์นี้อย่างเดียว ไม่ต้องแตะโค้ด
+#
+# cutoffs = คะแนนรวม กสพท เต็ม 100 ของ "คนสุดท้ายที่ติด" ในแต่ละปี
+# ranking จะใช้ค่าล่าสุด + ส่วนเบี่ยงเบนของ 3 ปี เพื่อประเมินโอกาส
+
+meta:
+  score_scale: 100.0
+  note: "คะแนนต่ำสุด กสพท (TPAT1 30% + A-Level 70%)"
+  years: [2568, 2569, 2570]
+
+programs:
+  - code: cu_med
+    name: "แพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+    faculty: "แพทยศาสตร์"
+    seats: 176
+    cutoffs: {2568: 73.5, 2569: 74.2}
+    verified: false
+
+  - code: si_med
+    name: "แพทยศาสตร์ศิริราชพยาบาล ม.มหิดล"
+    faculty: "แพทยศาสตร์"
+    seats: 260
+    cutoffs: {2568: 72.8, 2569: 73.4}
+    verified: false
+
+  - code: rama_med
+    name: "แพทยศาสตร์โรงพยาบาลรามาธิบดี ม.มหิดล"
+    faculty: "แพทยศาสตร์"
+    seats: 148
+    cutoffs: {2568: 72.0, 2569: 72.6}
+    verified: false
+
+  - code: tu_med
+    name: "แพทยศาสตร์ ม.ธรรมศาสตร์"
+    faculty: "แพทยศาสตร์"
+    seats: 65
+    cutoffs: {2568: 69.5, 2569: 70.1}
+    verified: false
+
+  - code: pmk_med
+    name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า"
+    faculty: "แพทยศาสตร์"
+    seats: 100
+    cutoffs: {2568: 68.9, 2569: 69.7}
+    verified: false
+
+  - code: swu_med
+    name: "แพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
+    faculty: "แพทยศาสตร์"
+    seats: 165
+    cutoffs: {2568: 68.5, 2569: 69.2}
+    verified: false
+
+  - code: cmu_med
+    name: "แพทยศาสตร์ ม.เชียงใหม่"
+    faculty: "แพทยศาสตร์"
+    seats: 55
+    cutoffs: {2568: 69.0, 2569: 69.6}
+    verified: false
+
+  - code: kku_med
+    name: "แพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "แพทยศาสตร์"
+    seats: 20
+    cutoffs: {2568: 67.4, 2569: 68.0}
+    verified: false
+
+  - code: psu_med
+    name: "แพทยศาสตร์ ม.สงขลานครินทร์"
+    faculty: "แพทยศาสตร์"
+    seats: 40
+    cutoffs: {2568: 66.8, 2569: 67.3}
+    verified: false
+
+  - code: nu_med
+    name: "แพทยศาสตร์ ม.นเรศวร"
+    faculty: "แพทยศาสตร์"
+    seats: 30
+    cutoffs: {2568: 66.2, 2569: 66.9}
+    verified: false
+
+  - code: cu_dent
+    name: "ทันตแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 80
+    cutoffs: {2568: 70.1, 2569: 70.8}
+    verified: false
+
+  - code: mu_dent
+    name: "ทันตแพทยศาสตร์ ม.มหิดล"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 83
+    cutoffs: {2568: 69.4, 2569: 70.0}
+    verified: false
+
+  - code: cu_pharm
+    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (บริบาล)"
+    faculty: "เภสัชศาสตร์"
+    seats: 75
+    cutoffs: {2568: 65.2, 2569: 65.9}
+    verified: false
+
+  - code: mu_pharm
+    name: "เภสัชศาสตร์ ม.มหิดล"
+    faculty: "เภสัชศาสตร์"
+    seats: 60
+    cutoffs: {2568: 64.6, 2569: 65.1}
+    verified: false
+
+  - code: cu_vet
+    name: "สัตวแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 100
+    cutoffs: {2568: 62.8, 2569: 63.4}
+    verified: false
+
+  - code: ku_vet
+    name: "สัตวแพทยศาสตร์ ม.เกษตรศาสตร์"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 90
+    cutoffs: {2568: 61.5, 2569: 62.2}
+    verified: false

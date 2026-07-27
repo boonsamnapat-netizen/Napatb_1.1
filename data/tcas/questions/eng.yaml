@@ -1,0 +1,121 @@
+subject: eng
+questions:
+  - qid: eng_grammar_001
+    topic: eng_grammar
+    stem: "Choose the correct option: The patient ___ to the emergency room every time his chest pain returns."
+    choices:
+      - "go"
+      - "goes"
+      - "going"
+      - "have gone"
+    answer: 1
+    explanation: "Present simple with a third-person singular subject ('the patient') takes -s. 'Every time' signals a habitual action."
+    difficulty: 1
+
+  - qid: eng_grammar_002
+    topic: eng_grammar
+    stem: "Choose the correct option: If I ___ you, I would apply to medical school this year."
+    choices:
+      - "am"
+      - "was"
+      - "were"
+      - "will be"
+    answer: 2
+    explanation: "Second conditional (unreal present) uses the subjunctive 'were' for all persons: If I were you, I would..."
+    difficulty: 2
+
+  - qid: eng_grammar_003
+    topic: eng_grammar
+    stem: "Choose the correct passive form: The nurse administered the vaccine. → The vaccine ___ by the nurse."
+    choices:
+      - "administered"
+      - "was administered"
+      - "was administering"
+      - "has administering"
+    answer: 1
+    explanation: "Past simple passive = was/were + past participle. The vaccine receives the action, so 'was administered'."
+    difficulty: 2
+
+  - qid: eng_vocab_001
+    topic: eng_vocab
+    stem: "In a medical context, a 'chronic' condition is one that ___."
+    choices:
+      - "appears suddenly and severely"
+      - "persists over a long period of time"
+      - "is caused by bacteria"
+      - "can be cured with a single treatment"
+    answer: 1
+    explanation: "'Chronic' = long-lasting or recurring. Its opposite is 'acute', which means sudden and short-lived but often severe."
+    difficulty: 1
+
+  - qid: eng_vocab_002
+    topic: eng_vocab
+    stem: "A tumour described as 'benign' is ___."
+    choices:
+      - "spreading rapidly to other organs"
+      - "not cancerous and unlikely to spread"
+      - "resistant to all treatment"
+      - "always fatal without surgery"
+    answer: 1
+    explanation: "'Benign' = harmless, non-cancerous. The opposite is 'malignant', which describes a cancerous tumour that can invade and metastasise."
+    difficulty: 1
+
+  - qid: eng_vocab_003
+    topic: eng_vocab
+    stem: "The word 'prognosis' most nearly means ___."
+    choices:
+      - "the identification of a disease from its symptoms"
+      - "the likely course and outcome of a disease"
+      - "a treatment plan prescribed by a doctor"
+      - "a record of a patient's past illnesses"
+    answer: 1
+    explanation: "'Prognosis' is the forecast of how a disease will develop. Compare 'diagnosis' (identifying what the disease is)."
+    difficulty: 2
+
+  - qid: eng_error_001
+    topic: eng_error
+    stem: "Identify the underlined part that is grammatically incorrect: 'The number of patients (A) waiting in the corridor (B) have increased (C) sharply since March (D).'"
+    choices:
+      - "A"
+      - "B"
+      - "C"
+      - "D"
+    answer: 2
+    explanation: "'The number of' takes a singular verb, so it should be 'has increased'. (Contrast: 'A number of patients have increased...' would be plural.)"
+    difficulty: 3
+
+  - qid: eng_conv_001
+    topic: eng_conversation
+    stem: "Doctor: 'How long have you been feeling this way?'  Patient: '___'"
+    choices:
+      - "Since about three weeks ago."
+      - "Since three weeks."
+      - "For three weeks ago."
+      - "During three weeks ago."
+    answer: 0
+    explanation: "'Since' needs a point in time ('three weeks ago'), 'for' needs a duration ('for three weeks'). Only option A combines them correctly."
+    difficulty: 2
+
+  - qid: eng_reading_001
+    topic: eng_reading
+    stem: "Read: 'Although the new drug reduced symptoms in most participants, researchers cautioned that the trial was small and lacked a control group.' What is the researchers' main concern?"
+    choices:
+      - "The drug failed to reduce symptoms."
+      - "The study design limits how much the results can be trusted."
+      - "The drug caused serious side effects."
+      - "The participants were too old for the treatment."
+    answer: 1
+    explanation: "The concern named after 'cautioned that' is methodological — a small sample and no control group — not the drug's effect, which the sentence says was positive."
+    difficulty: 2
+
+  - qid: eng_cloze_001
+    topic: eng_cloze
+    stem: "Complete: 'Regular exercise is strongly ___ with a lower risk of cardiovascular disease.'"
+    choices:
+      - "associated"
+      - "associating"
+      - "association"
+      - "associate"
+    answer: 0
+    explanation: "The fixed collocation is 'be associated with'. A past participle is needed after 'is' to form the passive."
+    difficulty: 2

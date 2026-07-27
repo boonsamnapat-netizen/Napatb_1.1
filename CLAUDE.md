@@ -5,10 +5,16 @@ with risk/MM, and pushes Thai-language alerts (+charts) to Telegram — runs
 hands-off on GitHub Actions. Educational/decision-support only; no profit
 guarantee — always quote honest, net-of-fees, out-of-sample numbers.
 
-## Two codebases (don't confuse them)
+## Three codebases (don't confuse them)
 - **`src/signal/` + `signal_*.py`** — THE live signal system (active work).
 - `src/{parser,backtest,analysis,output}/` + `main.py` — legacy Discord
   trade-setup analyzer (pre-existing, separate; usually leave untouched).
+- `src/tcas/` + `tcas_cli.py` — TCAS70 medical-school prep system (study
+  planner + quiz/SRS + กสพท scoring + program ranking + daily Telegram push).
+  Wholly unrelated to crypto; branch `claude/tcas70-medical-prep-l3ot0m`.
+  Details: `docs/TCAS_SYSTEM.md`. Exam dates and program cutoffs in
+  `config/tcas_*.yaml` are **unverified estimates** (`verified: false`) —
+  the sandbox can't reach mytcas.com, so don't re-probe; replace by hand.
 
 ## Branches
 - Develop on **`claude/crypto-signal-system-kcf8vq`**.

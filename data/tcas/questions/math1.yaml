@@ -1,0 +1,133 @@
+subject: math1
+questions:
+  - qid: math_explog_001
+    topic: math_explog
+    stem: "ค่าของ log₁₀ 1000 เท่ากับเท่าใด"
+    choices:
+      - "2"
+      - "3"
+      - "10"
+      - "100"
+    answer: 1
+    explanation: "log₁₀ 1000 คือเลขชี้กำลังที่ทำให้ 10^x = 1000 = 10³ ดังนั้น x = 3"
+    difficulty: 1
+
+  - qid: math_trig_001
+    topic: math_trig
+    stem: "ค่าของ sin 30° + cos 60° เท่ากับเท่าใด"
+    choices:
+      - "1/2"
+      - "1"
+      - "√3/2"
+      - "√3"
+    answer: 1
+    explanation: "sin 30° = 1/2 และ cos 60° = 1/2 รวมได้ 1"
+    difficulty: 1
+
+  - qid: math_calculus_001
+    topic: math_calculus
+    stem: "ถ้า f(x) = x³ − 2x แล้ว f′(2) มีค่าเท่าใด"
+    choices:
+      - "4"
+      - "6"
+      - "10"
+      - "12"
+    answer: 2
+    explanation: "f′(x) = 3x² − 2 แทน x = 2 ได้ 3(4) − 2 = 10"
+    difficulty: 2
+
+  - qid: math_calculus_002
+    topic: math_calculus
+    stem: "ค่าของ ∫₀¹ 3x² dx เท่ากับเท่าใด"
+    choices:
+      - "1"
+      - "2"
+      - "3"
+      - "1/3"
+    answer: 0
+    explanation: "∫3x² dx = x³ แทนขอบเขต ได้ 1³ − 0³ = 1"
+    difficulty: 2
+
+  - qid: math_sequence_001
+    topic: math_sequence
+    stem: "ผลบวกของจำนวนเต็มบวก 1 + 2 + 3 + ... + 100 เท่ากับเท่าใด"
+    choices:
+      - "5000"
+      - "5050"
+      - "5100"
+      - "10100"
+    answer: 1
+    explanation: "อนุกรมเลขคณิต Sₙ = n(a₁ + aₙ)/2 = 100(1 + 100)/2 = 5050"
+    difficulty: 1
+
+  - qid: math_prob_001
+    topic: math_prob
+    stem: "โยนเหรียญที่สมดุล 2 เหรียญพร้อมกัน ความน่าจะเป็นที่จะได้หัวทั้งสองเหรียญเท่ากับเท่าใด"
+    choices:
+      - "1/2"
+      - "1/3"
+      - "1/4"
+      - "2/3"
+    answer: 2
+    explanation: "ผลลัพธ์ทั้งหมด 4 แบบ (HH, HT, TH, TT) เหตุการณ์ที่ต้องการมี 1 แบบ จึงเป็น 1/4"
+    difficulty: 1
+
+  - qid: math_matrix_001
+    topic: math_matrix
+    stem: "ดีเทอร์มิแนนต์ของเมทริกซ์ [[2, 1], [3, 4]] เท่ากับเท่าใด"
+    choices:
+      - "5"
+      - "8"
+      - "11"
+      - "−5"
+    answer: 0
+    explanation: "det = ad − bc = (2)(4) − (1)(3) = 8 − 3 = 5"
+    difficulty: 1
+
+  - qid: math_complex_001
+    topic: math_complex
+    stem: "ค่าของ (1 + i)² เท่ากับเท่าใด เมื่อ i² = −1"
+    choices:
+      - "2"
+      - "2i"
+      - "1 + 2i"
+      - "−2i"
+    answer: 1
+    explanation: "(1 + i)² = 1 + 2i + i² = 1 + 2i − 1 = 2i"
+    difficulty: 2
+
+  - qid: math_real_001
+    topic: math_real
+    stem: "เซตคำตอบของสมการ |x − 3| = 5 คือข้อใด"
+    choices:
+      - "{8}"
+      - "{−2}"
+      - "{8, −2}"
+      - "{2, −8}"
+    answer: 2
+    explanation: "x − 3 = 5 ได้ x = 8 และ x − 3 = −5 ได้ x = −2"
+    difficulty: 1
+
+  - qid: math_stat_001
+    topic: math_stat
+    stem: "ข้อมูล 3, 7, 5, 9, 11 มีค่ามัธยฐานเท่าใด"
+    choices:
+      - "5"
+      - "7"
+      - "7.5"
+      - "9"
+    answer: 1
+    explanation: "เรียงข้อมูลได้ 3, 5, 7, 9, 11 มี 5 จำนวน ตัวกลางคือตัวที่ 3 ได้แก่ 7"
+    difficulty: 1
+
+  - qid: math_function_001
+    topic: math_function
+    stem: "โดเมนของฟังก์ชัน f(x) = √(x − 2) คือข้อใด"
+    choices:
+      - "x > 2"
+      - "x ≥ 2"
+      - "x ≤ 2"
+      - "จำนวนจริงทุกจำนวน"
+    answer: 1
+    explanation: "รากที่สองของจำนวนจริงต้องมีสิ่งที่อยู่ในรากไม่ติดลบ จึงต้องมี x − 2 ≥ 0 นั่นคือ x ≥ 2 (รวม x = 2 ที่ให้ค่า 0)"
+    difficulty: 2

@@ -1,0 +1,83 @@
+name: TCAS70 Daily Study Plan
+
+# ส่งตารางอ่านหนังสือ + นับถอยหลังวันสอบเข้า Telegram ทุกเช้า
+# แล้ว commit ความคืบหน้า (คิวทบทวนที่ขยับ) กลับเข้า branch
+#
+# ตั้งค่าครั้งเดียว:
+#   Repo Settings -> Secrets and variables -> Actions -> เพิ่ม
+#     TELEGRAM_BOT_TOKEN   (จาก @BotFather)
+#     TELEGRAM_CHAT_ID     (chat id ของตัวเอง)
+#   ไม่มี secret ก็รันได้ — จะเป็น dry-run พิมพ์ข้อความลง log เฉย ๆ
+#
+# ทดสอบการเชื่อมต่อ: Run workflow แล้วตั้ง test_notify = true
+#
+# หมายเหตุ: workflow ที่มี schedule ต้องอยู่บน default branch ถึงจะทำงาน
+# แต่ `ref:` ด้านล่างชี้ไป feature branch เพื่อใช้โค้ดล่าสุด
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "ส่งข้อความทดสอบเพื่อเช็คว่า Telegram ต่อติด"
+        default: "false"
+      skip_coverage:
+        description: "ไม่ต้องแนบความคืบหน้ารายวิชา (ข้อความสั้นลง)"
+        default: "false"
+  schedule:
+    - cron: '0 0 * * *'    # ทุกวัน 00:00 UTC = 07:00 น. ตามเวลาไทย
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tcas-daily
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/tcas70-medical-prep-l3ot0m
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate question bank
+        run: python tcas_cli.py bank
+
+      - name: Send Telegram test message
+        if: ${{ github.event.inputs.test_notify == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python tcas_cli.py notify --test
+
+      - name: Send daily study plan
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ "${{ github.event.inputs.skip_coverage }}" = "true" ]; then
+            python tcas_cli.py notify --no-coverage
+          else
+            python tcas_cli.py notify
+          fi
+
+      - name: Commit progress if it changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/tcas/progress.json
+          if git diff --cached --quiet; then
+            echo "ความคืบหน้าไม่เปลี่ยน — ไม่ต้อง commit"
+          else
+            git commit -m "chore(tcas): update study progress [skip ci]"
+            git push origin HEAD:claude/tcas70-medical-prep-l3ot0m
+          fi
