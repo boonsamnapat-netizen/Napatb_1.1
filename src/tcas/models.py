@@ -38,6 +38,12 @@ class Subject:
     group: str
     max_score: float
     topics: List[Topic] = field(default_factory=list)
+    # ชื่อสั้นสำหรับป้ายกำกับที่พื้นที่จำกัด (ชิปบนหน้าเว็บ) — ว่างได้ จะถอยไปใช้ name
+    short: str = ""
+
+    @property
+    def label(self) -> str:
+        return self.short or self.name
 
     @property
     def total_hours(self) -> float:

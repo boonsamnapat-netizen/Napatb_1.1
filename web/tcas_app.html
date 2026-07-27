@@ -1,0 +1,1277 @@
+<title>TCAS70 — ตารางเตรียมสอบแพทย์</title>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --ink:        #101826;
+  --paper:      #eef0f3;
+  --surface:    #ffffff;
+  --surface-2:  #f6f7f9;
+  --line:       #d8dde5;
+  --line-soft:  #e6eaef;
+  --text:       #101826;
+  --text-2:     #4a5566;
+  --text-3:     #78838f;
+
+  --indigo:     #2b4c8c;
+  --indigo-dim: #dde4f0;
+  --marigold:   #b8801d;
+  --marigold-f: #e0a02b;
+  --brick:      #b04a38;
+  --brick-dim:  #f6e3df;
+  --ok:         #2e7a56;
+  --ok-dim:     #dcece4;
+  --warn:       #9a6714;
+  --warn-dim:   #f6ecd8;
+
+  --sans: "Sarabun", "Noto Sans Thai", "IBM Plex Sans Thai", "Leelawadee UI",
+          "Thonburi", "Krungthep", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo,
+          Consolas, monospace;
+
+  --r: 3px;
+  --shadow: 0 1px 2px rgba(16, 24, 38, .06), 0 4px 16px rgba(16, 24, 38, .05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:      #0c121c;
+    --surface:    #141c2a;
+    --surface-2:  #1a2333;
+    --line:       #2a3547;
+    --line-soft:  #212b3c;
+    --text:       #e6eaf0;
+    --text-2:     #a2adbd;
+    --text-3:     #788495;
+
+    --indigo:     #7fa3e0;
+    --indigo-dim: #1c2942;
+    --marigold:   #e0a02b;
+    --marigold-f: #e0a02b;
+    --brick:      #e08573;
+    --brick-dim:  #35201d;
+    --ok:         #6dc39a;
+    --ok-dim:     #172b23;
+    --warn:       #d9a94a;
+    --warn-dim:   #2b2416;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:      #0c121c;
+  --surface:    #141c2a;
+  --surface-2:  #1a2333;
+  --line:       #2a3547;
+  --line-soft:  #212b3c;
+  --text:       #e6eaf0;
+  --text-2:     #a2adbd;
+  --text-3:     #788495;
+  --indigo:     #7fa3e0;
+  --indigo-dim: #1c2942;
+  --marigold:   #e0a02b;
+  --marigold-f: #e0a02b;
+  --brick:      #e08573;
+  --brick-dim:  #35201d;
+  --ok:         #6dc39a;
+  --ok-dim:     #172b23;
+  --warn:       #d9a94a;
+  --warn-dim:   #2b2416;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
+}
+
+:root[data-theme="light"] {
+  --paper:      #eef0f3;
+  --surface:    #ffffff;
+  --surface-2:  #f6f7f9;
+  --line:       #d8dde5;
+  --line-soft:  #e6eaef;
+  --text:       #101826;
+  --text-2:     #4a5566;
+  --text-3:     #78838f;
+  --indigo:     #2b4c8c;
+  --indigo-dim: #dde4f0;
+  --marigold:   #b8801d;
+  --marigold-f: #e0a02b;
+  --brick:      #b04a38;
+  --brick-dim:  #f6e3df;
+  --ok:         #2e7a56;
+  --ok-dim:     #dcece4;
+  --warn:       #9a6714;
+  --warn-dim:   #f6ecd8;
+  --shadow: 0 1px 2px rgba(16, 24, 38, .06), 0 4px 16px rgba(16, 24, 38, .05);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  /* Thai vowel marks sit above and below — tight leading clips them */
+  line-height: 1.75;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  /* clear the fixed bottom tab bar (~62px) plus the home indicator on iOS */
+  padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 720px) { body { padding-bottom: 0; } }
+
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; line-height: 1.45; }
+
+button { font-family: inherit; font-size: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--marigold-f);
+  outline-offset: 2px;
+  border-radius: var(--r);
+}
+
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.shell { max-width: 940px; margin: 0 auto; padding: 0 16px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   COUNTDOWN BAR — the one thing that is always true
+   ═══════════════════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--ink);
+  color: #e6eaf0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.topbar-in {
+  max-width: 940px; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+
+.brand { display: flex; flex-direction: column; gap: 1px; margin-right: auto; }
+.brand-name { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+.brand-sub { font-family: var(--mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: #8f9bb0; }
+
+.cd { display: flex; align-items: baseline; gap: 7px; }
+.cd-n { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 600; line-height: 1; color: var(--marigold-f); letter-spacing: -.03em; }
+.cd-meta { display: flex; flex-direction: column; line-height: 1.3; }
+.cd-unit { font-size: 12px; color: #b9c2d0; }
+.cd-what { font-size: 11px; color: #8f9bb0; max-width: 190px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════════════ */
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 45;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.tab {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  padding: 9px 2px 11px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--text-3);
+  border-top: 2px solid transparent;
+  margin-top: -1px;
+  transition: color .15s;
+}
+.tab-ico { width: 19px; height: 19px; display: block; }
+.tab-label { font-size: 10.5px; line-height: 1.2; }
+.tab[aria-selected="true"] { color: var(--text); border-top-color: var(--marigold-f); }
+.tab:hover { color: var(--text-2); }
+
+@media (min-width: 720px) {
+  .tabs {
+    position: sticky; top: 57px; bottom: auto;
+    max-width: 940px; margin: 0 auto;
+    grid-template-columns: repeat(5, auto);
+    justify-content: start; gap: 2px;
+    background: var(--paper); border-top: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+  }
+  .tab {
+    flex-direction: row; gap: 7px; padding: 12px 15px;
+    border-top: 0; border-bottom: 2px solid transparent; margin-top: 0;
+  }
+  .tab[aria-selected="true"] { border-bottom-color: var(--marigold-f); }
+  .tab-label { font-size: 13px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS / PANELS
+   ═══════════════════════════════════════════════════════════════ */
+main { padding-top: 20px; }
+.view { display: none; }
+.view.on { display: block; }
+
+.stack { display: flex; flex-direction: column; gap: 14px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+.card-pad { padding: 15px 16px; }
+
+.card-hd {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.card-hd h2 { font-size: 15px; }
+.card-hd .spacer { margin-left: auto; }
+
+.section-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+.section-title h2 { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; font-family: var(--mono); font-weight: 600; color: var(--text-2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   OMR BUBBLE — the motif. Every Thai student knows this grid.
+   ═══════════════════════════════════════════════════════════════ */
+.bub {
+  flex: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid var(--line);
+  display: grid; place-items: center;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-3);
+  background: var(--surface);
+  transition: background .12s, border-color .12s, color .12s;
+}
+.bub.fill { background: var(--marigold-f); border-color: var(--marigold-f); color: #2a1e06; }
+.bub.ok   { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.bub.bad  { background: var(--brick); border-color: var(--brick); color: var(--surface); }
+
+/* tiny bubbles used as progress dots */
+.dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 1.25px solid var(--line);
+  background: transparent;
+}
+.dot.on { background: var(--marigold-f); border-color: var(--marigold-f); }
+
+/* ═══════════════════════════════════════════════════════════════
+   DATE SPINE — dates are a real sequence, so a spine is honest
+   ═══════════════════════════════════════════════════════════════ */
+/* geometry: date column sits at 0-40px, the rule at 48px, blocks from 62px —
+   the column and the rule must not overlap or the dates get struck through */
+.spine { position: relative; padding-left: 62px; }
+.spine::before {
+  content: ""; position: absolute; left: 48px; top: 6px; bottom: 6px;
+  width: 1px; background: var(--line);
+}
+
+.sday { position: relative; padding-bottom: 18px; }
+.sday-mark {
+  position: absolute; left: -62px; top: 1px;
+  width: 40px; text-align: right;
+}
+.sday-dow { font-size: 10.5px; color: var(--text-3); line-height: 1.3; }
+.sday-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 17px; font-weight: 600; line-height: 1.15; color: var(--text-2);
+  letter-spacing: -.03em;
+}
+.sday-mon { font-size: 10px; color: var(--text-3); line-height: 1.3; }
+
+.sday.today .sday-num { color: var(--marigold); }
+.sday.today::after {
+  content: ""; position: absolute; left: -19px; top: 9px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--marigold-f);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+.sday.past { opacity: .5; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BLOCK ROWS
+   ═══════════════════════════════════════════════════════════════ */
+.blk {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--indigo);
+  border-radius: var(--r);
+  background: var(--surface);
+  margin-bottom: 7px;
+  cursor: pointer;
+  text-align: left; width: 100%;
+  transition: border-color .12s, background .12s;
+}
+.blk:hover { border-color: var(--line); }
+.blk.review { border-left-color: var(--marigold-f); }
+.blk.done { opacity: .52; }
+.blk.done .blk-name { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.blk-check {
+  flex: none; width: 20px; height: 20px; margin-top: 2px;
+  border: 1.5px solid var(--line); border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface);
+}
+.blk.done .blk-check { background: var(--ok); border-color: var(--ok); }
+.blk-check svg { width: 11px; height: 11px; opacity: 0; color: var(--surface); }
+.blk.done .blk-check svg { opacity: 1; }
+
+.blk-body { min-width: 0; flex: 1; }
+.blk-name { font-size: 14px; line-height: 1.5; }
+.blk-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em;
+  padding: 1px 6px; border-radius: 2px;
+  background: var(--surface-2); color: var(--text-2);
+  border: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.chip.learn   { background: var(--indigo-dim);   color: var(--indigo);   border-color: transparent; }
+.chip.review  { background: var(--warn-dim);     color: var(--warn);     border-color: transparent; }
+.chip.mock    { background: var(--brick-dim);    color: var(--brick);    border-color: transparent; }
+.chip.ok      { background: var(--ok-dim);       color: var(--ok);       border-color: transparent; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════ */
+.btn {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: var(--r); padding: 9px 15px;
+  font-size: 14px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  transition: background .12s, border-color .12s;
+}
+.btn:hover { background: var(--surface-2); }
+.btn-pri {
+  background: var(--ink); color: #f0f2f6; border-color: var(--ink);
+}
+.btn-pri:hover { background: #1c2942; border-color: #1c2942; }
+:root[data-theme="dark"] .btn-pri { background: var(--marigold-f); color: #2a1e06; border-color: var(--marigold-f); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-pri { background: var(--marigold-f); color: #2a1e06; border-color: var(--marigold-f); }
+}
+.btn-sm { padding: 5px 11px; font-size: 12.5px; font-weight: 500; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT TILES
+   ═══════════════════════════════════════════════════════════════ */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; }
+.tile {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 12px 13px;
+}
+.tile-n { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 25px; font-weight: 600; line-height: 1.15; letter-spacing: -.03em; }
+.tile-l { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   QUIZ
+   ═══════════════════════════════════════════════════════════════ */
+.q-stem { font-size: 16px; line-height: 1.75; margin: 0 0 14px; }
+.q-choice {
+  display: flex; align-items: flex-start; gap: 11px; width: 100%;
+  padding: 9px 12px; margin-bottom: 7px;
+  border: 1px solid var(--line-soft); border-radius: var(--r);
+  background: var(--surface); cursor: pointer; text-align: left;
+  transition: border-color .12s, background .12s;
+}
+.q-choice:hover:not(:disabled) { border-color: var(--indigo); }
+.q-choice:disabled { cursor: default; }
+.q-choice.is-ok  { border-color: var(--ok);    background: var(--ok-dim); }
+.q-choice.is-bad { border-color: var(--brick); background: var(--brick-dim); }
+.q-choice-t { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.6; padding-top: 2px; }
+
+.q-explain {
+  border-left: 3px solid var(--indigo);
+  background: var(--surface-2);
+  padding: 11px 13px; border-radius: 0 var(--r) var(--r) 0;
+  font-size: 13.5px; line-height: 1.7; color: var(--text-2);
+  margin-top: 10px;
+}
+
+.q-progress { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 3px; }
+.q-pip { width: 100%; max-width: 26px; height: 4px; border-radius: 2px; background: var(--line); flex: 1; }
+.q-pip.ok { background: var(--ok); }
+.q-pip.bad { background: var(--brick); }
+.q-pip.now { background: var(--marigold-f); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBJECT PROGRESS ROWS
+   ═══════════════════════════════════════════════════════════════ */
+.srow { padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.srow:last-child { border-bottom: 0; }
+.srow-hd { display: flex; align-items: baseline; gap: 9px; margin-bottom: 7px; }
+.srow-name { font-size: 14px; font-weight: 600; }
+.srow-pct { margin-left: auto; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   MISC
+   ═══════════════════════════════════════════════════════════════ */
+.muted { color: var(--text-2); font-size: 13.5px; }
+.tiny  { color: var(--text-3); font-size: 12px; line-height: 1.6; }
+
+.note {
+  border: 1px solid var(--warn);
+  border-left-width: 3px;
+  background: var(--warn-dim);
+  color: var(--text);
+  padding: 11px 13px; border-radius: var(--r);
+  font-size: 13px; line-height: 1.7;
+}
+
+.empty { padding: 26px 16px; text-align: center; color: var(--text-3); font-size: 13.5px; }
+
+.scroll-x { overflow-x: auto; }
+
+select.sel {
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 6px 9px;
+}
+
+hr.rule { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <span class="brand-name" id="brandName">TCAS70 · เตรียมสอบแพทย์</span>
+      <span class="brand-sub">กสพท · รอบ 3 Admission</span>
+    </div>
+    <div class="cd">
+      <span class="cd-n num" id="cdNum">—</span>
+      <span class="cd-meta">
+        <span class="cd-unit" id="cdUnit">วัน</span>
+        <span class="cd-what" id="cdWhat">—</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="ส่วนต่าง ๆ">
+  <button class="tab" role="tab" aria-selected="true" data-view="today">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    <span class="tab-label">วันนี้</span>
+  </button>
+  <button class="tab" role="tab" aria-selected="false" data-view="plan">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    <span class="tab-label">ตารางอ่าน</span>
+  </button>
+  <button class="tab" role="tab" aria-selected="false" data-view="tests">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l1 3H8l1-3zM7 6h10l1.5 15h-13L7 6z"/><path d="M10 11h4"/></svg>
+    <span class="tab-label">ตารางสอบ</span>
+  </button>
+  <button class="tab" role="tab" aria-selected="false" data-view="quiz">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="3"/><circle cx="7" cy="17" r="3"/><path d="M13 7h8M13 17h8"/></svg>
+    <span class="tab-label">ทำข้อสอบ</span>
+  </button>
+  <button class="tab" role="tab" aria-selected="false" data-view="progress">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span class="tab-label">ความคืบหน้า</span>
+  </button>
+</nav>
+
+<main class="shell">
+  <section class="view on" id="v-today"></section>
+  <section class="view" id="v-plan"></section>
+  <section class="view" id="v-tests"></section>
+  <section class="view" id="v-quiz"></section>
+  <section class="view" id="v-progress"></section>
+  <footer style="padding:26px 0 30px" id="foot"></footer>
+</main>
+
+<script>
+const DATA = /*__TCAS_DATA__*/null;
+
+/* ─────────────────────────────────────────────────────────────
+   storage — sandboxed frames can refuse localStorage, so never
+   let a throw take the page down; fall back to memory for the session
+   ───────────────────────────────────────────────────────────── */
+const Store = (() => {
+  const KEY = "tcas70.v1";
+  let mem = null, usable = true;
+  try {
+    const probe = "__t";
+    localStorage.setItem(probe, "1");
+    localStorage.removeItem(probe);
+  } catch (e) { usable = false; }
+
+  function read() {
+    if (mem) return mem;
+    if (usable) {
+      try { mem = JSON.parse(localStorage.getItem(KEY) || "{}"); }
+      catch (e) { mem = {}; }
+    } else mem = {};
+    if (!mem.done) mem.done = {};        // "YYYY-MM-DD|topic" -> true
+    if (!mem.q) mem.q = {};              // qid -> {seen, ok}
+    if (!mem.tests) mem.tests = {};      // "YYYY-MM-DD|kind" -> true
+    if (!mem.runs) mem.runs = [];        // quiz history
+    return mem;
+  }
+  function save() {
+    if (!usable) return;
+    try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { usable = false; }
+  }
+  return { read, save, get persistent() { return usable; } };
+})();
+
+const S = Store.read();
+
+/* ─────────────────────────────────────────────────────────────
+   dates
+   ───────────────────────────────────────────────────────────── */
+const DOW = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+const DOW_FULL = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+const MON = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+function d(iso) { const [y, m, dd] = iso.split("-").map(Number); return new Date(y, m - 1, dd); }
+function iso(dt) {
+  return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") +
+         "-" + String(dt.getDate()).padStart(2, "0");
+}
+function thaiDate(isoStr, full) {
+  const t = d(isoStr);
+  const base = t.getDate() + " " + MON[t.getMonth()] + " " + (t.getFullYear() + 543);
+  return full ? base + " (" + DOW_FULL[t.getDay()] + ")" : base;
+}
+function daysBetween(a, b) { return Math.round((d(b) - d(a)) / 86400000); }
+function fmtHours(h) {
+  const H = Math.floor(h), M = Math.round((h - H) * 60);
+  if (H && M) return H + " ชม. " + M + " น.";
+  if (H) return H + " ชม.";
+  return M + " นาที";
+}
+
+/* วันนี้จริง ๆ — แต่ข้อมูลถูกสร้างไว้ล่วงหน้า ถ้าเปิดหน้านี้ก่อนวันเริ่มแผน
+   ให้ยึดวันเริ่มแผนแทน จะได้ไม่เจอหน้าว่าง */
+const REAL_TODAY = iso(new Date());
+const TODAY = REAL_TODAY < DATA.startDate ? DATA.startDate : REAL_TODAY;
+
+const PLAN_BY_DATE = new Map(DATA.plan.map(p => [p.date, p]));
+const SUBJ = DATA.subjects;
+const TOPIC_OF = (() => {
+  const m = new Map();
+  for (const [sc, s] of Object.entries(SUBJ)) for (const t of s.topics) m.set(t.code, { subject: sc, ...t });
+  return m;
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   helpers
+   ───────────────────────────────────────────────────────────── */
+const $ = (sel, root) => (root || document).querySelector(sel);
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+
+const CHOICE_LETTERS = ["ก", "ข", "ค", "ง", "จ"];
+
+/* ชิปในตารางมีที่แคบ — ใช้ชื่อสั้น ("ชีววิทยา") ไม่ใช่ชื่อเต็ม ("A-Level ชีววิทยา") */
+const subjLabel = code => (SUBJ[code] && (SUBJ[code].short || SUBJ[code].name)) || code;
+const subjName  = code => (SUBJ[code] && SUBJ[code].name) || code;
+const blockKey = (date, topic) => date + "|" + topic;
+const isDone = (date, topic) => !!S.done[blockKey(date, topic)];
+
+function nextExam() {
+  for (const e of DATA.exams) if (daysBetween(TODAY, e.date) >= 0) return e;
+  return null;
+}
+
+/* หัวข้อถือว่า "อ่านจบ" เมื่อเช็คบล็อกอ่านใหม่ของหัวข้อนั้นครบทุกบล็อกในแผน */
+function topicProgress() {
+  const need = new Map(), got = new Map();
+  for (const day of DATA.plan) {
+    for (const b of day.blocks) {
+      if (b.kind !== "learn") continue;
+      need.set(b.topic, (need.get(b.topic) || 0) + 1);
+      if (isDone(day.date, b.topic)) got.set(b.topic, (got.get(b.topic) || 0) + 1);
+    }
+  }
+  const done = new Set();
+  for (const [t, n] of need) if ((got.get(t) || 0) >= n) done.add(t);
+  return { need, got, done };
+}
+
+function subjectStats() {
+  const { done } = topicProgress();
+  const out = [];
+  for (const [code, s] of Object.entries(SUBJ)) {
+    const total = s.topics.length;
+    const dn = s.topics.filter(t => done.has(t.code)).length;
+    const hoursDone = s.topics.filter(t => done.has(t.code)).reduce((a, t) => a + t.hours, 0);
+    // ความแม่นจากข้อสอบที่เคยทำในวิชานี้
+    let seen = 0, ok = 0;
+    for (const q of DATA.questions) {
+      if (q.subject !== code) continue;
+      const r = S.q[q.qid];
+      if (r) { seen += r.seen; ok += r.ok; }
+    }
+    out.push({
+      code, name: s.name, total, done: dn,
+      pct: total ? (100 * dn / total) : 0,
+      hoursDone, hoursTotal: s.hours,
+      accuracy: seen ? (100 * ok / seen) : null, seen,
+      topics: s.topics, doneSet: done,
+    });
+  }
+  return out.sort((a, b) => b.pct - a.pct);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COUNTDOWN BAR
+   ───────────────────────────────────────────────────────────── */
+function renderTop() {
+  const name = (DATA.student && DATA.student.name) ? DATA.student.name : "";
+  $("#brandName").textContent = name ? "TCAS70 · " + name : "TCAS70 · เตรียมสอบแพทย์";
+  const e = nextExam();
+  if (!e) {
+    $("#cdNum").textContent = "—";
+    $("#cdUnit").textContent = "";
+    $("#cdWhat").textContent = "สอบครบทุกสนามแล้ว";
+    return;
+  }
+  const n = daysBetween(TODAY, e.date);
+  $("#cdNum").textContent = n;
+  $("#cdUnit").textContent = n === 0 ? "สอบวันนี้" : "วัน";
+  $("#cdWhat").textContent = e.name + (e.verified ? "" : " ⚠︎");
+}
+
+/* ─────────────────────────────────────────────────────────────
+   VIEW: วันนี้
+   ───────────────────────────────────────────────────────────── */
+function blockRow(day, b) {
+  const done = isDone(day.date, b.topic);
+  const kindChip = b.kind === "review"
+    ? '<span class="chip review">ทบทวน #' + b.repetition + "</span>"
+    : '<span class="chip learn">อ่านใหม่</span>';
+  const btn = el(
+    '<button class="blk ' + (b.kind === "review" ? "review " : "") + (done ? "done" : "") + '">' +
+      '<span class="blk-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>' +
+      '<span class="blk-body">' +
+        '<span class="blk-name">' + esc(b.topicName) + "</span>" +
+        '<span class="blk-meta">' + kindChip +
+          '<span class="chip">' + esc(subjLabel(b.subject)) + "</span>" +
+          '<span class="chip">' + fmtHours(b.hours) + "</span>" +
+        "</span>" +
+      "</span>" +
+    "</button>"
+  );
+  btn.setAttribute("aria-pressed", done ? "true" : "false");
+  btn.addEventListener("click", () => {
+    const k = blockKey(day.date, b.topic);
+    if (S.done[k]) delete S.done[k]; else S.done[k] = true;
+    Store.save();
+    render();
+  });
+  return btn;
+}
+
+function viewToday() {
+  const root = $("#v-today");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  const day = PLAN_BY_DATE.get(TODAY);
+  const todaysTests = DATA.tests.filter(t => t.date === TODAY);
+
+  /* ---- summary tiles */
+  const blocks = day ? day.blocks : [];
+  const doneCount = blocks.filter(b => isDone(TODAY, b.topic)).length;
+  const hoursLeft = blocks.filter(b => !isDone(TODAY, b.topic)).reduce((a, b) => a + b.hours, 0);
+  const st = subjectStats();
+  const overall = st.reduce((a, s) => a + s.done, 0);
+  const overallTotal = st.reduce((a, s) => a + s.total, 0);
+
+  wrap.appendChild(el(
+    '<div class="tiles">' +
+      '<div class="tile"><div class="tile-n">' + doneCount + "/" + blocks.length + '</div><div class="tile-l">บล็อกวันนี้</div></div>' +
+      '<div class="tile"><div class="tile-n">' + (hoursLeft ? fmtHours(hoursLeft).replace(" ชม.", "") : "0") + '</div><div class="tile-l">ชั่วโมงที่เหลือ</div></div>' +
+      '<div class="tile"><div class="tile-n">' + overall + "/" + overallTotal + '</div><div class="tile-l">หัวข้อที่อ่านจบ</div></div>' +
+    "</div>"
+  ));
+
+  /* ---- today's blocks */
+  const card = el('<div class="card"></div>');
+  card.appendChild(el(
+    '<div class="card-hd"><h2>' + esc(thaiDate(TODAY, true)) + "</h2>" +
+    '<span class="spacer eyebrow">' + (day ? fmtHours(day.hours) : "—") + "</span></div>"
+  ));
+  const body = el('<div class="card-pad"></div>');
+
+  if (!day || !blocks.length) {
+    body.appendChild(el('<div class="empty">' + esc(day && day.note ? day.note : "ไม่มีตารางของวันนี้") + "</div>"));
+  } else {
+    const reviews = blocks.filter(b => b.kind === "review");
+    const learns = blocks.filter(b => b.kind === "learn");
+    if (reviews.length) {
+      body.appendChild(el('<div class="section-title"><h2>ทบทวนก่อน</h2></div>'));
+      body.appendChild(el('<p class="tiny" style="margin:-6px 0 8px">อ่านแล้วลืมคือเสียเวลาเปล่า — คิวทบทวนมาก่อนของใหม่เสมอ</p>'));
+      reviews.forEach(b => body.appendChild(blockRow(day, b)));
+    }
+    if (learns.length) {
+      body.appendChild(el('<div class="section-title" style="margin-top:' + (reviews.length ? "14px" : "0") + '"><h2>อ่านใหม่</h2></div>'));
+      learns.forEach(b => body.appendChild(blockRow(day, b)));
+    }
+  }
+  card.appendChild(body);
+  wrap.appendChild(card);
+
+  /* ---- tests today or next */
+  const upcoming = todaysTests.length ? todaysTests : DATA.tests.filter(t => t.date > TODAY).slice(0, 1);
+  if (upcoming.length) {
+    const tc = el('<div class="card"></div>');
+    tc.appendChild(el('<div class="card-hd"><h2>' + (todaysTests.length ? "ต้องทดสอบวันนี้" : "การทดสอบครั้งถัดไป") + "</h2></div>"));
+    const tb = el('<div class="card-pad stack"></div>');
+    upcoming.forEach(t => tb.appendChild(testRow(t)));
+    tc.appendChild(tb);
+    wrap.appendChild(tc);
+  }
+
+  /* ---- quick quiz */
+  const subjectsToday = [...new Set(blocks.map(b => b.subject))];
+  const qc = el('<div class="card card-pad stack"></div>');
+  qc.appendChild(el('<div class="section-title"><h2>ทดสอบเร็ว</h2></div>'));
+  qc.appendChild(el('<p class="muted" style="margin:-8px 0 0">ทำข้อสอบสั้น ๆ จากวิชาที่อ่านวันนี้ ตอบผิดข้อไหนระบบจะเอากลับมาถามซ้ำ</p>'));
+  const row = el('<div class="btn-row"></div>');
+  if (subjectsToday.length) {
+    subjectsToday.forEach(sc => {
+      const n = DATA.questions.filter(q => q.subject === sc).length;
+      if (!n) return;
+      const b = el('<button class="btn btn-sm">' + esc(subjLabel(sc)) + " · " + n + " ข้อ</button>");
+      b.addEventListener("click", () => { startQuiz({ subject: sc, count: 5 }); go("quiz"); });
+      row.appendChild(b);
+    });
+  }
+  const anyBtn = el('<button class="btn btn-sm btn-pri">สุ่มทุกวิชา 10 ข้อ</button>');
+  anyBtn.addEventListener("click", () => { startQuiz({ count: 10 }); go("quiz"); });
+  row.appendChild(anyBtn);
+  qc.appendChild(row);
+  wrap.appendChild(qc);
+
+  /* ---- milestones */
+  const ms = DATA.milestones
+    .map(m => ({ ...m, inDays: daysBetween(TODAY, m.date) }))
+    .filter(m => m.inDays >= 0 && m.inDays <= 60);
+  if (ms.length) {
+    const mc = el('<div class="card card-pad"></div>');
+    mc.appendChild(el('<div class="section-title"><h2>หมุดหมายที่ใกล้ถึง</h2></div>'));
+    ms.forEach(m => mc.appendChild(el(
+      '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line-soft)">' +
+        '<span class="num" style="font-size:13px;color:var(--marigold);min-width:62px">' +
+          (m.inDays === 0 ? "วันนี้" : "อีก " + m.inDays + " วัน") + "</span>" +
+        "<span style=\"font-size:13.5px\">" + esc(m.label) + "</span>" +
+        '<span class="tiny" style="margin-left:auto;white-space:nowrap">' + esc(thaiDate(m.date)) + "</span>" +
+      "</div>"
+    )));
+    wrap.appendChild(mc);
+  }
+
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   VIEW: ตารางอ่าน
+   ───────────────────────────────────────────────────────────── */
+let planWindow = 14;
+
+function viewPlan() {
+  const root = $("#v-plan");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  const ctl = el('<div class="card card-pad"></div>');
+  ctl.appendChild(el('<div class="section-title"><h2>ช่วงที่แสดง</h2></div>'));
+  const row = el('<div class="btn-row"></div>');
+  [7, 14, 30, 90].forEach(n => {
+    const b = el('<button class="btn btn-sm' + (planWindow === n ? " btn-pri" : "") + '">' + n + " วัน</button>");
+    b.addEventListener("click", () => { planWindow = n; render(); });
+    row.appendChild(b);
+  });
+  ctl.appendChild(row);
+  ctl.appendChild(el('<p class="tiny" style="margin:10px 0 0">ตารางนี้คำนวณจากวันสอบและเวลาว่างที่ตั้งไว้ ' +
+    'TPAT1 ถูกดันขึ้นมาก่อน A-Level เองเพราะสอบก่อน 3 เดือน — ไม่ได้กำหนดลำดับไว้ตายตัว</p>'));
+  wrap.appendChild(ctl);
+
+  const days = DATA.plan.filter(p => p.date >= TODAY).slice(0, planWindow);
+  const card = el('<div class="card card-pad"></div>');
+  const spine = el('<div class="spine"></div>');
+
+  if (!days.length) {
+    card.appendChild(el('<div class="empty">ไม่มีตารางในช่วงนี้แล้ว</div>'));
+  } else {
+    let lastMonth = "";
+    days.forEach(day => {
+      const dt = d(day.date);
+      const monKey = dt.getFullYear() + "-" + dt.getMonth();
+      const sd = el('<div class="sday' + (day.date === TODAY ? " today" : "") + '"></div>');
+      sd.appendChild(el(
+        '<div class="sday-mark">' +
+          '<div class="sday-dow">' + DOW[dt.getDay()] + "</div>" +
+          '<div class="sday-num">' + dt.getDate() + "</div>" +
+          (monKey !== lastMonth ? '<div class="sday-mon">' + MON[dt.getMonth()] + "</div>" : "") +
+        "</div>"
+      ));
+      lastMonth = monKey;
+
+      if (!day.blocks.length) {
+        sd.appendChild(el('<div class="tiny" style="padding:3px 0 0">' + esc(day.note || "พัก") + "</div>"));
+      } else {
+        day.blocks.forEach(b => sd.appendChild(blockRow(day, b)));
+      }
+      const tests = DATA.tests.filter(t => t.date === day.date);
+      tests.forEach(t => sd.appendChild(el(
+        '<div class="blk" style="border-left-color:var(--brick);cursor:default">' +
+          '<span class="blk-body"><span class="blk-name">' + esc(t.title) + "</span>" +
+          '<span class="blk-meta"><span class="chip mock">' + esc(t.kindLabel) + "</span></span></span></div>"
+      )));
+      spine.appendChild(sd);
+    });
+    card.appendChild(spine);
+  }
+  wrap.appendChild(card);
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   VIEW: ตารางสอบ
+   ───────────────────────────────────────────────────────────── */
+function testRow(t) {
+  const inDays = daysBetween(TODAY, t.date);
+  const key = t.date + "|" + t.kind;
+  const done = !!S.tests[key];
+  const chipCls = t.kind === "mock" ? "mock" : (t.kind === "monthly" ? "review" : "learn");
+
+  const node = el(
+    '<div class="blk' + (done ? " done" : "") + '" style="border-left-color:' +
+      (t.kind === "mock" ? "var(--brick)" : t.kind === "monthly" ? "var(--marigold-f)" : "var(--indigo)") + '">' +
+      '<span class="blk-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>' +
+      '<span class="blk-body">' +
+        '<span class="blk-name">' + esc(t.title) + "</span>" +
+        '<span class="blk-meta">' +
+          '<span class="chip ' + chipCls + '">' + esc(t.kindLabel) + "</span>" +
+          '<span class="chip">' + esc(thaiDate(t.date)) + "</span>" +
+          '<span class="chip">' + (inDays === 0 ? "วันนี้" : inDays > 0 ? "อีก " + inDays + " วัน" : "ผ่านมาแล้ว") + "</span>" +
+          (t.questions ? '<span class="chip">~' + t.questions + " ข้อ</span>" : "") +
+          (t.minutes ? '<span class="chip">' + t.minutes + " นาที</span>" : "") +
+        "</span>" +
+        (t.note ? '<span class="tiny" style="display:block;margin-top:4px">' + esc(t.note) + "</span>" : "") +
+      "</span>" +
+    "</div>"
+  );
+  node.style.cursor = "pointer";
+  node.setAttribute("role", "button");
+  node.tabIndex = 0;
+  const toggle = () => {
+    if (S.tests[key]) delete S.tests[key]; else S.tests[key] = true;
+    Store.save(); render();
+  };
+  node.addEventListener("click", toggle);
+  node.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); }
+  });
+  return node;
+}
+
+let testFilter = "all";
+
+function viewTests() {
+  const root = $("#v-tests");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  wrap.appendChild(el(
+    '<div class="card card-pad">' +
+      '<div class="section-title"><h2>ตารางทดสอบทำงานยังไง</h2></div>' +
+      '<p class="muted" style="margin:0">อ่านอย่างเดียวไม่รู้ว่าจำได้จริงไหม ตารางนี้แทรกการวัดผล 3 ระดับ: ' +
+      "<b>รายสัปดาห์</b> ทดสอบเฉพาะที่เพิ่งอ่าน · <b>รายเดือน</b> ทดสอบสะสมของเก่าด้วย · " +
+      "<b>สอบเสมือนจริง</b> จับเวลาเต็มรูปแบบ นับถอยหลังจากวันสอบจริง</p>" +
+    "</div>"
+  ));
+
+  const filters = el('<div class="card card-pad"><div class="btn-row"></div></div>');
+  const frow = $(".btn-row", filters);
+  [["all", "ทั้งหมด"], ["mock", "สอบเสมือนจริง"], ["monthly", "รายเดือน"], ["weekly", "รายสัปดาห์"]]
+    .forEach(([k, label]) => {
+      const b = el('<button class="btn btn-sm' + (testFilter === k ? " btn-pri" : "") + '">' + label + "</button>");
+      b.addEventListener("click", () => { testFilter = k; render(); });
+      frow.appendChild(b);
+    });
+  wrap.appendChild(filters);
+
+  const list = DATA.tests
+    .filter(t => t.date >= TODAY)
+    .filter(t => testFilter === "all" || t.kind === testFilter)
+    .slice(0, 40);
+
+  const card = el('<div class="card card-pad stack" style="gap:0"></div>');
+  if (!list.length) card.appendChild(el('<div class="empty">ไม่มีการทดสอบที่ตรงเงื่อนไข</div>'));
+  else list.forEach(t => card.appendChild(testRow(t)));
+  wrap.appendChild(card);
+
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   VIEW: ทำข้อสอบ
+   ───────────────────────────────────────────────────────────── */
+let quiz = null;
+
+function startQuiz(opts) {
+  const pool = DATA.questions.filter(q =>
+    (!opts.subject || q.subject === opts.subject) && (!opts.topic || q.topic === opts.topic));
+
+  // เรียงลำดับความสำคัญ: ข้อที่เคยตอบผิด -> ยังไม่เคยทำ -> ที่เหลือ
+  const rank = q => {
+    const r = S.q[q.qid];
+    if (!r) return 1;
+    return r.ok < r.seen ? 0 : 2;
+  };
+  const shuffled = pool.slice().sort(() => Math.random() - 0.5).sort((a, b) => rank(a) - rank(b));
+  const items = shuffled.slice(0, opts.count || 10);
+
+  quiz = { items, i: 0, answers: new Array(items.length).fill(null), done: false, subject: opts.subject || null };
+}
+
+function answerQuiz(choiceIndex) {
+  if (!quiz || quiz.answers[quiz.i] !== null) return;
+  const q = quiz.items[quiz.i];
+  quiz.answers[quiz.i] = choiceIndex;
+  const ok = choiceIndex === q.answer;
+  const rec = S.q[q.qid] || { seen: 0, ok: 0 };
+  rec.seen += 1; if (ok) rec.ok += 1;
+  S.q[q.qid] = rec;
+  Store.save();
+  render();
+}
+
+function viewQuiz() {
+  const root = $("#v-quiz");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  /* ---- picker */
+  if (!quiz) {
+    const pick = el('<div class="card card-pad stack"></div>');
+    pick.appendChild(el('<div class="section-title"><h2>เลือกชุดข้อสอบ</h2></div>'));
+    pick.appendChild(el('<p class="muted" style="margin:-8px 0 0">ข้อที่เคยตอบผิดจะถูกดันขึ้นมาถามก่อนเสมอ ' +
+      "คลังตอนนี้มี " + DATA.questions.length + " ข้อ</p>"));
+
+    const grid = el('<div class="tiles"></div>');
+    Object.entries(SUBJ).forEach(([code, s]) => {
+      const n = DATA.questions.filter(q => q.subject === code).length;
+      if (!n) return;
+      let seen = 0, ok = 0;
+      DATA.questions.filter(q => q.subject === code).forEach(q => {
+        const r = S.q[q.qid]; if (r) { seen += r.seen; ok += r.ok; }
+      });
+      const acc = seen ? Math.round(100 * ok / seen) : null;
+      const b = el(
+        '<button class="tile" style="cursor:pointer;text-align:left">' +
+          '<div class="tile-n">' + n + '<span style="font-size:13px;color:var(--text-3)"> ข้อ</span></div>' +
+          '<div class="tile-l">' + esc(s.name) + "</div>" +
+          '<div class="tiny" style="margin-top:3px">' + (acc === null ? "ยังไม่เคยทำ" : "เคยถูก " + acc + "%") + "</div>" +
+        "</button>"
+      );
+      b.addEventListener("click", () => { startQuiz({ subject: code, count: Math.min(10, n) }); render(); });
+      grid.appendChild(b);
+    });
+    pick.appendChild(grid);
+
+    const all = el('<button class="btn btn-pri">สุ่มทุกวิชา 15 ข้อ</button>');
+    all.addEventListener("click", () => { startQuiz({ count: 15 }); render(); });
+    pick.appendChild(all);
+    wrap.appendChild(pick);
+
+    /* history */
+    if (S.runs.length) {
+      const h = el('<div class="card card-pad"></div>');
+      h.appendChild(el('<div class="section-title"><h2>ผลย้อนหลัง</h2></div>'));
+      S.runs.slice(-8).reverse().forEach(r => h.appendChild(el(
+        '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line-soft)">' +
+          '<span class="num" style="font-size:14px;min-width:52px;color:' +
+            (r.pct >= 80 ? "var(--ok)" : r.pct >= 60 ? "var(--warn)" : "var(--brick)") + '">' + r.pct + "%</span>" +
+          "<span style=\"font-size:13.5px\">" + esc(r.subject || "รวมทุกวิชา") + "</span>" +
+          '<span class="tiny" style="margin-left:auto">' + r.correct + "/" + r.total + " · " + esc(thaiDate(r.date)) + "</span>" +
+        "</div>"
+      )));
+      wrap.appendChild(h);
+    }
+
+    root.appendChild(wrap);
+    return;
+  }
+
+  /* ---- results */
+  if (quiz.done) {
+    const correct = quiz.items.filter((q, i) => quiz.answers[i] === q.answer).length;
+    const pct = Math.round(100 * correct / quiz.items.length);
+    const verdict = pct >= 80 ? "แม่นแล้ว" : pct >= 60 ? "ผ่านเกณฑ์ แต่ยังมีจุดรั่ว" : "ต้องกลับไปทบทวน";
+
+    const res = el('<div class="card card-pad stack"></div>');
+    res.appendChild(el(
+      '<div><div class="eyebrow">ผลการทำชุดนี้</div>' +
+      '<div class="tile-n" style="font-size:42px;color:' +
+        (pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--warn)" : "var(--brick)") + '">' + pct + "%</div>" +
+      '<div class="muted">ถูก ' + correct + " จาก " + quiz.items.length + " ข้อ — " + verdict + "</div></div>"
+    ));
+
+    const wrong = quiz.items.filter((q, i) => quiz.answers[i] !== q.answer);
+    if (wrong.length) {
+      res.appendChild(el('<hr class="rule">'));
+      res.appendChild(el('<div class="section-title"><h2>ข้อที่ยังพลาด</h2></div>'));
+      wrong.forEach(q => {
+        const t = TOPIC_OF.get(q.topic);
+        res.appendChild(el(
+          '<div style="padding:9px 0;border-bottom:1px solid var(--line-soft)">' +
+            '<div style="font-size:13.5px;line-height:1.65">' + esc(q.stem) + "</div>" +
+            '<div style="font-size:13.5px;margin-top:5px"><b>เฉลย:</b> ' +
+              esc(CHOICE_LETTERS[q.answer] + ". " + q.choices[q.answer]) + "</div>" +
+            (t ? '<div class="tiny" style="margin-top:3px">หัวข้อ: ' + esc(t.name) + "</div>" : "") +
+          "</div>"
+        ));
+      });
+    }
+
+    const row = el('<div class="btn-row"></div>');
+    const again = el('<button class="btn btn-pri">ทำชุดใหม่</button>');
+    again.addEventListener("click", () => { quiz = null; render(); });
+    row.appendChild(again);
+    if (wrong.length) {
+      const retry = el('<button class="btn">ทำเฉพาะข้อที่ผิด (' + wrong.length + ")</button>");
+      retry.addEventListener("click", () => {
+        quiz = { items: wrong, i: 0, answers: new Array(wrong.length).fill(null), done: false, subject: quiz.subject };
+        render();
+      });
+      row.appendChild(retry);
+    }
+    res.appendChild(row);
+    wrap.appendChild(res);
+    root.appendChild(wrap);
+    return;
+  }
+
+  /* ---- runner */
+  const q = quiz.items[quiz.i];
+  const given = quiz.answers[quiz.i];
+  const answered = given !== null;
+  const subj = SUBJ[q.subject];
+  const topic = TOPIC_OF.get(q.topic);
+
+  const pips = el('<div class="q-progress"></div>');
+  quiz.items.forEach((it, i) => {
+    const a = quiz.answers[i];
+    const cls = i === quiz.i ? "now" : a === null ? "" : (a === it.answer ? "ok" : "bad");
+    pips.appendChild(el('<span class="q-pip ' + cls + '"></span>'));
+  });
+
+  const card = el('<div class="card"></div>');
+  card.appendChild(el(
+    '<div class="card-hd">' +
+      '<h2 class="num" style="font-size:14px">ข้อ ' + (quiz.i + 1) + " / " + quiz.items.length + "</h2>" +
+      '<span class="spacer chip">' + esc(subjLabel(q.subject)) + "</span>" +
+    "</div>"
+  ));
+
+  const body = el('<div class="card-pad"></div>');
+  body.appendChild(pips);
+  body.appendChild(el('<p class="q-stem">' + esc(q.stem) + "</p>"));
+
+  q.choices.forEach((c, i) => {
+    let cls = "", bub = "bub";
+    if (answered) {
+      if (i === q.answer) { cls = "is-ok"; bub += " ok"; }
+      else if (i === given) { cls = "is-bad"; bub += " bad"; }
+    }
+    const b = el(
+      '<button class="q-choice ' + cls + '">' +
+        '<span class="' + bub + '">' + CHOICE_LETTERS[i] + "</span>" +
+        '<span class="q-choice-t">' + esc(c) + "</span>" +
+      "</button>"
+    );
+    if (answered) b.disabled = true;
+    else b.addEventListener("click", () => answerQuiz(i));
+    body.appendChild(b);
+  });
+
+  if (answered) {
+    if (q.explanation) body.appendChild(el('<div class="q-explain">' + esc(q.explanation) + "</div>"));
+    if (topic) body.appendChild(el('<p class="tiny" style="margin:8px 0 0">หัวข้อ: ' + esc(topic.name) + "</p>"));
+
+    const nav = el('<div class="btn-row" style="margin-top:14px"></div>');
+    const last = quiz.i === quiz.items.length - 1;
+    const next = el('<button class="btn btn-pri">' + (last ? "ดูผลรวม" : "ข้อถัดไป") + "</button>");
+    next.addEventListener("click", () => {
+      if (last) {
+        const correct = quiz.items.filter((it, i) => quiz.answers[i] === it.answer).length;
+        S.runs.push({
+          date: TODAY, subject: quiz.subject ? subjLabel(quiz.subject) : null,
+          total: quiz.items.length, correct, pct: Math.round(100 * correct / quiz.items.length),
+        });
+        Store.save();
+        quiz.done = true;
+      } else quiz.i += 1;
+      render();
+    });
+    nav.appendChild(next);
+    const quit = el('<button class="btn">ออก</button>');
+    quit.addEventListener("click", () => { quiz = null; render(); });
+    nav.appendChild(quit);
+    body.appendChild(nav);
+  }
+
+  card.appendChild(body);
+  wrap.appendChild(card);
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   VIEW: ความคืบหน้า
+   ───────────────────────────────────────────────────────────── */
+function viewProgress() {
+  const root = $("#v-progress");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  const st = subjectStats();
+  const doneTopics = st.reduce((a, s) => a + s.done, 0);
+  const allTopics = st.reduce((a, s) => a + s.total, 0);
+  const hoursDone = st.reduce((a, s) => a + s.hoursDone, 0);
+  const hoursAll = st.reduce((a, s) => a + s.hoursTotal, 0);
+  let seen = 0, ok = 0;
+  Object.values(S.q).forEach(r => { seen += r.seen; ok += r.ok; });
+
+  wrap.appendChild(el(
+    '<div class="tiles">' +
+      '<div class="tile"><div class="tile-n">' + Math.round(100 * doneTopics / allTopics) + '%</div><div class="tile-l">เนื้อหาที่อ่านจบ</div></div>' +
+      '<div class="tile"><div class="tile-n">' + Math.round(hoursDone) + '</div><div class="tile-l">ชม. จาก ' + Math.round(hoursAll) + "</div></div>" +
+      '<div class="tile"><div class="tile-n">' + (seen ? Math.round(100 * ok / seen) + "%" : "—") + '</div><div class="tile-l">ความแม่นข้อสอบ</div></div>' +
+      '<div class="tile"><div class="tile-n">' + seen + '</div><div class="tile-l">ข้อที่ทำไปแล้ว</div></div>' +
+    "</div>"
+  ));
+
+  const card = el('<div class="card card-pad"></div>');
+  card.appendChild(el('<div class="section-title"><h2>รายวิชา</h2></div>'));
+  card.appendChild(el('<p class="tiny" style="margin:-6px 0 8px">แต่ละวงกลมคือหนึ่งหัวข้อ — เติมเมื่ออ่านครบทุกบล็อกของหัวข้อนั้น</p>'));
+
+  st.forEach(s => {
+    const row = el('<div class="srow"></div>');
+    row.appendChild(el(
+      '<div class="srow-hd">' +
+        '<span class="srow-name">' + esc(s.name) + "</span>" +
+        (s.accuracy !== null
+          ? '<span class="chip ' + (s.accuracy >= 70 ? "ok" : "review") + '">แม่น ' + Math.round(s.accuracy) + "%</span>"
+          : "") +
+        '<span class="srow-pct">' + s.done + "/" + s.total + "</span>" +
+      "</div>"
+    ));
+    const dots = el('<div class="dots"></div>');
+    s.topics.forEach(t => {
+      const on = s.doneSet.has(t.code);
+      const dot = el('<span class="dot' + (on ? " on" : "") + '"></span>');
+      dot.title = t.name + (on ? " — อ่านจบแล้ว" : "");
+      dots.appendChild(dot);
+    });
+    row.appendChild(dots);
+    card.appendChild(row);
+  });
+  wrap.appendChild(card);
+
+  /* programs */
+  if (DATA.programs && DATA.programs.length) {
+    const pc = el('<div class="card card-pad"></div>');
+    pc.appendChild(el('<div class="section-title"><h2>คะแนนต่ำสุดที่ต้องไปให้ถึง</h2></div>'));
+    pc.appendChild(el('<p class="tiny" style="margin:-6px 0 9px">คาดการณ์จากสถิติย้อนหลัง ' +
+      "ทุกตัวเลขยังไม่ได้ยืนยันกับประกาศจริง</p>"));
+    DATA.programs.slice(0, 10).forEach(p => pc.appendChild(el(
+      '<div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft)">' +
+        '<span class="num" style="font-size:14px;min-width:52px;color:var(--marigold)">' +
+          (p.projected !== null ? p.projected.toFixed(1) : "—") + "</span>" +
+        '<span style="font-size:13.5px">' + esc(p.name) + "</span>" +
+        '<span class="tiny" style="margin-left:auto;white-space:nowrap">' +
+          (p.seats ? p.seats + " ที่นั่ง" : "") + "</span>" +
+      "</div>"
+    )));
+    wrap.appendChild(pc);
+  }
+
+  /* reset */
+  const rc = el('<div class="card card-pad stack"></div>');
+  rc.appendChild(el('<div class="section-title"><h2>ข้อมูลที่บันทึกไว้</h2></div>'));
+  rc.appendChild(el('<p class="tiny" style="margin:-8px 0 0">' +
+    (Store.persistent
+      ? "ความคืบหน้าเก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ได้ส่งไปไหน — เปลี่ยนเครื่องหรือล้างข้อมูลเบราว์เซอร์แล้วจะหาย"
+      : "⚠️ เบราว์เซอร์นี้ไม่ยอมให้บันทึกถาวร ความคืบหน้าจะหายเมื่อปิดหน้า") + "</p>"));
+  const rb = el('<button class="btn btn-sm">ล้างความคืบหน้าทั้งหมด</button>');
+  rb.addEventListener("click", () => {
+    if (!confirm("ล้างบล็อกที่เช็คไว้ ผลข้อสอบ และประวัติทั้งหมด?")) return;
+    S.done = {}; S.q = {}; S.tests = {}; S.runs = [];
+    Store.save(); quiz = null; render();
+  });
+  rc.appendChild(rb);
+  wrap.appendChild(rc);
+
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ROUTER
+   ───────────────────────────────────────────────────────────── */
+let current = "today";
+const VIEWS = { today: viewToday, plan: viewPlan, tests: viewTests, quiz: viewQuiz, progress: viewProgress };
+
+function go(name) {
+  current = name;
+  document.querySelectorAll(".tab").forEach(t =>
+    t.setAttribute("aria-selected", t.dataset.view === name ? "true" : "false"));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("on"));
+  $("#v-" + name).classList.add("on");
+  render();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.querySelectorAll(".tab").forEach(t =>
+  t.addEventListener("click", () => go(t.dataset.view)));
+
+function render() {
+  renderTop();
+  VIEWS[current]();
+}
+
+/* footer */
+$("#foot").innerHTML =
+  '<hr class="rule" style="margin-bottom:14px">' +
+  '<p class="tiny">วันสอบ เกณฑ์ กสพท และคะแนนต่ำสุดของทุกคณะในหน้านี้เป็น<b>ค่าประมาณ</b> ' +
+  "ยังไม่ได้ยืนยันกับประกาศจริง (เครื่องที่สร้างต่อ mytcas.com ไม่ได้) — " +
+  "ก่อนใช้ตัดสินใจจริงต้องตรวจกับ mytcas.com และประกาศ กสพท ปีการศึกษา 2570</p>" +
+  '<p class="tiny" style="margin-top:6px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
+  " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
+  " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";
+
+render();
+</script>

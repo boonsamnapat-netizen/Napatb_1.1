@@ -21,6 +21,7 @@ def _t(code: str, name: str, weight: int, hours: float) -> Topic:
 # --------------------------------------------------------------- TPAT1 กสพท
 TPAT1 = Subject(
     code="tpat1",
+    short="TPAT1",
     name="TPAT1 วิชาเฉพาะ กสพท",
     exam="tpat1",
     group="tpat1",
@@ -42,6 +43,7 @@ TPAT1 = Subject(
 # ------------------------------------------------------------------ ชีววิทยา
 BIO = Subject(
     code="bio",
+    short="ชีววิทยา",
     name="A-Level ชีววิทยา",
     exam="alevel",
     group="science",
@@ -75,6 +77,7 @@ BIO = Subject(
 # ---------------------------------------------------------------------- เคมี
 CHEM = Subject(
     code="chem",
+    short="เคมี",
     name="A-Level เคมี",
     exam="alevel",
     group="science",
@@ -99,6 +102,7 @@ CHEM = Subject(
 # -------------------------------------------------------------------- ฟิสิกส์
 PHYS = Subject(
     code="phys",
+    short="ฟิสิกส์",
     name="A-Level ฟิสิกส์",
     exam="alevel",
     group="science",
@@ -126,6 +130,7 @@ PHYS = Subject(
 # ---------------------------------------------------------- คณิตศาสตร์ประยุกต์ 1
 MATH = Subject(
     code="math1",
+    short="คณิต 1",
     name="A-Level คณิตศาสตร์ประยุกต์ 1",
     exam="alevel",
     group="math1",
@@ -149,6 +154,7 @@ MATH = Subject(
 # ------------------------------------------------------------------- อังกฤษ
 ENG = Subject(
     code="eng",
+    short="อังกฤษ",
     name="A-Level ภาษาอังกฤษ",
     exam="alevel",
     group="english",
@@ -167,6 +173,7 @@ ENG = Subject(
 # ---------------------------------------------------------------------- ไทย
 THAI = Subject(
     code="thai",
+    short="ไทย",
     name="A-Level ภาษาไทย",
     exam="alevel",
     group="thai",
@@ -185,6 +192,7 @@ THAI = Subject(
 # -------------------------------------------------------------------- สังคม
 SOCIAL = Subject(
     code="social",
+    short="สังคม",
     name="A-Level สังคมศึกษา",
     exam="alevel",
     group="social",

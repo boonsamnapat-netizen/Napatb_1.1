@@ -324,6 +324,71 @@ def cmd_progress(args) -> int:
     return 0
 
 
+def cmd_export(args) -> int:
+    """สร้างหน้าเว็บไฟล์เดียวที่มีตารางอ่าน ตารางทดสอบ และคลังข้อสอบฝังอยู่."""
+    from src.tcas import webexport
+
+    cfg, store, on = _load(args)
+    qdir = (cfg.get("quiz") or {}).get("questions_dir", "data/tcas/questions")
+    try:
+        bank = quiz.load_bank(qdir)
+    except quiz.BankError as exc:
+        print(f"คลังข้อสอบมีปัญหา: {exc}")
+        return 1
+
+    try:
+        programs = cfgmod.load_programs(args.programs)
+    except FileNotFoundError:
+        programs = None
+
+    payload = webexport.build_payload(cfg, store, programs, bank, start=on)
+    try:
+        html = webexport.render(payload, args.template)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"สร้างหน้าเว็บไม่สำเร็จ: {exc}")
+        return 1
+
+    path = webexport.write(html, args.out)
+    size_kb = path.stat().st_size / 1024
+    print(f"สร้างหน้าเว็บแล้ว: {path}  ({size_kb:.0f} KB)")
+    print(
+        f"  ตารางอ่าน {len(payload['plan'])} วัน · "
+        f"ตารางทดสอบ {len(payload['tests'])} ครั้ง · "
+        f"ข้อสอบ {len(payload['questions'])} ข้อ"
+    )
+    print("  เปิดไฟล์นี้ในเบราว์เซอร์ได้เลย ไม่ต้องต่อเน็ต")
+    return 0
+
+
+def cmd_tests(args) -> int:
+    """ดูตารางทดสอบบนเทอร์มินัล."""
+    from src.tcas import testplan
+
+    cfg, store, on = _load(args)
+    plan = planner.generate_plan(cfg, store, start=on)
+    events = testplan.generate(cfg, plan, on)
+    if args.kind:
+        events = [e for e in events if e.kind == args.kind]
+    if not events:
+        print("ไม่มีการทดสอบในช่วงนี้")
+        return 0
+
+    for e in events[: args.limit]:
+        days = (e.day - on).days
+        when = "วันนี้" if days == 0 else f"อีก {days} วัน"
+        print(f"\n{e.day}  ({when})  [{testplan.KIND_LABELS.get(e.kind, e.kind)}]")
+        print(f"  {e.title}")
+        if e.subjects:
+            print(f"  วิชา: {', '.join(e.subject_names)}")
+        if e.questions:
+            print(f"  ประมาณ {e.questions} ข้อ · {e.minutes} นาที")
+        elif e.minutes:
+            print(f"  ใช้เวลา {e.minutes} นาที")
+        if e.note:
+            print(f"  {e.note}")
+    return 0
+
+
 def cmd_notify(args) -> int:
     cfg, store, on = _load(args)
     tg = TelegramNotifier(cfg)
@@ -402,6 +467,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("progress", help="ความคืบหน้ารายวิชา + สถิติ quiz")
     s.set_defaults(func=cmd_progress)
+
+    s = sub.add_parser("tests", help="ตารางทดสอบ (รายสัปดาห์ / รายเดือน / สอบเสมือนจริง)")
+    s.add_argument(
+        "--kind", choices=["weekly", "monthly", "mock"], help="กรองเฉพาะประเภทนี้"
+    )
+    s.add_argument("--limit", type=int, default=15, help="แสดงกี่รายการ")
+    s.set_defaults(func=cmd_tests)
+
+    s = sub.add_parser("export", help="สร้างหน้าเว็บไฟล์เดียว (เปิดบนมือถือได้)")
+    s.add_argument("--out", help="ไฟล์ปลายทาง (ค่าเริ่มต้น web/tcas_app.build.html)")
+    s.add_argument("--template", help="ไฟล์ template (ค่าเริ่มต้น web/tcas_app.html)")
+    s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
+    s.set_defaults(func=cmd_export)
 
     s = sub.add_parser("notify", help="ส่งสรุปประจำวันเข้า Telegram")
     s.add_argument("--test", action="store_true", help="ส่งข้อความทดสอบการเชื่อมต่อ")
