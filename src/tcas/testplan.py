@@ -62,8 +62,28 @@ class TestEvent:
         ]
 
 
-def _weekly_events(plan: List[StudyDay], questions_per_topic: int = 2) -> List[TestEvent]:
-    """รวมหัวข้อที่อ่านในแต่ละสัปดาห์ แล้วตั้งเป็นการทดสอบวันอาทิตย์ท้ายสัปดาห์."""
+def _bank_counts(bank) -> Dict[str, int]:
+    """นับข้อสอบต่อหัวข้อจากคลังจริง — คีย์คือรหัสหัวข้อ."""
+    counts: Dict[str, int] = {}
+    for q in (bank or {}).values():
+        if q.topic_code:
+            counts[q.topic_code] = counts.get(q.topic_code, 0) + 1
+    return counts
+
+
+def _available(counts: Dict[str, int], topics) -> int:
+    return sum(counts.get(t, 0) for t in topics)
+
+
+def _weekly_events(
+    plan: List[StudyDay],
+    counts: Optional[Dict[str, int]] = None,
+    questions_per_topic: int = 2,
+) -> List[TestEvent]:
+    """รวมหัวข้อที่อ่านในแต่ละสัปดาห์ แล้วตั้งเป็นการทดสอบวันอาทิตย์ท้ายสัปดาห์.
+
+    จำนวนข้อที่บอก ต้องไม่เกินที่คลังมีจริง — ไม่งั้นแอปสัญญาสิ่งที่ทำไม่ได้
+    """
     # จัดกลุ่มตามสัปดาห์ ISO
     weeks: Dict[tuple, Dict[str, Any]] = {}
     for sd in plan:
@@ -85,6 +105,22 @@ def _weekly_events(plan: List[StudyDay], questions_per_topic: int = 2) -> List[T
         # สอบวันอาทิตย์ของสัปดาห์นั้น (หรือวันสุดท้ายที่มีตาราง ถ้าเลยไปแล้ว)
         last = bucket["last"]
         sunday = last + timedelta(days=(6 - last.weekday()))
+
+        want = len(topics) * questions_per_topic
+        have = _available(counts, topics) if counts is not None else want
+        n = min(want, have)
+
+        note = "เน้นเฉพาะของใหม่ ทำทันทีที่จบสัปดาห์ตอนยังจำได้"
+        if counts is not None and have < want:
+            gap = [t for t in sorted(topics) if not counts.get(t)]
+            if not n:
+                note = (
+                    f"⚠️ ยังไม่มีข้อสอบของ {len(gap)} หัวข้อนี้ในคลัง — "
+                    "เพิ่มได้ที่ data/tcas/questions/ แล้วรัน export ใหม่"
+                )
+            elif gap:
+                note += f" (คลังยังขาดข้อสอบ {len(gap)} หัวข้อ)"
+
         events.append(
             TestEvent(
                 day=sunday,
@@ -92,40 +128,55 @@ def _weekly_events(plan: List[StudyDay], questions_per_topic: int = 2) -> List[T
                 title=f"ทดสอบหัวข้อที่อ่านสัปดาห์นี้ ({len(topics)} หัวข้อ)",
                 subjects=subjects,
                 topics=sorted(topics),
-                questions=len(topics) * questions_per_topic,
-                minutes=max(15, len(topics) * questions_per_topic * 2),
-                note="เน้นเฉพาะของใหม่ ทำทันทีที่จบสัปดาห์ตอนยังจำได้",
+                questions=n,
+                minutes=max(10, n * 2) if n else 0,
+                note=note,
             )
         )
     return events
 
 
-def _monthly_events(plan: List[StudyDay]) -> List[TestEvent]:
+def _monthly_events(
+    plan: List[StudyDay], counts: Optional[Dict[str, int]] = None
+) -> List[TestEvent]:
     """สิ้นเดือน ทดสอบรวมทุกวิชาที่อ่านสะสมมาถึงตอนนั้น."""
     months: Dict[tuple, Dict[str, Any]] = {}
     for sd in plan:
         if not sd.blocks:
             continue
         key = (sd.day.year, sd.day.month)
-        bucket = months.setdefault(key, {"subjects": set(), "last": sd.day})
+        bucket = months.setdefault(key, {"subjects": set(), "topics": set(), "last": sd.day})
         bucket["last"] = max(bucket["last"], sd.day)
         for b in sd.blocks:
             bucket["subjects"].add(b.subject_code)
+            bucket["topics"].add(b.topic_code)
 
     events = []
     cumulative: set = set()
+    cumulative_topics: set = set()
     for _key, bucket in sorted(months.items()):
         cumulative |= bucket["subjects"]
+        cumulative_topics |= bucket["topics"]
         subjects = sorted(cumulative)
+
+        want = len(subjects) * 10
+        have = _available(counts, cumulative_topics) if counts is not None else want
+        n = min(want, have)
+
+        note = "รวมของเก่าทั้งหมด ไม่ใช่แค่เดือนนี้ — วัดว่าของเดิมยังอยู่ไหม"
+        if counts is not None and have < want:
+            note += f" (คลังมีข้อสอบให้ {n} ข้อ จากที่ควรได้ {want})"
+
         events.append(
             TestEvent(
                 day=bucket["last"],
                 kind=KIND_MONTHLY,
                 title=f"ทดสอบรวมสะสม {len(subjects)} วิชา",
                 subjects=subjects,
-                questions=len(subjects) * 10,
-                minutes=len(subjects) * 15,
-                note="รวมของเก่าทั้งหมด ไม่ใช่แค่เดือนนี้ — วัดว่าของเดิมยังอยู่ไหม",
+                topics=sorted(cumulative_topics),
+                questions=n,
+                minutes=max(10, n * 90 // 60) if n else 0,
+                note=note,
             )
         )
     return events
@@ -178,12 +229,22 @@ def generate(
     cfg: Dict[str, Any],
     plan: List[StudyDay],
     start: Optional[date] = None,
+    bank=None,
 ) -> List[TestEvent]:
-    """สร้างตารางทดสอบทั้งหมด เรียงตามวัน."""
+    """สร้างตารางทดสอบทั้งหมด เรียงตามวัน.
+
+    ส่ง `bank` (ผลจาก quiz.load_bank) มาด้วยเสมอถ้าทำได้ — จำนวนข้อที่แสดง
+    จะได้ไม่เกินที่คลังมีจริง ถ้าไม่ส่งมาจะกลับไปใช้ค่าประมาณแบบเดิม
+    """
     if not plan:
         return []
     start = start or plan[0].day
-    events = _weekly_events(plan) + _monthly_events(plan) + _mock_events(cfg, start)
+    counts = _bank_counts(bank) if bank is not None else None
+    events = (
+        _weekly_events(plan, counts)
+        + _monthly_events(plan, counts)
+        + _mock_events(cfg, start)
+    )
 
     # ถ้าวันเดียวกันชนกัน ให้สอบเสมือนจริงมาก่อน แล้วรายเดือน แล้วรายสัปดาห์
     priority = {KIND_MOCK: 0, KIND_MONTHLY: 1, KIND_WEEKLY: 2}

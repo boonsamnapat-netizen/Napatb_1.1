@@ -61,7 +61,7 @@ def build_payload(
 ) -> Dict[str, Any]:
     """สร้าง dict ที่จะกลายเป็น JSON ฝังในหน้าเว็บ."""
     plan = planner.generate_plan(cfg, store, start=start, max_days=horizon_days)
-    tests = testplan.generate(cfg, plan, start)
+    tests = testplan.generate(cfg, plan, start, bank=bank)
 
     subjects = {
         code: {
@@ -98,15 +98,40 @@ def build_payload(
         for q in bank.values()
     ]
 
+    exam_specs = exam_dates(cfg)
     exams = [
         {
             "key": key,
             "name": spec["name"],
             "date": spec["date"].isoformat(),
             "verified": spec["verified"],
+            # ตัวนับถอยหลังหลักจะยึดเฉพาะสนามที่ counts = true
+            "counts": spec["counts"],
         }
-        for key, spec in exam_dates(cfg).items()
+        for key, spec in exam_specs.items()
     ]
+
+    # เส้นตายของแต่ละวิชา — ใช้ให้เบราว์เซอร์คำนวณความเร่งด่วนเองได้
+    tpat1_day = exam_specs.get("tpat1", {}).get("date")
+    alevel_day = exam_specs.get("alevel", {}).get("date")
+    deadlines = {
+        code: (tpat1_day if subj.exam == "tpat1" else alevel_day).isoformat()
+        for code, subj in syllabus.SUBJECTS.items()
+        if (tpat1_day if subj.exam == "tpat1" else alevel_day)
+    }
+
+    # config การวางแผน — เบราว์เซอร์ใช้จัดตารางใหม่จากสิ่งที่ยังไม่ได้ทำจริง
+    # แทนที่จะยึดปฏิทินที่คำนวณไว้ตอน build (ซึ่งตามหลังไม่ได้)
+    st = cfg.get("study") or {}
+    study = {
+        "hoursByWeekday": st.get("hours_by_weekday") or {},
+        "blockHours": float(st.get("block_hours", 1.5)),
+        "reviewShare": float(st.get("review_share", 0.25)),
+        "reviewIntervals": list(st.get("review_intervals_days") or [1, 3, 7, 16, 35]),
+        "daysOff": [str(d) for d in (st.get("days_off") or [])],
+        "baselineMastery": float(cfg.get("baseline_mastery", 35.0)),
+        "deadlines": deadlines,
+    }
 
     milestones = [
         {"date": parse_date(m["date"]).isoformat(), "label": str(m.get("label", ""))}
@@ -133,6 +158,7 @@ def build_payload(
         "startDate": start.isoformat(),
         "student": cfg.get("student") or {},
         "exams": exams,
+        "study": study,
         "milestones": milestones,
         "weights": scoring.group_weights(cfg),
         "groupLabels": scoring.GROUP_LABELS,

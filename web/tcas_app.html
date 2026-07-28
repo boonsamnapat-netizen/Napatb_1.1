@@ -173,6 +173,50 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .cd-unit { font-size: 12px; color: #b9c2d0; }
 .cd-what { font-size: 11px; color: #8f9bb0; max-width: 190px; }
 
+.streak{display:flex;align-items:baseline;gap:5px;padding:4px 10px;border-radius:99px;
+  background:rgba(224,160,43,.14);border:1px solid rgba(224,160,43,.35)}
+/* display:flex ชนะ [hidden] ของเบราว์เซอร์ ต้องประกาศทับเอง */
+.streak[hidden]{display:none}
+.streak-n{font-size:16px;font-weight:600;color:var(--marigold-f);line-height:1}
+.streak-l{font-size:11px;color:#b9c2d0}
+
+/* ═══════════════════════════════════════════════════════════════
+   ON-TRACK STATUS
+   ═══════════════════════════════════════════════════════════════ */
+.status{border:1px solid var(--line);border-left-width:4px;border-radius:var(--r);
+  padding:12px 14px;background:var(--surface)}
+.status.ok{border-left-color:var(--ok);background:var(--ok-dim)}
+.status.tight{border-left-color:var(--warn-f,var(--marigold-f));background:var(--warn-dim)}
+.status.over{border-left-color:var(--brick);background:var(--brick-dim)}
+.status-hd{display:flex;align-items:baseline;gap:8px;font-size:14.5px}
+.status-hd .spacer{margin-left:auto;font-size:13px;color:var(--text-2)}
+.status-dot{width:9px;height:9px;border-radius:50%;flex:none;align-self:center}
+.status.ok .status-dot{background:var(--ok)}
+.status.tight .status-dot{background:var(--marigold-f)}
+.status.over .status-dot{background:var(--brick)}
+
+/* ═══════════════════════════════════════════════════════════════
+   DAY COMPLETE + TOAST
+   ═══════════════════════════════════════════════════════════════ */
+.done-hero{display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:26px 16px;text-align:center}
+.done-hero b{font-size:17px}
+.done-mark{width:46px;height:46px;border-radius:50%;background:var(--ok);color:var(--surface);
+  display:grid;place-items:center;margin-bottom:3px}
+.done-mark svg{width:24px;height:24px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:70;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:var(--ink);color:#f0f2f6;padding:10px 18px;border-radius:99px;
+  box-shadow:0 6px 24px rgba(0,0,0,.28);animation:toastIn .22s ease-out}
+.toast-big-t{font-size:14px;font-weight:600}
+.toast-sub{font-size:11.5px;color:#a9b3c2}
+.toast.toast-big{background:var(--ok);color:#fff;padding:13px 24px;border-radius:14px}
+.toast.toast-big .toast-sub{color:rgba(255,255,255,.85)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(7px)}
+                   to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media (min-width:720px){.toast{bottom:26px}}
+
 /* ═══════════════════════════════════════════════════════════════
    TABS
    ═══════════════════════════════════════════════════════════════ */
@@ -377,7 +421,7 @@ main { padding-top: 20px; }
 /* ═══════════════════════════════════════════════════════════════
    STAT TILES
    ═══════════════════════════════════════════════════════════════ */
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px; }
 .tile {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r); padding: 12px 13px;
@@ -470,6 +514,10 @@ hr.rule { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
         <span class="cd-what" id="cdWhat">—</span>
       </span>
     </div>
+    <div class="streak" id="streakBox" hidden>
+      <span class="streak-n num" id="streakN">0</span>
+      <span class="streak-l">วันติด</span>
+    </div>
   </div>
 </div>
 
@@ -527,10 +575,15 @@ const Store = (() => {
       try { mem = JSON.parse(localStorage.getItem(KEY) || "{}"); }
       catch (e) { mem = {}; }
     } else mem = {};
-    if (!mem.done) mem.done = {};        // "YYYY-MM-DD|topic" -> true
+
+    // topicCode -> {hoursDone, learnedOn, rep, ease, next}
+    // ความคืบหน้าผูกกับ "หัวข้อ" ไม่ใช่ "วันที่" — ข้ามวันแล้วงานจึงไม่หาย
+    if (!mem.topics) mem.topics = {};
     if (!mem.q) mem.q = {};              // qid -> {seen, ok}
     if (!mem.tests) mem.tests = {};      // "YYYY-MM-DD|kind" -> true
     if (!mem.runs) mem.runs = [];        // quiz history
+    if (!mem.days) mem.days = {};        // "YYYY-MM-DD" -> ชั่วโมงที่ทำวันนั้น (ใช้นับ streak)
+    if (!mem.log) mem.log = {};          // "YYYY-MM-DD" -> [{topic,kind,hours,rep}] ที่ทำเสร็จวันนั้น
     return mem;
   }
   function save() {
@@ -541,6 +594,28 @@ const Store = (() => {
 })();
 
 const S = Store.read();
+
+/* ย้ายข้อมูลจากรูปแบบเดิม (v1) ที่เก็บเป็น "วันที่|หัวข้อ" มาเป็นชั่วโมงต่อหัวข้อ
+   ทำครั้งเดียวแล้วทิ้งของเดิม — ผู้ใช้เดิมจึงไม่เสียความคืบหน้าที่เคยติ๊กไว้ */
+(function migrateFromDateKeyedProgress() {
+  if (!S.done || S.migrated) return;
+  const hoursOf = new Map();
+  for (const day of DATA.plan)
+    for (const b of day.blocks)
+      if (b.kind === "learn") hoursOf.set(day.date + "|" + b.topic, b.hours);
+
+  for (const key of Object.keys(S.done)) {
+    const [, topic] = key.split("|");
+    const h = hoursOf.get(key) || 0;
+    if (!topic || !h) continue;
+    const rec = S.topics[topic] || { hoursDone: 0 };
+    rec.hoursDone = (rec.hoursDone || 0) + h;
+    S.topics[topic] = rec;
+  }
+  delete S.done;
+  S.migrated = true;
+  Store.save();
+})();
 
 /* ─────────────────────────────────────────────────────────────
    dates
@@ -572,7 +647,6 @@ function fmtHours(h) {
 const REAL_TODAY = iso(new Date());
 const TODAY = REAL_TODAY < DATA.startDate ? DATA.startDate : REAL_TODAY;
 
-const PLAN_BY_DATE = new Map(DATA.plan.map(p => [p.date, p]));
 const SUBJ = DATA.subjects;
 const TOPIC_OF = (() => {
   const m = new Map();
@@ -595,37 +669,203 @@ const CHOICE_LETTERS = ["ก", "ข", "ค", "ง", "จ"];
 /* ชิปในตารางมีที่แคบ — ใช้ชื่อสั้น ("ชีววิทยา") ไม่ใช่ชื่อเต็ม ("A-Level ชีววิทยา") */
 const subjLabel = code => (SUBJ[code] && (SUBJ[code].short || SUBJ[code].name)) || code;
 const subjName  = code => (SUBJ[code] && SUBJ[code].name) || code;
-const blockKey = (date, topic) => date + "|" + topic;
-const isDone = (date, topic) => !!S.done[blockKey(date, topic)];
+const ST = DATA.study;
+const DOW_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-function nextExam() {
-  for (const e of DATA.exams) if (daysBetween(TODAY, e.date) >= 0) return e;
+/** ตัวนับถอยหลังหลักยึดเฉพาะสนามที่มีน้ำหนักใน กสพท — TGAT ไม่นับ */
+function nextExam(countingOnly) {
+  for (const e of DATA.exams) {
+    if (daysBetween(TODAY, e.date) < 0) continue;
+    if (countingOnly && e.counts === false) continue;
+    return e;
+  }
   return null;
 }
 
-/* หัวข้อถือว่า "อ่านจบ" เมื่อเช็คบล็อกอ่านใหม่ของหัวข้อนั้นครบทุกบล็อกในแผน */
-function topicProgress() {
-  const need = new Map(), got = new Map();
-  for (const day of DATA.plan) {
-    for (const b of day.blocks) {
-      if (b.kind !== "learn") continue;
-      need.set(b.topic, (need.get(b.topic) || 0) + 1);
-      if (isDone(day.date, b.topic)) got.set(b.topic, (got.get(b.topic) || 0) + 1);
-    }
+/* ── สถานะรายหัวข้อ ───────────────────────────────────────── */
+const topicRec = code => S.topics[code] || {};
+const hoursDoneOf = code => Number(topicRec(code).hoursDone || 0);
+const hoursLeftOf = t => Math.max(0, Math.round((t.hours - hoursDoneOf(t.code)) * 4) / 4);
+const isLearned = code => {
+  const t = TOPIC_OF.get(code);
+  return !!t && hoursDoneOf(code) >= t.hours - 0.001;
+};
+
+/** ความแม่นของหัวข้อ จากข้อสอบที่เคยทำในหัวข้อนั้น (ยังไม่เคยทำ = ค่าตั้งต้น) */
+function masteryOf(code) {
+  let seen = 0, ok = 0;
+  for (const q of DATA.questions) {
+    if (q.topic !== code) continue;
+    const r = S.q[q.qid];
+    if (r) { seen += r.seen; ok += r.ok; }
   }
-  const done = new Set();
-  for (const [t, n] of need) if ((got.get(t) || 0) >= n) done.add(t);
-  return { need, got, done };
+  return seen ? (100 * ok / seen) : ST.baselineMastery;
+}
+
+/* ── เวลาว่างในแต่ละวัน ───────────────────────────────────── */
+function hoursFor(isoStr) {
+  if (ST.daysOff.includes(isoStr)) return 0;
+  return Number(ST.hoursByWeekday[DOW_KEY[d(isoStr).getDay()]] || 0);
+}
+
+/** ชั่วโมงอ่าน "ของใหม่" ที่เหลือระหว่างสองวัน (หักส่วนที่กันไว้ทบทวน) */
+function learnHoursBetween(fromISO, toISO) {
+  const learnShare = 1 - ST.reviewShare;
+  let total = 0, cur = d(fromISO), end = d(toISO), guard = 0;
+  while (cur <= end && guard++ < 800) {
+    total += hoursFor(iso(cur)) * learnShare;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return total;
+}
+
+/** น้ำหนักของวิชาในคะแนนรวม 100 (กลุ่มวิทย์ 3 วิชาหารเท่ากัน) */
+const SUBJ_WEIGHT = (() => {
+  const perGroup = {};
+  for (const s of Object.values(SUBJ)) perGroup[s.group] = (perGroup[s.group] || 0) + 1;
+  const out = {};
+  for (const [code, s] of Object.entries(SUBJ))
+    out[code] = (DATA.weights[s.group] || 1) / (perGroup[s.group] || 1);
+  return out;
+})();
+
+/* ── ตัวจัดตาราง ───────────────────────────────────────────
+   จัดใหม่ทุกครั้งที่เปิดหน้า โดยเริ่มจาก "วันนี้" และ "สิ่งที่ยังไม่ได้ทำจริง"
+   ข้ามไปกี่วันก็ตาม งานที่ค้างจะถูกดันมาข้างหน้าเสมอ ไม่หายไปตามปฏิทิน
+   สูตรเดียวกับฝั่ง Python: น้ำหนักหัวข้อ × น้ำหนักวิชา × (1−ความแม่น) × ความเร่งด่วน */
+function buildPlan(fromISO, nDays) {
+  const pending = [];
+  for (const [sc, s] of Object.entries(SUBJ))
+    for (const t of s.topics) {
+      const left = hoursLeftOf(t);
+      if (left >= 0.25)
+        pending.push({ subject: sc, code: t.code, name: t.name, weight: t.weight, left });
+    }
+
+  // คิวทบทวน — จำลองต่อไปข้างหน้าโดยถือว่าทบทวนผ่าน
+  const sim = new Map();
+  for (const [code, rec] of Object.entries(S.topics))
+    if (rec.next && TOPIC_OF.has(code)) sim.set(code, { next: rec.next, rep: rec.rep || 0 });
+
+  const days = [];
+  const cur = d(fromISO);
+
+  for (let i = 0; i < nDays; i++) {
+    const dayISO = iso(cur);
+    // หักเวลาที่ทำไปแล้ววันนั้นออก — ทำครึ่งวันแล้วตารางจะเหลือแค่ส่วนที่ค้าง
+    const logged = (S.log[dayISO] || []).reduce((a, x) => a + x.hours, 0);
+    const capacity = Math.max(0, hoursFor(dayISO) - logged);
+    const day = { date: dayISO, blocks: [],
+                  note: hoursFor(dayISO) <= 0 ? "วันพัก" : (capacity <= 0 ? "ทำครบแล้ว" : "") };
+
+    if (capacity > 0) {
+      let usedReview = 0;
+      const reviewBudget = capacity * ST.reviewShare;
+
+      // 1) ทบทวนก่อน — ค้างนานสุดขึ้นก่อน
+      const due = [...sim.entries()].filter(([, r]) => r.next <= dayISO)
+        .sort((a, b) => (a[1].next < b[1].next ? -1 : 1));
+      for (const [code, r] of due) {
+        const t = TOPIC_OF.get(code);
+        if (!t) continue;
+        let need = Math.max(0.25, Math.round(t.hours * 0.25 * Math.pow(0.7, r.rep) * 4) / 4);
+        need = Math.min(need, capacity - usedReview);
+        if (need < 0.25) break;
+        if (usedReview + need > reviewBudget && usedReview > 0) break;
+        day.blocks.push({ kind: "review", subject: t.subject, topic: code,
+                          topicName: t.name, hours: need, repetition: r.rep + 1 });
+        usedReview += need;
+        const gap = ST.reviewIntervals[Math.min(r.rep + 1, ST.reviewIntervals.length - 1)];
+        const nx = d(dayISO); nx.setDate(nx.getDate() + gap);
+        sim.set(code, { next: iso(nx), rep: r.rep + 1 });
+      }
+
+      // 2) อ่านใหม่ตามลำดับความคุ้ม
+      let budget = capacity - usedReview;
+      if (pending.length) {
+        const remain = {}, urgency = {};
+        for (const p of pending) remain[p.subject] = (remain[p.subject] || 0) + p.left;
+        for (const sc of Object.keys(remain)) {
+          const avail = learnHoursBetween(dayISO, ST.deadlines[sc] || dayISO);
+          urgency[sc] = Math.min(5, Math.max(0.1, remain[sc] / Math.max(avail, 1)));
+        }
+        const score = p => p.weight * SUBJ_WEIGHT[p.subject] *
+          (1 - masteryOf(p.code) / 100) * (urgency[p.subject] || 1);
+        pending.sort((a, b) => score(b) - score(a));
+
+        // หัวข้อที่ลงมือไปแล้ววันนี้ ให้ไปต่อคิวท้าย — จะได้ไม่เด้งกลับมาซ้ำ
+        // ทันทีที่ติ๊กเสร็จ (มันยัง priority สูงสุดอยู่ เพราะยังอ่านไม่จบ)
+        const workedToday = new Set((S.log[dayISO] || []).map(e => e.topic));
+        if (workedToday.size) {
+          const front = pending.filter(x => !workedToday.has(x.code));
+          const back = pending.filter(x => workedToday.has(x.code));
+          pending.length = 0;
+          pending.push(...front, ...back);
+        }
+      }
+      while (budget >= 0.25 && pending.length) {
+        const p = pending[0];
+        const chunk = Math.round(Math.min(ST.blockHours, p.left, budget) * 4) / 4;
+        if (chunk < 0.25) break;
+        day.blocks.push({ kind: "learn", subject: p.subject, topic: p.code,
+                          topicName: p.name, hours: chunk, repetition: 0 });
+        budget -= chunk;
+        p.left = Math.round((p.left - chunk) * 4) / 4;
+        pending.shift();
+        if (p.left >= 0.25) {
+          pending.push(p);          // เหลืออีก -> ต่อวันหลัง ไม่กองซ้ำวันเดียว
+        } else {
+          const nx = d(dayISO); nx.setDate(nx.getDate() + ST.reviewIntervals[0]);
+          sim.set(p.code, { next: iso(nx), rep: 0 });
+        }
+      }
+    }
+    days.push(day);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+}
+
+/* ── ยังทันไหม ─────────────────────────────────────────────
+   เทียบชั่วโมงที่ยังต้องอ่าน กับชั่วโมงว่างที่เหลือจริงก่อนถึงวันสอบแต่ละสนาม */
+function outlook() {
+  const byDeadline = {};
+  for (const [sc, s] of Object.entries(SUBJ)) {
+    const dl = ST.deadlines[sc];
+    if (!dl) continue;
+    byDeadline[dl] = (byDeadline[dl] || 0) + s.topics.reduce((a, t) => a + hoursLeftOf(t), 0);
+  }
+  return Object.entries(byDeadline).sort().map(([dl, need]) => {
+    const avail = learnHoursBetween(TODAY, dl);
+    const exam = DATA.exams.find(e => e.date === dl);
+    const ratio = avail > 0 ? need / avail : (need > 0 ? 99 : 0);
+    return {
+      deadline: dl, need, avail, slack: avail - need,
+      name: exam ? exam.name : dl,
+      status: need <= 0 ? "done" : ratio <= 0.85 ? "ok" : ratio <= 1 ? "tight" : "over",
+    };
+  });
+}
+
+/* ── streak ───────────────────────────────────────────────── */
+function streak() {
+  let n = 0;
+  const cur = d(TODAY);
+  // วันนี้ยังไม่ได้ทำก็ยังไม่ตัด streak — เริ่มนับจากเมื่อวานแทน
+  if (!(S.days[iso(cur)] > 0)) cur.setDate(cur.getDate() - 1);
+  for (let i = 0; i < 400; i++) {
+    if (!(S.days[iso(cur)] > 0)) break;
+    n++; cur.setDate(cur.getDate() - 1);
+  }
+  return n;
 }
 
 function subjectStats() {
-  const { done } = topicProgress();
   const out = [];
   for (const [code, s] of Object.entries(SUBJ)) {
     const total = s.topics.length;
-    const dn = s.topics.filter(t => done.has(t.code)).length;
-    const hoursDone = s.topics.filter(t => done.has(t.code)).reduce((a, t) => a + t.hours, 0);
-    // ความแม่นจากข้อสอบที่เคยทำในวิชานี้
+    const dn = s.topics.filter(t => isLearned(t.code)).length;
+    const hoursDone = s.topics.reduce((a, t) => a + Math.min(hoursDoneOf(t.code), t.hours), 0);
     let seen = 0, ok = 0;
     for (const q of DATA.questions) {
       if (q.subject !== code) continue;
@@ -637,7 +877,7 @@ function subjectStats() {
       pct: total ? (100 * dn / total) : 0,
       hoursDone, hoursTotal: s.hours,
       accuracy: seen ? (100 * ok / seen) : null, seen,
-      topics: s.topics, doneSet: done,
+      topics: s.topics,
     });
   }
   return out.sort((a, b) => b.pct - a.pct);
@@ -649,7 +889,7 @@ function subjectStats() {
 function renderTop() {
   const name = (DATA.student && DATA.student.name) ? DATA.student.name : "";
   $("#brandName").textContent = name ? "TCAS70 · " + name : "TCAS70 · เตรียมสอบแพทย์";
-  const e = nextExam();
+  const e = nextExam(true);
   if (!e) {
     $("#cdNum").textContent = "—";
     $("#cdUnit").textContent = "";
@@ -660,18 +900,70 @@ function renderTop() {
   $("#cdNum").textContent = n;
   $("#cdUnit").textContent = n === 0 ? "สอบวันนี้" : "วัน";
   $("#cdWhat").textContent = e.name + (e.verified ? "" : " ⚠︎");
+
+  const st = streak();
+  const box = $("#streakBox");
+  box.hidden = st < 1;
+  $("#streakN").textContent = st;
 }
 
 /* ─────────────────────────────────────────────────────────────
    VIEW: วันนี้
    ───────────────────────────────────────────────────────────── */
-function blockRow(day, b) {
-  const done = isDone(day.date, b.topic);
+/* ทำบล็อกเสร็จ: ลงชั่วโมงให้หัวข้อ บันทึกลงล็อกของวัน แล้วขยับคิวทบทวน
+   ตารางที่เหลือจะถูกคำนวณใหม่เองจากชั่วโมงที่เหลือ ไม่ต้องแตะปฏิทิน */
+function completeBlock(dayISO, b) {
+  const rec = S.topics[b.topic] || {};
+
+  if (b.kind === "learn") {
+    rec.hoursDone = Number(rec.hoursDone || 0) + b.hours;
+    const t = TOPIC_OF.get(b.topic);
+    if (t && rec.hoursDone >= t.hours - 0.001 && !rec.learnedOn) {
+      rec.learnedOn = dayISO;
+      rec.rep = 0;
+      const nx = d(dayISO); nx.setDate(nx.getDate() + ST.reviewIntervals[0]);
+      rec.next = iso(nx);
+    }
+  } else {
+    rec.rep = Number(rec.rep || 0) + 1;
+    const gap = ST.reviewIntervals[Math.min(rec.rep, ST.reviewIntervals.length - 1)];
+    const nx = d(dayISO); nx.setDate(nx.getDate() + gap);
+    rec.next = iso(nx);
+  }
+
+  S.topics[b.topic] = rec;
+  (S.log[dayISO] = S.log[dayISO] || []).push(
+    { topic: b.topic, kind: b.kind, hours: b.hours, rep: b.repetition, subject: b.subject });
+  S.days[dayISO] = Number(S.days[dayISO] || 0) + b.hours;
+  Store.save();
+}
+
+function undoLogged(dayISO, index) {
+  const entries = S.log[dayISO] || [];
+  const e = entries[index];
+  if (!e) return;
+  const rec = S.topics[e.topic] || {};
+  if (e.kind === "learn") {
+    rec.hoursDone = Math.max(0, Number(rec.hoursDone || 0) - e.hours);
+    const t = TOPIC_OF.get(e.topic);
+    if (t && rec.hoursDone < t.hours - 0.001) { delete rec.learnedOn; delete rec.next; delete rec.rep; }
+  } else {
+    rec.rep = Math.max(0, Number(rec.rep || 0) - 1);
+  }
+  S.topics[e.topic] = rec;
+  entries.splice(index, 1);
+  S.days[dayISO] = Math.max(0, Number(S.days[dayISO] || 0) - e.hours);
+  if (!S.days[dayISO]) delete S.days[dayISO];
+  Store.save();
+}
+
+function blockRow(dayISO, b, opts) {
+  const o = opts || {};
   const kindChip = b.kind === "review"
     ? '<span class="chip review">ทบทวน #' + b.repetition + "</span>"
     : '<span class="chip learn">อ่านใหม่</span>';
   const btn = el(
-    '<button class="blk ' + (b.kind === "review" ? "review " : "") + (done ? "done" : "") + '">' +
+    '<button class="blk ' + (b.kind === "review" ? "review " : "") + (o.done ? "done" : "") + '">' +
       '<span class="blk-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>' +
       '<span class="blk-body">' +
         '<span class="blk-name">' + esc(b.topicName) + "</span>" +
@@ -682,14 +974,38 @@ function blockRow(day, b) {
       "</span>" +
     "</button>"
   );
-  btn.setAttribute("aria-pressed", done ? "true" : "false");
+  btn.setAttribute("aria-pressed", o.done ? "true" : "false");
+  if (o.readonly) { btn.disabled = true; btn.style.cursor = "default"; return btn; }
+
   btn.addEventListener("click", () => {
-    const k = blockKey(day.date, b.topic);
-    if (S.done[k]) delete S.done[k]; else S.done[k] = true;
-    Store.save();
+    if (o.done) undoLogged(dayISO, o.index);
+    else {
+      completeBlock(dayISO, b);
+      celebrate(dayISO);
+    }
     render();
   });
   return btn;
+}
+
+/* ฟีดแบ็กตอนทำเสร็จ — เงียบ ๆ ตอนทำได้ทีละบล็อก และชัดขึ้นเมื่อครบทั้งวัน */
+let toastTimer = null;
+function celebrate(dayISO) {
+  const left = buildPlan(dayISO, 1)[0].blocks.length;
+  const st = streak();
+  const msg = left === 0
+    ? { big: "ครบแล้ววันนี้", sub: st > 1 ? "ต่อเนื่อง " + st + " วันติด 🔥" : "เริ่มนับ streak แล้ว" }
+    : { big: "บันทึกแล้ว", sub: "เหลืออีก " + left + " บล็อก" };
+
+  const old = $("#toast"); if (old) old.remove();
+  const node = el(
+    '<div id="toast" class="toast' + (left === 0 ? " toast-big" : "") + '">' +
+      '<span class="toast-big-t">' + esc(msg.big) + "</span>" +
+      '<span class="toast-sub">' + esc(msg.sub) + "</span>" +
+    "</div>");
+  document.body.appendChild(node);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => node.remove(), left === 0 ? 3200 : 1700);
 }
 
 function viewToday() {
@@ -697,22 +1013,46 @@ function viewToday() {
   root.innerHTML = "";
   const wrap = el('<div class="stack"></div>');
 
-  const day = PLAN_BY_DATE.get(TODAY);
   const todaysTests = DATA.tests.filter(t => t.date === TODAY);
+  const todo = buildPlan(TODAY, 1)[0];
+  const doneToday = S.log[TODAY] || [];
+  const blocks = todo.blocks;
+  const hoursLeft = blocks.reduce((a, b) => a + b.hours, 0);
+  const hoursDone = doneToday.reduce((a, b) => a + b.hours, 0);
+  const allDone = hoursDone > 0 && blocks.length === 0;
+  const st = streak();
+
+  /* ---- ยังทันไหม — ตอบคำถามที่สำคัญที่สุดก่อนเรื่องอื่น */
+  const look = outlook().filter(o => o.need > 0);
+  if (look.length) {
+    const worst = look.reduce((a, b) => (a.slack <= b.slack ? a : b));
+    const cls = worst.status === "over" ? "over" : worst.status === "tight" ? "tight" : "ok";
+    const label = { ok: "ตามทัน", tight: "ค่อนข้างตึง", over: "ไม่ทันแล้ว" }[cls];
+    const detail = worst.status === "over"
+      ? "ยังต้องอ่านอีก " + Math.round(worst.need) + " ชม. แต่ก่อนถึง " +
+        worst.name + " เหลือเวลาว่างแค่ " + Math.round(worst.avail) +
+        " ชม. — ต้องเพิ่มเวลาต่อวัน หรือตัดหัวข้อที่น้ำหนักน้อยออก"
+      : "ยังต้องอ่านอีก " + Math.round(worst.need) + " ชม. จากเวลาว่างที่เหลือ " +
+        Math.round(worst.avail) + " ชม. ก่อน " + worst.name;
+    wrap.appendChild(el(
+      '<div class="status ' + cls + '">' +
+        '<div class="status-hd"><span class="status-dot"></span>' +
+        '<b>' + label + '</b><span class="spacer num">' +
+        Math.round(worst.need) + " / " + Math.round(worst.avail) + " ชม.</span></div>" +
+        '<p class="tiny" style="margin:3px 0 0">' + esc(detail) + "</p>" +
+      "</div>"));
+  }
 
   /* ---- summary tiles */
-  const blocks = day ? day.blocks : [];
-  const doneCount = blocks.filter(b => isDone(TODAY, b.topic)).length;
-  const hoursLeft = blocks.filter(b => !isDone(TODAY, b.topic)).reduce((a, b) => a + b.hours, 0);
-  const st = subjectStats();
-  const overall = st.reduce((a, s) => a + s.done, 0);
-  const overallTotal = st.reduce((a, s) => a + s.total, 0);
-
   wrap.appendChild(el(
     '<div class="tiles">' +
-      '<div class="tile"><div class="tile-n">' + doneCount + "/" + blocks.length + '</div><div class="tile-l">บล็อกวันนี้</div></div>' +
-      '<div class="tile"><div class="tile-n">' + (hoursLeft ? fmtHours(hoursLeft).replace(" ชม.", "") : "0") + '</div><div class="tile-l">ชั่วโมงที่เหลือ</div></div>' +
-      '<div class="tile"><div class="tile-n">' + overall + "/" + overallTotal + '</div><div class="tile-l">หัวข้อที่อ่านจบ</div></div>' +
+      '<div class="tile"><div class="tile-n" style="color:' + (st ? "var(--marigold)" : "inherit") + '">' +
+        st + '</div><div class="tile-l">วันติดต่อกัน 🔥</div></div>' +
+      '<div class="tile"><div class="tile-n">' + doneToday.length + "/" + (doneToday.length + blocks.length) +
+        '</div><div class="tile-l">บล็อกวันนี้</div></div>' +
+      '<div class="tile"><div class="tile-n">' +
+        (Math.round(hoursLeft * 10) / 10) +
+        '</div><div class="tile-l">ชั่วโมงที่เหลือ</div></div>' +
     "</div>"
   ));
 
@@ -720,24 +1060,44 @@ function viewToday() {
   const card = el('<div class="card"></div>');
   card.appendChild(el(
     '<div class="card-hd"><h2>' + esc(thaiDate(TODAY, true)) + "</h2>" +
-    '<span class="spacer eyebrow">' + (day ? fmtHours(day.hours) : "—") + "</span></div>"
+    '<span class="spacer eyebrow">' + (hoursDone ? "ทำแล้ว " + fmtHours(hoursDone) : fmtHours(hoursLeft)) + "</span></div>"
   ));
   const body = el('<div class="card-pad"></div>');
 
-  if (!day || !blocks.length) {
-    body.appendChild(el('<div class="empty">' + esc(day && day.note ? day.note : "ไม่มีตารางของวันนี้") + "</div>"));
+  if (allDone) {
+    body.appendChild(el(
+      '<div class="done-hero">' +
+        '<div class="done-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></div>' +
+        "<b>ครบแล้ววันนี้</b>" +
+        '<span class="tiny">ทำไป ' + fmtHours(hoursDone) +
+        (st > 1 ? " · ต่อเนื่อง " + st + " วันติด" : "") + "</span>" +
+      "</div>"));
+  } else if (!blocks.length) {
+    body.appendChild(el('<div class="empty">' + esc(todo.note || "ไม่มีตารางของวันนี้") + "</div>"));
   } else {
     const reviews = blocks.filter(b => b.kind === "review");
     const learns = blocks.filter(b => b.kind === "learn");
     if (reviews.length) {
       body.appendChild(el('<div class="section-title"><h2>ทบทวนก่อน</h2></div>'));
       body.appendChild(el('<p class="tiny" style="margin:-6px 0 8px">อ่านแล้วลืมคือเสียเวลาเปล่า — คิวทบทวนมาก่อนของใหม่เสมอ</p>'));
-      reviews.forEach(b => body.appendChild(blockRow(day, b)));
+      reviews.forEach(b => body.appendChild(blockRow(TODAY, b, {})));
     }
     if (learns.length) {
       body.appendChild(el('<div class="section-title" style="margin-top:' + (reviews.length ? "14px" : "0") + '"><h2>อ่านใหม่</h2></div>'));
-      learns.forEach(b => body.appendChild(blockRow(day, b)));
+      learns.forEach(b => body.appendChild(blockRow(TODAY, b, {})));
     }
+  }
+
+  // ที่ทำเสร็จไปแล้ววันนี้ — กดซ้ำเพื่อยกเลิกได้
+  if (doneToday.length) {
+    body.appendChild(el('<div class="section-title" style="margin-top:14px"><h2>ทำเสร็จแล้ว</h2></div>'));
+    doneToday.forEach((e, i) => {
+      const t = TOPIC_OF.get(e.topic);
+      body.appendChild(blockRow(TODAY, {
+        kind: e.kind, subject: e.subject || (t && t.subject), topic: e.topic,
+        topicName: t ? t.name : e.topic, hours: e.hours, repetition: e.rep || 0,
+      }, { done: true, index: i }));
+    });
   }
   card.appendChild(body);
   wrap.appendChild(card);
@@ -754,7 +1114,8 @@ function viewToday() {
   }
 
   /* ---- quick quiz */
-  const subjectsToday = [...new Set(blocks.map(b => b.subject))];
+  const subjectsToday = [...new Set(
+    blocks.map(b => b.subject).concat(doneToday.map(e => e.subject).filter(Boolean)))];
   const qc = el('<div class="card card-pad stack"></div>');
   qc.appendChild(el('<div class="section-title"><h2>ทดสอบเร็ว</h2></div>'));
   qc.appendChild(el('<p class="muted" style="margin:-8px 0 0">ทำข้อสอบสั้น ๆ จากวิชาที่อ่านวันนี้ ตอบผิดข้อไหนระบบจะเอากลับมาถามซ้ำ</p>'));
@@ -814,11 +1175,12 @@ function viewPlan() {
     row.appendChild(b);
   });
   ctl.appendChild(row);
-  ctl.appendChild(el('<p class="tiny" style="margin:10px 0 0">ตารางนี้คำนวณจากวันสอบและเวลาว่างที่ตั้งไว้ ' +
-    'TPAT1 ถูกดันขึ้นมาก่อน A-Level เองเพราะสอบก่อน 3 เดือน — ไม่ได้กำหนดลำดับไว้ตายตัว</p>'));
+  ctl.appendChild(el('<p class="tiny" style="margin:10px 0 0">ตารางจัดใหม่ทุกครั้งที่เปิด ' +
+    'จากงานที่ยังไม่ได้ทำจริง — ข้ามไปกี่วันงานก็ไม่หาย จะถูกดันมาข้างหน้าให้เอง ' +
+    'ติ๊กได้เฉพาะของวันนี้</p>'));
   wrap.appendChild(ctl);
 
-  const days = DATA.plan.filter(p => p.date >= TODAY).slice(0, planWindow);
+  const days = buildPlan(TODAY, planWindow);
   const card = el('<div class="card card-pad"></div>');
   const spine = el('<div class="spine"></div>');
 
@@ -842,7 +1204,8 @@ function viewPlan() {
       if (!day.blocks.length) {
         sd.appendChild(el('<div class="tiny" style="padding:3px 0 0">' + esc(day.note || "พัก") + "</div>"));
       } else {
-        day.blocks.forEach(b => sd.appendChild(blockRow(day, b)));
+        day.blocks.forEach(b => sd.appendChild(blockRow(day.date,
+          b, { readonly: day.date !== TODAY })));
       }
       const tests = DATA.tests.filter(t => t.date === day.date);
       tests.forEach(t => sd.appendChild(el(
@@ -1192,7 +1555,7 @@ function viewProgress() {
     ));
     const dots = el('<div class="dots"></div>');
     s.topics.forEach(t => {
-      const on = s.doneSet.has(t.code);
+      const on = isLearned(t.code);
       const dot = el('<span class="dot' + (on ? " on" : "") + '"></span>');
       dot.title = t.name + (on ? " — อ่านจบแล้ว" : "");
       dots.appendChild(dot);
@@ -1229,10 +1592,12 @@ function viewProgress() {
         "<b>สำรองข้อมูล</b> แล้วเอาไฟล์ไป <b>กู้คืน</b> ที่อีกเครื่อง"
       : "⚠️ เบราว์เซอร์นี้ไม่ยอมให้บันทึกถาวร ความคืบหน้าจะหายเมื่อปิดหน้า") + "</p>"));
 
-  const nDone = Object.keys(S.done).length;
+  const nBlocks = Object.values(S.log).reduce((a, v) => a + v.length, 0);
+  const nTopics = Object.keys(S.topics).length;
   const nQ = Object.keys(S.q).length;
-  rc.appendChild(el('<p class="tiny" style="margin:0">ตอนนี้เก็บไว้: บล็อกที่ทำแล้ว ' +
-    nDone + " · ข้อสอบที่เคยทำ " + nQ + " · ชุดที่ทำจบ " + S.runs.length + "</p>"));
+  rc.appendChild(el('<p class="tiny" style="margin:0">ตอนนี้เก็บไว้: บล็อกที่ทำแล้ว ' + nBlocks +
+    " · หัวข้อที่มีความคืบหน้า " + nTopics + " · ข้อสอบที่เคยทำ " + nQ +
+    " · ชุดที่ทำจบ " + S.runs.length + "</p>"));
 
   const row = el('<div class="btn-row"></div>');
 
@@ -1263,14 +1628,34 @@ function viewProgress() {
       let parsed;
       try { parsed = JSON.parse(reader.result); }
       catch (e) { alert("อ่านไฟล์ไม่ได้ — ไฟล์นี้ไม่ใช่ JSON ที่ถูกต้อง"); return; }
-      const d = parsed && parsed.data;
-      if (!d || typeof d !== "object" || !d.done || !d.q) {
+      const dd = parsed && parsed.data;
+      const looksOurs = dd && typeof dd === "object" && dd.q &&
+                        (dd.topics || dd.done);   // dd.done = ไฟล์สำรองรุ่นเก่า
+      if (!looksOurs) {
         alert("ไฟล์นี้ไม่ใช่ไฟล์สำรองของ TCAS70 — เลือกไฟล์ที่ได้จากปุ่ม สำรองข้อมูล");
         return;
       }
       if (!confirm("ทับความคืบหน้าปัจจุบันด้วยไฟล์นี้? (ของเดิมจะหาย)")) return;
-      S.done = d.done || {}; S.q = d.q || {};
-      S.tests = d.tests || {}; S.runs = d.runs || [];
+
+      S.q = dd.q || {}; S.tests = dd.tests || {}; S.runs = dd.runs || [];
+      S.topics = dd.topics || {}; S.log = dd.log || {}; S.days = dd.days || {};
+
+      if (!dd.topics && dd.done) {
+        // ไฟล์สำรองรุ่นเก่าเก็บเป็น "วันที่|หัวข้อ" — แปลงเป็นชั่วโมงต่อหัวข้อ
+        const hoursOf = new Map();
+        for (const day of DATA.plan)
+          for (const b of day.blocks)
+            if (b.kind === "learn") hoursOf.set(day.date + "|" + b.topic, b.hours);
+        for (const key of Object.keys(dd.done)) {
+          const [, topic] = key.split("|");
+          const h = hoursOf.get(key) || 0;
+          if (!topic || !h) continue;
+          const rec = S.topics[topic] || { hoursDone: 0 };
+          rec.hoursDone = (rec.hoursDone || 0) + h;
+          S.topics[topic] = rec;
+        }
+      }
+      S.migrated = true;
       Store.save(); quiz = null; render();
       alert("กู้คืนเรียบร้อย");
     };
@@ -1283,7 +1668,8 @@ function viewProgress() {
   const rb = el('<button class="btn btn-sm">ล้างทั้งหมด</button>');
   rb.addEventListener("click", () => {
     if (!confirm("ล้างบล็อกที่เช็คไว้ ผลข้อสอบ และประวัติทั้งหมด?")) return;
-    S.done = {}; S.q = {}; S.tests = {}; S.runs = [];
+    S.topics = {}; S.log = {}; S.days = {};
+    S.q = {}; S.tests = {}; S.runs = [];
     Store.save(); quiz = null; render();
   });
   row.appendChild(rb);

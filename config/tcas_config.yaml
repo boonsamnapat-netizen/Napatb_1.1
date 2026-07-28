@@ -15,19 +15,26 @@ student:
 # ---------------------------------------------------------------- ปฏิทินสอบ
 # วันสอบ TCAS70 (ปีการศึกษา 2570 / สอบปลายปี 2569 - ต้นปี 2570)
 # ⚠️ ประมาณการจากรูปแบบปีก่อน — ยืนยันกับ mytcas.com
+# counts_toward_kaspot: สนามนี้มีน้ำหนักในคะแนน กสพท หรือไม่
+#   true  = ตัวนับถอยหลังหลักของแอปจะยึดสนามนี้
+#   false = ยังแสดงในปฏิทิน แต่ไม่ใช่เป้าหมายหลัก (เช่น TGAT ใช้ยื่นรอบอื่น
+#           ไม่ได้อยู่ในสูตร กสพท ซึ่งคิดจาก TPAT1 30% + A-Level 70% เท่านั้น)
 exams:
   tgat_tpat:
     name: "TGAT / TPAT2-5 (คอมพิวเตอร์)"
     date: "2026-12-05"
     verified: false
+    counts_toward_kaspot: false
   tpat1:
     name: "TPAT1 วิชาเฉพาะ กสพท (กระดาษ)"
     date: "2026-12-19"
     verified: false
+    counts_toward_kaspot: true
   alevel:
     name: "A-Level ทุกวิชา"
     date: "2027-03-13"
     verified: false
+    counts_toward_kaspot: true
 
 # วันสมัคร/ยื่นคะแนนแต่ละรอบ (ใช้เตือนล่วงหน้า)
 milestones:

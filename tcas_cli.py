@@ -374,8 +374,14 @@ def cmd_tests(args) -> int:
     from src.tcas import testplan
 
     cfg, store, on = _load(args)
+    qdir = (cfg.get("quiz") or {}).get("questions_dir", "data/tcas/questions")
+    try:
+        bank = quiz.load_bank(qdir)
+    except quiz.BankError as exc:
+        print(f"คลังข้อสอบมีปัญหา: {exc}")
+        return 1
     plan = planner.generate_plan(cfg, store, start=on)
-    events = testplan.generate(cfg, plan, on)
+    events = testplan.generate(cfg, plan, on, bank=bank)
     if args.kind:
         events = [e for e in events if e.kind == args.kind]
     if not events:

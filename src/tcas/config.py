@@ -65,14 +65,25 @@ def exam_dates(cfg: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
             "name": spec.get("name", key),
             "date": parse_date(spec["date"]),
             "verified": bool(spec.get("verified", False)),
+            # ค่าเริ่มต้น True เพื่อไม่ให้ config เก่าที่ไม่มีคีย์นี้เงียบหายไปจากการนับถอยหลัง
+            "counts": bool(spec.get("counts_toward_kaspot", True)),
         }
     return dict(sorted(out.items(), key=lambda kv: kv[1]["date"]))
 
 
-def next_exam(cfg: Dict[str, Any], ref: date | None = None) -> Dict[str, Any] | None:
-    """สนามสอบถัดไปที่ยังไม่ผ่าน."""
+def next_exam(
+    cfg: Dict[str, Any], ref: date | None = None, counting_only: bool = False
+) -> Dict[str, Any] | None:
+    """สนามสอบถัดไปที่ยังไม่ผ่าน.
+
+    counting_only=True จะข้ามสนามที่ไม่มีน้ำหนักใน กสพท (เช่น TGAT) —
+    ใช้กับตัวนับถอยหลังหลัก เพื่อไม่ให้เลขเด่นที่สุดบนหน้าจอชี้ผิดเป้า
+    """
     ref = ref or today()
     for spec in exam_dates(cfg).values():
-        if spec["date"] >= ref:
-            return spec
+        if spec["date"] < ref:
+            continue
+        if counting_only and not spec.get("counts", True):
+            continue
+        return spec
     return None
