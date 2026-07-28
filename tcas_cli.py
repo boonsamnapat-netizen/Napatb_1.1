@@ -342,21 +342,30 @@ def cmd_export(args) -> int:
         programs = None
 
     payload = webexport.build_payload(cfg, store, programs, bank, start=on)
-    try:
-        html = webexport.render(payload, args.template)
-    except (FileNotFoundError, ValueError) as exc:
-        print(f"สร้างหน้าเว็บไม่สำเร็จ: {exc}")
-        return 1
-
-    path = webexport.write(html, args.out)
-    size_kb = path.stat().st_size / 1024
-    print(f"สร้างหน้าเว็บแล้ว: {path}  ({size_kb:.0f} KB)")
-    print(
+    summary = (
         f"  ตารางอ่าน {len(payload['plan'])} วัน · "
         f"ตารางทดสอบ {len(payload['tests'])} ครั้ง · "
         f"ข้อสอบ {len(payload['questions'])} ข้อ"
     )
-    print("  เปิดไฟล์นี้ในเบราว์เซอร์ได้เลย ไม่ต้องต่อเน็ต")
+
+    try:
+        if args.single:
+            html = webexport.render(payload, args.template)
+            path = webexport.write(html, args.out)
+            print(f"สร้างไฟล์เดียวแล้ว: {path}  ({path.stat().st_size / 1024:.0f} KB)")
+            print(summary)
+            print("  เปิดในเบราว์เซอร์ได้เลย ไม่ต้องต่อเน็ต (ติดตั้งเป็นแอปไม่ได้)")
+        else:
+            site = webexport.build_site(payload, args.out, args.template)
+            print(f"สร้างเว็บแอปแล้ว: {site['dir']}  ({site['bytes'] / 1024:.0f} KB)")
+            print(summary)
+            print(f"  ไฟล์: {', '.join(site['files'])}")
+            print(f"  build {site['version']}")
+            print("  ทดสอบเครื่องตัวเอง: python -m http.server -d web/dist 8000")
+            print("  แล้วเปิด http://localhost:8000 (ต้องผ่าน http ไม่ใช่ file://)")
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"สร้างหน้าเว็บไม่สำเร็จ: {exc}")
+        return 1
     return 0
 
 
@@ -475,8 +484,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--limit", type=int, default=15, help="แสดงกี่รายการ")
     s.set_defaults(func=cmd_tests)
 
-    s = sub.add_parser("export", help="สร้างหน้าเว็บไฟล์เดียว (เปิดบนมือถือได้)")
-    s.add_argument("--out", help="ไฟล์ปลายทาง (ค่าเริ่มต้น web/tcas_app.build.html)")
+    s = sub.add_parser("export", help="สร้างเว็บแอป (PWA) ติดตั้งลงหน้าจอโฮมได้")
+    s.add_argument(
+        "--single", action="store_true",
+        help="สร้างเป็นไฟล์ HTML ไฟล์เดียวแทน (ส่งต่อง่าย แต่ติดตั้งเป็นแอปไม่ได้)",
+    )
+    s.add_argument("--out", help="ปลายทาง (ค่าเริ่มต้น web/dist/ หรือ web/tcas_app.build.html)")
     s.add_argument("--template", help="ไฟล์ template (ค่าเริ่มต้น web/tcas_app.html)")
     s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
     s.set_defaults(func=cmd_export)

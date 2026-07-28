@@ -12,12 +12,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from . import planner, ranking, scoring, syllabus, testplan
+from . import icons, planner, ranking, scoring, syllabus, testplan
 from .config import REPO_ROOT, exam_dates, parse_date, resolve_path
 from .models import StudyDay
 
@@ -176,3 +178,176 @@ def write(html: str, output: str | Path | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")
     return path
+
+
+# ══════════════════════════════════════════════════════════════════════
+# โหมด PWA — สร้างเป็นโฟลเดอร์เว็บไซต์ ติดตั้งลงหน้าจอโฮมได้
+# ══════════════════════════════════════════════════════════════════════
+DEFAULT_SITE = REPO_ROOT / "web" / "dist"
+
+APP_NAME = "TCAS70 เตรียมสอบแพทย์"
+APP_SHORT = "TCAS70"
+THEME_COLOR = "#101826"
+
+TITLE_RE = re.compile(r"<title>(.*?)</title>\s*", re.S)
+
+
+def _document(content: str, title: str) -> str:
+    """ห่อเนื้อหาให้เป็น HTML เต็มรูปแบบ.
+
+    template ตั้งใจเขียนเป็น 'เนื้อหาอย่างเดียว' เพื่อให้ publish เป็น Artifact ได้
+    แต่ PWA ต้องคุม <head> เอง (manifest, theme-color, meta ของ iOS) จึงห่อตรงนี้
+    """
+    return f"""<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{title}</title>
+<meta name="description" content="ตารางอ่านหนังสือ ตารางทดสอบ และคลังข้อสอบ TCAS70 กสพท">
+<meta name="theme-color" content="{THEME_COLOR}">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="{APP_SHORT}">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+{content}
+<script>
+/* ลงทะเบียน service worker เพื่อให้ใช้ได้ตอนไม่มีเน็ต
+   ต้องเสิร์ฟผ่าน https (หรือ localhost) — เปิดไฟล์ตรง ๆ ด้วย file:// จะข้ามไป */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {{
+  window.addEventListener("load", () => {{
+    navigator.serviceWorker.register("sw.js").catch(err =>
+      console.warn("service worker ลงทะเบียนไม่สำเร็จ:", err));
+  }});
+}}
+</script>
+</body>
+</html>
+"""
+
+
+def _manifest() -> str:
+    return json.dumps(
+        {
+            "name": APP_NAME,
+            "short_name": APP_SHORT,
+            "description": "ตารางอ่านหนังสือ ตารางทดสอบ และคลังข้อสอบ กสพท",
+            "lang": "th",
+            "dir": "ltr",
+            "start_url": ".",
+            "scope": ".",
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": THEME_COLOR,
+            "theme_color": THEME_COLOR,
+            "icons": [
+                {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            ],
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
+def _service_worker(version: str) -> str:
+    """cache-first สำหรับ app shell.
+
+    ข้อมูลทั้งหมดฝังอยู่ใน index.html แล้ว จึงไม่มีอะไรต้องเรียกผ่านเน็ตตอนใช้งาน
+    version เปลี่ยนทุกครั้งที่ build ใหม่ -> แคชเก่าถูกลบและโหลดของใหม่
+    """
+    return f"""/* TCAS70 — service worker (build {version}) */
+const CACHE = "tcas70-{version}";
+const SHELL = ["./", "./index.html", "./manifest.webmanifest",
+               "./icon-192.png", "./icon-512.png", "./icon-180.png"];
+
+self.addEventListener("install", e => {{
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+}});
+
+self.addEventListener("activate", e => {{
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+}});
+
+self.addEventListener("fetch", e => {{
+  if (e.request.method !== "GET") return;
+  const url = new URL(e.request.url);
+  if (url.origin !== location.origin) return;
+
+  // ตารางทั้งหมดฝังอยู่ใน index.html ดังนั้นตัวหน้าเว็บ = ตัวข้อมูล
+  // จึงต้องเอาของใหม่ก่อนถ้าเน็ตมี ไม่งั้น build ใหม่จะไม่ขึ้นจนกว่าจะโหลดสองรอบ
+  const isPage = e.request.mode === "navigate" ||
+                 e.request.destination === "document" ||
+                 url.pathname.endsWith("/") ||
+                 url.pathname.endsWith("index.html");
+
+  if (isPage) {{
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {{
+          if (res && res.ok) {{
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put("./index.html", copy));
+          }}
+          return res;
+        }})
+        .catch(() => caches.match("./index.html").then(hit => hit || Response.error()))
+    );
+    return;
+  }}
+
+  // ไอคอน/manifest ไม่ค่อยเปลี่ยน — เอาจากแคชก่อนเพื่อความเร็ว แล้วค่อยอัปเดตเบื้องหลัง
+  e.respondWith(
+    caches.match(e.request).then(hit => {{
+      if (hit) {{
+        fetch(e.request)
+          .then(res => res && res.ok && caches.open(CACHE).then(c => c.put(e.request, res.clone())))
+          .catch(() => {{}});
+        return hit;
+      }}
+      return fetch(e.request).catch(() => Response.error());
+    }})
+  );
+}});
+"""
+
+
+def build_site(
+    payload: Dict[str, Any],
+    outdir: str | Path | None = None,
+    template: str | Path | None = None,
+) -> Dict[str, Any]:
+    """สร้างโฟลเดอร์เว็บไซต์ PWA พร้อม deploy."""
+    out = resolve_path(outdir) if outdir else DEFAULT_SITE
+    out.mkdir(parents=True, exist_ok=True)
+
+    content = render(payload, template)
+    match = TITLE_RE.search(content)
+    title = match.group(1) if match else APP_NAME
+    content = TITLE_RE.sub("", content, count=1)
+
+    # ผูก version ของแคชกับเนื้อหาจริง — เนื้อหาเปลี่ยนเมื่อไร แคชล้างเมื่อนั้น
+    version = hashlib.sha256(content.encode("utf-8")).hexdigest()[:12]
+
+    (out / "index.html").write_text(_document(content, title), encoding="utf-8")
+    (out / "manifest.webmanifest").write_text(_manifest(), encoding="utf-8")
+    (out / "sw.js").write_text(_service_worker(version), encoding="utf-8")
+    # Pages ไม่ต้องประมวลผลด้วย Jekyll — กันไฟล์ที่ขึ้นต้นด้วย _ โดนตัดทิ้ง
+    (out / ".nojekyll").write_text("", encoding="utf-8")
+    icons.write_all(out)
+
+    return {
+        "dir": out,
+        "version": version,
+        "files": sorted(p.name for p in out.iterdir()),
+        "bytes": sum(p.stat().st_size for p in out.iterdir() if p.is_file()),
+    }

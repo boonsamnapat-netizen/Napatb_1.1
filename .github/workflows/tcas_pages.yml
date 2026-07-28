@@ -1,0 +1,93 @@
+name: TCAS70 Deploy App
+
+# Build the study app and publish it to GitHub Pages, so it can be installed
+# on a phone home screen and used offline.
+#
+# One-time setup:
+#   Repo Settings -> Pages -> Source: "GitHub Actions"
+#   (the configure-pages step below also tries to enable it automatically)
+#
+# The published URL is PUBLIC — anyone with the link can open it. Nothing
+# personal lives in the build: progress is stored only in the browser that
+# opens it, never uploaded.
+#
+# Runs on every push that touches the app or the data it is built from, so
+# editing a config value or adding a question redeploys on its own.
+
+on:
+  push:
+    branches: [claude/tcas70-medical-prep-l3ot0m]
+    paths:
+      - 'web/tcas_app.html'
+      - 'src/tcas/**'
+      - 'config/tcas_*.yaml'
+      - 'data/tcas/questions/**'
+      - 'tcas_cli.py'
+      - '.github/workflows/tcas_pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: tcas-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate question bank
+        run: python tcas_cli.py bank
+
+      - name: Build the app
+        run: python tcas_cli.py export
+
+      - name: Check the build produced what a PWA needs
+        run: |
+          cd web/dist
+          for f in index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-180.png; do
+            test -s "$f" || { echo "::error::missing or empty: $f"; exit 1; }
+          done
+          grep -q 'rel="manifest"' index.html || { echo "::error::manifest not linked"; exit 1; }
+          grep -q 'serviceWorker' index.html || { echo "::error::service worker not registered"; exit 1; }
+          echo "build ok — $(du -sh . | cut -f1)"
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Where it landed
+        run: |
+          echo "### แอปติดตั้งได้ที่นี่" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.deploy.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "เปิดลิงก์บนมือถือ แล้ว *Add to Home Screen* (iOS) หรือ *ติดตั้งแอป* (Android)" >> $GITHUB_STEP_SUMMARY
