@@ -201,6 +201,41 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .week-total{display:flex;align-items:baseline;gap:8px;padding-top:11px;font-size:13.5px;color:var(--text-2)}
 .week-total b{font-family:var(--mono);font-size:17px;color:var(--text)}
 
+/* ── where to read ────────────────────────────────────────── */
+.blk-row{position:relative}
+.blk-row .blk{padding-right:46px}
+.blk-res{position:absolute;right:7px;top:9px;appearance:none;cursor:pointer;
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--text-2)}
+.blk-res:hover{border-color:var(--indigo);color:var(--indigo)}
+.blk-res svg{width:15px;height:15px}
+
+.sheet-back{position:fixed;inset:0;z-index:85;background:rgba(8,12,20,.55);
+  display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:720px){.sheet-back{align-items:center}}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:86vh;overflow-y:auto;
+  border-radius:14px 14px 0 0;padding:18px 17px calc(20px + env(safe-area-inset-bottom,0px));
+  animation:sheetIn .2s ease-out}
+@media (min-width:720px){.sheet{border-radius:12px;max-height:80vh}}
+@keyframes sheetIn{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+.sheet-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}
+.sheet-hd h2{font-size:17px;flex:1;min-width:0}
+.sheet-x{appearance:none;border:0;background:none;cursor:pointer;color:var(--text-3);
+  font-size:22px;line-height:1;padding:0 2px}
+
+.res{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;margin-bottom:7px;
+  border:1px solid var(--line-soft);border-radius:var(--r);background:var(--surface);
+  text-decoration:none;color:inherit}
+.res:hover{border-color:var(--indigo)}
+.res-ico{flex:none;width:26px;height:26px;border-radius:var(--r);display:grid;place-items:center;
+  background:var(--indigo-dim);color:var(--indigo);font-size:13px}
+.res-b{flex:1;min-width:0}
+.res-b b{display:block;font-size:14px;font-weight:600}
+.res-b span{display:block;font-size:12.5px;color:var(--text-2);line-height:1.6}
+.res-del{appearance:none;border:0;background:none;cursor:pointer;color:var(--text-3);
+  font-size:17px;line-height:1;padding:2px 4px;flex:none}
+.res-del:hover{color:var(--brick)}
+
 /* ── first run + focus timer ──────────────────────────────── */
 .intro{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--marigold-f);
   border-radius:var(--r);padding:15px 17px}
@@ -648,6 +683,7 @@ const Store = (() => {
     if (!mem.runs) mem.runs = [];        // quiz history
     if (!mem.days) mem.days = {};        // "YYYY-MM-DD" -> ชั่วโมงที่ทำวันนั้น (ใช้นับ streak)
     if (!mem.settings) mem.settings = {};
+    if (!mem.links) mem.links = {};    // topicCode -> [{url,title,saved}]
     if (!mem.log) mem.log = {};          // "YYYY-MM-DD" -> [{topic,kind,hours,rep}] ที่ทำเสร็จวันนั้น
     return mem;
   }
@@ -1049,17 +1085,129 @@ function blockRow(dayISO, b, opts) {
     "</button>"
   );
   btn.setAttribute("aria-pressed", o.done ? "true" : "false");
-  if (o.readonly) { btn.disabled = true; btn.style.cursor = "default"; return btn; }
+  if (o.readonly) { btn.disabled = true; btn.style.cursor = "default"; }
+  else {
+    btn.addEventListener("click", () => {
+      if (o.done) undoLogged(dayISO, o.index);
+      else { completeBlock(dayISO, b); celebrate(dayISO); }
+      render();
+    });
+  }
 
-  btn.addEventListener("click", () => {
-    if (o.done) undoLogged(dayISO, o.index);
-    else {
-      completeBlock(dayISO, b);
-      celebrate(dayISO);
-    }
-    render();
+  const row = el('<div class="blk-row"></div>');
+  row.appendChild(btn);
+  const res = el('<button class="blk-res" aria-label="หาอ่านหัวข้อนี้">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9a3 3 0 0 1 3 3v11a2.5 2.5 0 0 0-2.5-2.5H4z"/><path d="M20 5h-2a3 3 0 0 0-3 3v11a2.5 2.5 0 0 1 2.5-2.5H20z"/></svg></button>');
+  res.addEventListener("click", ev => { ev.stopPropagation(); openResources(b.topic); });
+  row.appendChild(res);
+  return row;
+}
+
+/* ── "จะไปอ่านที่ไหน" ──────────────────────────────────────
+   ปุ่มค้นหายิงคำค้นจากชื่อหัวข้อจริง จึงไม่มีวันเสียแม้ลิงก์ใน config จะตาย
+   ส่วนลิงก์ที่ผู้ใช้บันทึกเอง ผูกกับหัวข้อไปตลอด เจอของดีครั้งเดียวไม่ต้องหาซ้ำ */
+const RES = DATA.resources || {};
+
+function searchUrlsFor(topicName, subjectCode) {
+  const engines = (RES.search && RES.search.engines) || [];
+  const exam = (SUBJ[subjectCode] || {}).exam || "alevel";
+  const suffix = ((RES.search || {}).suffix_by_exam || {})[exam] || "";
+  const q = encodeURIComponent((topicName + " " + suffix).trim());
+  return engines.map(e => ({ name: e.name, icon: e.icon || "🔍", url: e.url.replace("{q}", q) }));
+}
+
+function hubsFor(subjectCode) {
+  return (RES.hubs || []).filter(h => {
+    const subs = h.subjects || ["all"];
+    return subs.includes("all") || subs.includes(subjectCode);
   });
-  return btn;
+}
+
+const savedLinks = code => (S.links && S.links[code]) || [];
+
+function resourceRow(icon, title, sub, href, onDelete) {
+  const node = el(
+    '<a class="res" target="_blank" rel="noopener noreferrer" href="' + esc(href) + '">' +
+      '<span class="res-ico">' + esc(icon) + "</span>" +
+      '<span class="res-b"><b>' + esc(title) + "</b>" +
+        (sub ? "<span>" + esc(sub) + "</span>" : "") + "</span>" +
+    "</a>");
+  if (onDelete) {
+    const del = el('<button class="res-del" aria-label="ลบลิงก์">×</button>');
+    del.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); onDelete(); });
+    node.appendChild(del);
+  }
+  return node;
+}
+
+function openResources(topicCode) {
+  const t = TOPIC_OF.get(topicCode);
+  if (!t) return;
+  const old = $("#sheet"); if (old) old.remove();
+
+  const back = el('<div class="sheet-back" id="sheet"></div>');
+  const sheet = el('<div class="sheet"></div>');
+  back.addEventListener("click", ev => { if (ev.target === back) back.remove(); });
+
+  const hd = el('<div class="sheet-hd"><h2>' + esc(t.name) + "</h2></div>");
+  const x = el('<button class="sheet-x" aria-label="ปิด">×</button>');
+  x.addEventListener("click", () => back.remove());
+  hd.appendChild(x);
+  sheet.appendChild(hd);
+  sheet.appendChild(el('<p class="tiny" style="margin:0 0 13px">' +
+    esc(subjName(t.subject)) + " · " + t.hours + " ชม. · น้ำหนักออกสอบ " + t.weight + "/5</p>"));
+
+  /* ค้นหา — ใช้ได้เสมอ */
+  sheet.appendChild(el('<div class="section-title"><h2>ค้นหาหัวข้อนี้</h2></div>'));
+  searchUrlsFor(t.name, t.subject).forEach(e =>
+    sheet.appendChild(resourceRow(e.icon, "ค้นบน " + e.name, t.name, e.url)));
+
+  /* ลิงก์ที่บันทึกเอง */
+  sheet.appendChild(el('<div class="section-title" style="margin-top:15px"><h2>ลิงก์ของฉัน</h2></div>'));
+  const mine = savedLinks(topicCode);
+  if (mine.length) {
+    mine.forEach((lk, i) => sheet.appendChild(
+      resourceRow("★", lk.title || lk.url, lk.url, lk.url, () => {
+        S.links[topicCode].splice(i, 1);
+        if (!S.links[topicCode].length) delete S.links[topicCode];
+        Store.save(); openResources(topicCode);
+      })));
+  } else {
+    sheet.appendChild(el('<p class="tiny" style="margin:-2px 0 8px">เจอคลิปหรือสรุปที่ดี ' +
+      "บันทึกไว้ตรงนี้ ครั้งหน้าไม่ต้องหาใหม่</p>"));
+  }
+
+  const addRow = el('<div class="btn-row" style="margin-top:6px"></div>');
+  const urlIn = el('<input type="text" placeholder="วางลิงก์ที่นี่" ' +
+    'style="flex:1;min-width:140px;font-family:inherit;font-size:13.5px;color:var(--text);' +
+    'background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:8px 10px">');
+  const addBtn = el('<button class="btn btn-sm">บันทึก</button>');
+  const add = () => {
+    let v = urlIn.value.trim();
+    if (!v) return;
+    if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+    try { new URL(v); } catch (e) { alert("ลิงก์ไม่ถูกต้อง"); return; }
+    S.links = S.links || {};
+    (S.links[topicCode] = S.links[topicCode] || []).push({ url: v, title: "", saved: TODAY });
+    Store.save(); openResources(topicCode);
+  };
+  addBtn.addEventListener("click", add);
+  urlIn.addEventListener("keydown", ev => { if (ev.key === "Enter") add(); });
+  addRow.appendChild(urlIn); addRow.appendChild(addBtn);
+  sheet.appendChild(addRow);
+
+  /* แหล่งรวม */
+  const hubs = hubsFor(t.subject);
+  if (hubs.length) {
+    sheet.appendChild(el('<div class="section-title" style="margin-top:16px"><h2>แหล่งรวมของวิชานี้</h2></div>'));
+    hubs.forEach(h => sheet.appendChild(
+      resourceRow(h.verified ? "✓" : "↗", h.name, h.note || "", h.url)));
+    sheet.appendChild(el('<p class="tiny" style="margin:6px 0 0">ลิงก์เหล่านี้มาจากการค้นเว็บ ' +
+      "แต่ยังไม่ได้เปิดยืนยันทีละอัน ถ้าเจอลิงก์เสียแก้ได้ที่ config/tcas_resources.yaml</p>"));
+  }
+
+  back.appendChild(sheet);
+  document.body.appendChild(back);
 }
 
 /* ── ตัวจับเวลาอ่านหนังสือ ─────────────────────────────────
@@ -1775,7 +1923,8 @@ function viewProgress() {
   const nQ = Object.keys(S.q).length;
   rc.appendChild(el('<p class="tiny" style="margin:0">ตอนนี้เก็บไว้: บล็อกที่ทำแล้ว ' + nBlocks +
     " · หัวข้อที่มีความคืบหน้า " + nTopics + " · ข้อสอบที่เคยทำ " + nQ +
-    " · ชุดที่ทำจบ " + S.runs.length + "</p>"));
+    " · ชุดที่ทำจบ " + S.runs.length +
+    " · ลิงก์ที่บันทึก " + Object.values(S.links || {}).reduce((a, v) => a + v.length, 0) + "</p>"));
 
   const row = el('<div class="btn-row"></div>');
 
@@ -1817,6 +1966,7 @@ function viewProgress() {
 
       S.q = dd.q || {}; S.tests = dd.tests || {}; S.runs = dd.runs || [];
       S.topics = dd.topics || {}; S.log = dd.log || {}; S.days = dd.days || {};
+      S.links = dd.links || {}; S.settings = dd.settings || {};
 
       if (!dd.topics && dd.done) {
         // ไฟล์สำรองรุ่นเก่าเก็บเป็น "วันที่|หัวข้อ" — แปลงเป็นชั่วโมงต่อหัวข้อ
@@ -1848,6 +1998,7 @@ function viewProgress() {
     if (!confirm("ล้างบล็อกที่เช็คไว้ ผลข้อสอบ และประวัติทั้งหมด?")) return;
     S.topics = {}; S.log = {}; S.days = {};
     S.q = {}; S.tests = {}; S.runs = [];
+    // ลิงก์ที่บันทึกเองกับค่าที่ตั้งไว้ไม่ใช่ "ความคืบหน้า" จึงไม่ล้างไปด้วย
     Store.save(); quiz = null; render();
   });
   row.appendChild(rb);

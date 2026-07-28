@@ -341,7 +341,9 @@ def cmd_export(args) -> int:
     except FileNotFoundError:
         programs = None
 
-    payload = webexport.build_payload(cfg, store, programs, bank, start=on)
+    resources = cfgmod.load_resources(args.resources)
+    payload = webexport.build_payload(
+        cfg, store, programs, bank, start=on, resources=resources)
     summary = (
         f"  ตารางอ่าน {len(payload['plan'])} วัน · "
         f"ตารางทดสอบ {len(payload['tests'])} ครั้ง · "
@@ -498,6 +500,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--out", help="ปลายทาง (ค่าเริ่มต้น web/dist/ หรือ web/tcas_app.build.html)")
     s.add_argument("--template", help="ไฟล์ template (ค่าเริ่มต้น web/tcas_app.html)")
     s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
+    s.add_argument("--resources", help="ไฟล์แหล่งเรียนรู้ (ค่าเริ่มต้น config/tcas_resources.yaml)")
     s.set_defaults(func=cmd_export)
 
     s = sub.add_parser("notify", help="ส่งสรุปประจำวันเข้า Telegram")

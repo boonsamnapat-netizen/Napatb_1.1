@@ -58,6 +58,7 @@ def build_payload(
     bank: Dict[str, Any],
     start: date,
     horizon_days: int = 400,
+    resources: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """สร้าง dict ที่จะกลายเป็น JSON ฝังในหน้าเว็บ."""
     plan = planner.generate_plan(cfg, store, start=start, max_days=horizon_days)
@@ -181,6 +182,7 @@ def build_payload(
         ],
         "questions": questions,
         "programs": program_list,
+        "resources": resources or {},
     }
 
 

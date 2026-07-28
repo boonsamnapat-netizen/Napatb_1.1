@@ -1,0 +1,87 @@
+# แหล่งเรียนรู้ — "จะไปอ่านที่ไหน"
+#
+# ⚠️ ลิงก์ทั้งหมดในไฟล์นี้มาจากผลการค้นหาเว็บ (URL ที่ search engine index จริง)
+#    แต่ **เปิดยืนยันเนื้อหาไม่ได้** เพราะเครื่องที่สร้างระบบนี้ถูกเว็บบล็อก (HTTP 403)
+#    จึงตั้ง verified: false ไว้ทั้งหมด — ถ้าลิงก์ไหนใช้ได้จริงให้ตั้งเป็น true
+#    ลิงก์เสียเมื่อไรแก้ที่ไฟล์นี้ไฟล์เดียว
+#
+# กลไกที่ **ไม่มีวันเสีย** คือปุ่มค้นหาในแอป ซึ่งยิงคำค้นจากชื่อหัวข้อจริง ๆ
+# ไปที่ YouTube/Google — ต่อให้ลิงก์ด้านล่างตายหมด ปุ่มค้นหาก็ยังใช้ได้
+#
+# subjects: ใส่รหัสวิชา (tpat1 bio chem phys math1 eng thai social) หรือ "all"
+
+# คำที่เติมท้ายชื่อหัวข้อตอนค้นหา ให้ผลลัพธ์ตรงกับการเตรียมสอบมากขึ้น
+search:
+  suffix_by_exam:
+    tpat1: "TPAT1 กสพท ติว"
+    alevel: "A-Level ติว สรุป"
+  engines:
+    - name: "YouTube"
+      icon: "▶"
+      url: "https://www.youtube.com/results?search_query={q}"
+    - name: "Google"
+      icon: "🔍"
+      url: "https://www.google.com/search?q={q}"
+
+hubs:
+  # ---------------------------------------------------------- ทางการ / ฟรีจริง
+  - name: "Project 14 — สสวท."
+    url: "https://proj14.ipst.ac.th/"
+    note: "วิดีโอสอนตามหลักสูตรแกนกลาง ทำโดย สสวท. เอง ฟรีทั้งหมด ตรงกับหนังสือเรียน"
+    subjects: [bio, chem, phys, math1]
+    verified: false
+
+  - name: "Project 14+ (ช่องรายวิชา)"
+    url: "https://project14plus.ipst.ac.th/channels"
+    note: "ส่วนขยายของ Project 14 แยกเป็นช่องตามวิชา"
+    subjects: [bio, chem, phys, math1]
+    verified: false
+
+  # ---------------------------------------------------------- รวมติวฟรี
+  - name: "TCASter — รวมติวฟรีทุกวิชา"
+    url: "https://tcaster.net/tutorfree-tcas-tcaster/"
+    note: "รวมคลิปติวฟรี TGAT/TPAT/A-Level จากหลายแหล่งไว้ที่เดียว"
+    subjects: [all]
+    verified: false
+
+  - name: "SmartMathPro — รวมคลิปติวฟรี TCAS"
+    url: "https://www.smartmathpro.com/article/free-tcas-vdo/"
+    note: "รวมลิงก์คลิปติวฟรีแยกตามวิชา"
+    subjects: [all]
+    verified: false
+
+  - name: "TutorTown — 8 ช่อง YouTube ติว A-Level ฟรี"
+    url: "https://tutortown.co/youtube-a-level-free/"
+    note: "รายชื่อช่อง YouTube ที่ติว A-Level ฟรี พร้อมเฉลยข้อสอบ"
+    subjects: [bio, chem, phys, math1, eng, thai, social]
+    verified: false
+
+  # ---------------------------------------------------------- ฝึกทำข้อสอบ
+  - name: "TCASter — ฝึกทำข้อสอบฟรี"
+    url: "https://tcaster.net/mini-exam-fix/"
+    note: "ข้อสอบฝึกทำออนไลน์ ครบทั้ง TGAT/TPAT และ A-Level"
+    subjects: [all]
+    verified: false
+
+  - name: "ChulaTutor — ข้อสอบ A-Level ฟรีพร้อมเฉลย"
+    url: "https://exam.chulatutor.com/a-level/"
+    note: "ทดลองทำข้อสอบ A-Level ออนไลน์ มีเฉลยทุกข้อ"
+    subjects: [bio, chem, phys, math1, eng, thai, social]
+    verified: false
+
+  # ---------------------------------------------------------- เฉพาะ TPAT1
+  - name: "TCASter — ติว TPAT1 ฟรี"
+    url: "https://tcaster.net/tcas-news/general-news/free-tutor-tpat1/"
+    note: "คลิปติว TPAT1 วิชาเฉพาะ กสพท ครบทั้ง 3 พาร์ท"
+    subjects: [tpat1]
+    verified: false
+
+  - name: "Dek-D School — พิชิต TPAT1 วิชาเฉพาะ กสพท"
+    url: "https://school.dek-d.com/course/215"
+    note: "คอร์สออนไลน์ TPAT1 (บางส่วนฟรี บางส่วนเสียเงิน)"
+    subjects: [tpat1]
+    verified: false
+
+# ลิงก์เฉพาะหัวข้อ — ใส่เองได้ตามต้องการ
+# ในแอปก็เพิ่มลิงก์รายหัวข้อได้เช่นกัน (เก็บในเครื่อง ไม่ต้องแก้ไฟล์นี้)
+by_topic: {}

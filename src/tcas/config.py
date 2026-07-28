@@ -12,6 +12,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "config" / "tcas_config.yaml"
 DEFAULT_PROGRAMS = REPO_ROOT / "config" / "tcas_programs.yaml"
+DEFAULT_RESOURCES = REPO_ROOT / "config" / "tcas_resources.yaml"
 
 
 def load_config(path: str | Path | None = None) -> Dict[str, Any]:
@@ -30,6 +31,17 @@ def load_programs(path: str | Path | None = None) -> Dict[str, Any]:
         p = REPO_ROOT / p
     if not p.exists():
         raise FileNotFoundError(f"ไม่พบไฟล์คณะ: {p}")
+    with open(p, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def load_resources(path: str | Path | None = None) -> Dict[str, Any]:
+    """แหล่งเรียนรู้ — ไม่มีไฟล์ก็ไม่เป็นไร แอปจะเหลือแค่ปุ่มค้นหา"""
+    p = Path(path) if path else DEFAULT_RESOURCES
+    if not p.is_absolute():
+        p = REPO_ROOT / p
+    if not p.exists():
+        return {}
     with open(p, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
