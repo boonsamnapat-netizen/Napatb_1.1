@@ -66,9 +66,32 @@ jobs:
           grep -q 'serviceWorker' index.html || { echo "::error::service worker not registered"; exit 1; }
           echo "build ok — $(du -sh . | cut -f1)"
 
-      - uses: actions/configure-pages@v5
+      # Fails until Pages is switched on for the repo. The token here often
+      # lacks permission to switch it on itself, so say plainly what to click
+      # rather than leaving a bare API error in the log.
+      - id: pages
+        uses: actions/configure-pages@v5
+        continue-on-error: true
         with:
           enablement: true
+
+      - name: Explain how to turn Pages on
+        if: steps.pages.outcome == 'failure'
+        run: |
+          {
+            echo "### ⚠️ ยังเปิด GitHub Pages ไม่ได้"
+            echo ""
+            echo "ตัวแอป build ผ่านหมดแล้ว เหลือแค่เปิด Pages ให้ repo นี้:"
+            echo ""
+            echo "1. ไปที่ **Settings → Pages**"
+            echo "2. ช่อง **Source** เลือก **GitHub Actions**"
+            echo "3. กลับมาที่ Actions แล้วกด **Re-run all jobs** ของ run นี้"
+            echo ""
+            echo "แอปจะขึ้นที่ \`https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/\`"
+            echo "(ต้องมี \`/${{ github.event.repository.name }}/\` ต่อท้ายด้วย)"
+          } >> $GITHUB_STEP_SUMMARY
+          echo "::error::เปิด GitHub Pages ก่อน — Settings > Pages > Source: GitHub Actions แล้ว re-run"
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:
