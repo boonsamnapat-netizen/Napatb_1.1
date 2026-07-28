@@ -149,6 +149,24 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-07-26T04:28:48.463691+00:00"
+    },
+    {
+      "date": "2026-07-28",
+      "symbol": "ATOMUSDT",
+      "direction": "SHORT",
+      "confidence": 61.6,
+      "entry": 1.30200005,
+      "stop": 1.50748288,
+      "tps": [
+        1.13096297,
+        1.0,
+        0.5
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-07-28T04:13:15.085013+00:00"
     }
   ]
 }
