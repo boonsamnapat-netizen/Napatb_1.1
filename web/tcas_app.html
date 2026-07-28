@@ -406,7 +406,21 @@ main { padding-top: 26px; }
   border: 1.5px solid var(--line);
   background: transparent;
 }
-.dot.on { background: var(--ok); border-color: var(--ok); }
+.dot.on { background: var(--sc, var(--ok)); border-color: var(--sc, var(--ok)); }
+
+/* แถบสัดส่วนวิชาในสัปดาห์ — เห็นส่วนผสมของสัปดาห์ได้ในแวบเดียว
+   เว้นช่อง 2px ระหว่างช่วงตามสเปกของ mark ไม่ให้สองสีเชื่อมกันจนอ่านผิด */
+.mix { display: flex; gap: 2px; height: 6px; margin: 9px 0 7px; }
+.mix span { border-radius: 2px; background: var(--sc, var(--line)); min-width: 3px; }
+.mix-key { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 4px; }
+.mix-key i {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-style: normal; font-size: 11.5px; color: var(--text-2);
+}
+.mix-key i::before {
+  content: ""; width: 9px; height: 9px; border-radius: 2px;
+  background: var(--sc, var(--line)); flex: none;
+}
 
 /* หัวสัปดาห์ — ทำให้ตารางยาว ๆ สแกนได้ แทนที่จะเป็นแถวเรียงไม่จบ */
 .wk {
@@ -458,20 +472,57 @@ main { padding-top: 26px; }
 }
 .sday.past { opacity: .5; }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBJECT COLOURS — สีประจำวิชา (categorical)
+   แปดเฉดกระจายวงล้อสี ตรวจด้วย validate_palette.js แล้วทั้งสองธีม
+   ผ่านทุกข้อ (ธีมมืดเหลือคู่ ΔE 7.9 ซึ่งกติกายอมได้เมื่อมีป้ายชื่อกำกับ —
+   ในแอปนี้ชื่อวิชาแสดงเป็นข้อความเสมอ ไม่ได้ใช้สีสื่อความหมายลำพัง)
+   สีนี้บอก "วิชาอะไร" ส่วนสีเหลืองยังสงวนไว้บอก "ตอนนี้" เหมือนเดิม
+   ═══════════════════════════════════════════════════════════════ */
+[data-s="social"] { --sc: #7E9A25; --sc-dim: #f1f4e2; }
+[data-s="phys"] { --sc: #2F86C9; --sc-dim: #e7f0fa; }
+[data-s="thai"] { --sc: #BF3A2E; --sc-dim: #fbeae8; }
+[data-s="eng"] { --sc: #0FA096; --sc-dim: #e0f5f3; }
+[data-s="math1"] { --sc: #B5641A; --sc-dim: #f8eee2; }
+[data-s="chem"] { --sc: #6D2FA6; --sc-dim: #f0e8fa; }
+[data-s="bio"] { --sc: #3F9E54; --sc-dim: #e7f4ea; }
+[data-s="tpat1"] { --sc: #A32E68; --sc-dim: #fae9f1; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-s="social"] { --sc: #86A038; --sc-dim: #232a15; }
+  :root:not([data-theme="light"]) [data-s="phys"] { --sc: #4593D2; --sc-dim: #16283a; }
+  :root:not([data-theme="light"]) [data-s="thai"] { --sc: #D2604F; --sc-dim: #33201d; }
+  :root:not([data-theme="light"]) [data-s="eng"] { --sc: #1BAAA1; --sc-dim: #0d2c2a; }
+  :root:not([data-theme="light"]) [data-s="math1"] { --sc: #BC6B2F; --sc-dim: #2f2115; }
+  :root:not([data-theme="light"]) [data-s="chem"] { --sc: #8C5EC4; --sc-dim: #241634; }
+  :root:not([data-theme="light"]) [data-s="bio"] { --sc: #48A961; --sc-dim: #142a1c; }
+  :root:not([data-theme="light"]) [data-s="tpat1"] { --sc: #C9548A; --sc-dim: #331726; }
+}
+[data-theme="dark"] [data-s="social"] { --sc: #86A038; --sc-dim: #232a15; }
+[data-theme="dark"] [data-s="phys"] { --sc: #4593D2; --sc-dim: #16283a; }
+[data-theme="dark"] [data-s="thai"] { --sc: #D2604F; --sc-dim: #33201d; }
+[data-theme="dark"] [data-s="eng"] { --sc: #1BAAA1; --sc-dim: #0d2c2a; }
+[data-theme="dark"] [data-s="math1"] { --sc: #BC6B2F; --sc-dim: #2f2115; }
+[data-theme="dark"] [data-s="chem"] { --sc: #8C5EC4; --sc-dim: #241634; }
+[data-theme="dark"] [data-s="bio"] { --sc: #48A961; --sc-dim: #142a1c; }
+[data-theme="dark"] [data-s="tpat1"] { --sc: #C9548A; --sc-dim: #331726; }
+
 /* ═══════════════════════════════════════════════════════════════
    BLOCK ROWS
    หนึ่งกล่องพอ — แถวข้างในไม่มีขอบของตัวเอง ใช้เส้นคั่นบางกับช่องไฟแทน
    ═══════════════════════════════════════════════════════════════ */
 .blk {
   display: flex; align-items: flex-start; gap: 12px;
-  padding: 11px 2px;
+  padding: 11px 2px 11px 11px;
   border: 0; background: none;
+  border-left: 3px solid var(--sc, transparent);
   border-bottom: 1px solid var(--line-soft);
   cursor: pointer; text-align: left; width: 100%;
   transition: opacity .12s;
 }
 .blk-row:last-child .blk { border-bottom: 0; }
-.blk:hover .blk-name { color: var(--indigo); }
+.blk:hover .blk-name { color: var(--sc, var(--indigo)); }
 .blk.done { opacity: .45; }
 .blk.done .blk-name { text-decoration: line-through; text-decoration-thickness: 1px; }
 
@@ -483,7 +534,7 @@ main { padding-top: 26px; }
   background: var(--surface);
   transition: background .12s, border-color .12s;
 }
-.blk:hover .blk-check { border-color: var(--indigo); }
+.blk:hover .blk-check { border-color: var(--sc, var(--indigo)); }
 .blk.done .blk-check { background: var(--ok); border-color: var(--ok); }
 .blk-check svg { width: 12px; height: 12px; opacity: 0; color: var(--surface); }
 .blk.done .blk-check svg { opacity: 1; }
@@ -506,6 +557,7 @@ main { padding-top: 26px; }
 .chip.review { background: var(--warn-dim);   color: var(--warn); }
 .chip.mock   { background: var(--brick-dim);  color: var(--brick); }
 .chip.ok     { background: var(--ok-dim);     color: var(--ok); }
+.chip.subj   { background: var(--sc-dim); color: var(--sc); padding: 2px 8px; border-radius: 2px; }
 
 /* ═══════════════════════════════════════════════════════════════
    BUTTONS
@@ -866,12 +918,16 @@ const SUBJ_WEIGHT = (() => {
    สูตรเดียวกับฝั่ง Python: น้ำหนักหัวข้อ × น้ำหนักวิชา × (1−ความแม่น) × ความเร่งด่วน */
 function buildPlan(fromISO, nDays) {
   const pending = [];
-  for (const [sc, s] of Object.entries(SUBJ))
+  for (const [sc, s] of Object.entries(SUBJ)) {
+    // สอบวิชานี้ไปแล้วก็ไม่ต้องอ่านต่อ — ไม่งั้นความเร่งด่วนจะพุ่งค้างตลอดกาล
+    // (เวลาว่างก่อนเส้นตายเป็น 0 ทำให้ตัวหารเล็กจนดันวิชานั้นขึ้นบนสุดเสมอ)
+    if (ST.deadlines[sc] && ST.deadlines[sc] < fromISO) continue;
     for (const t of s.topics) {
       const left = hoursLeftOf(t);
       if (left >= 0.25)
         pending.push({ subject: sc, code: t.code, name: t.name, weight: t.weight, left });
     }
+  }
 
   // คิวทบทวน — จำลองต่อไปข้างหน้าโดยถือว่าทบทวนผ่าน
   const sim = new Map();
@@ -963,7 +1019,7 @@ function outlook() {
   const byDeadline = {};
   for (const [sc, s] of Object.entries(SUBJ)) {
     const dl = ST.deadlines[sc];
-    if (!dl) continue;
+    if (!dl || dl < TODAY) continue;   // สนามที่สอบไปแล้วไม่ต้องเตือนอีก
     byDeadline[dl] = (byDeadline[dl] || 0) + s.topics.reduce((a, t) => a + hoursLeftOf(t), 0);
   }
   return Object.entries(byDeadline).sort().map(([dl, need]) => {
@@ -1118,6 +1174,7 @@ function blockRow(dayISO, b, opts) {
   }
 
   const row = el('<div class="blk-row"></div>');
+  btn.setAttribute("data-s", b.subject || "");
   row.appendChild(btn);
   const res = el('<button class="blk-res" aria-label="หาอ่านหัวข้อนี้">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9a3 3 0 0 1 3 3v11a2.5 2.5 0 0 0-2.5-2.5H4z"/><path d="M20 5h-2a3 3 0 0 0-3 3v11a2.5 2.5 0 0 1 2.5-2.5H20z"/></svg></button>');
@@ -1575,6 +1632,31 @@ function viewPlan() {
       "</button>");
     const body = el('<div class="wk-body"></div>');
     body.hidden = !open;
+
+    // สัดส่วนชั่วโมงต่อวิชาในสัปดาห์นี้
+    const mixHours = {};
+    w.days.forEach(x => x.blocks.forEach(y => {
+      mixHours[y.subject] = (mixHours[y.subject] || 0) + y.hours;
+    }));
+    const mixList = Object.entries(mixHours).sort((a, b) => b[1] - a[1]);
+    if (mixList.length) {
+      const bar = el('<div class="mix"></div>');
+      mixList.forEach(([sc, h]) => {
+        const seg = el('<span></span>');
+        seg.setAttribute("data-s", sc);
+        seg.style.flex = h;
+        seg.title = subjLabel(sc) + " " + Math.round(h) + " ชม.";
+        bar.appendChild(seg);
+      });
+      body.appendChild(bar);
+      const key = el('<div class="mix-key"></div>');
+      mixList.forEach(([sc, h]) => {
+        const k = el("<i>" + esc(subjLabel(sc)) + " " + Math.round(h) + " ชม.</i>");
+        k.setAttribute("data-s", sc);
+        key.appendChild(k);
+      });
+      body.appendChild(key);
+    }
     head.addEventListener("click", () => {
       body.hidden = !body.hidden;
       head.setAttribute("aria-expanded", String(!body.hidden));
@@ -1756,7 +1838,8 @@ function viewQuiz() {
       });
       const acc = seen ? Math.round(100 * ok / seen) : null;
       const b = el(
-        '<button class="tile" style="cursor:pointer;text-align:left">' +
+        '<button class="tile" data-s="' + esc(code) + '" ' +
+          'style="cursor:pointer;text-align:left;border-left:3px solid var(--sc)">' +
           '<div class="tile-n">' + n + '<span style="font-size:13px;color:var(--text-3)"> ข้อ</span></div>' +
           '<div class="tile-l">' + esc(s.name) + "</div>" +
           '<div class="tiny" style="margin-top:3px">' + (acc === null ? "ยังไม่เคยทำ" : "เคยถูก " + acc + "%") + "</div>" +
@@ -1858,7 +1941,8 @@ function viewQuiz() {
   card.appendChild(el(
     '<div class="card-hd">' +
       '<h2 class="num" style="font-size:14px">ข้อ ' + (quiz.i + 1) + " / " + quiz.items.length + "</h2>" +
-      '<span class="spacer chip">' + esc(subjLabel(q.subject)) + "</span>" +
+      '<span class="spacer chip subj" data-s="' + esc(q.subject) + '">' +
+        esc(subjLabel(q.subject)) + "</span>" +
     "</div>"
   ));
 
@@ -1945,6 +2029,7 @@ function viewProgress() {
 
   st.forEach(s => {
     const row = el('<div class="srow"></div>');
+    row.setAttribute("data-s", s.code);
     row.appendChild(el(
       '<div class="srow-hd">' +
         '<span class="srow-name">' + esc(s.name) + "</span>" +

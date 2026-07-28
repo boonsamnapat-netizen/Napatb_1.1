@@ -143,6 +143,11 @@ def generate_plan(
     for subj, topic in syllabus.all_topics():
         if subj.code not in wanted:
             continue
+        # วิชาที่เลยวันสอบไปแล้ว ตัดออก — ไม่งั้นเวลาว่างก่อนเส้นตายเป็น 0
+        # ทำให้ความเร่งด่วนพุ่งค้างและวิชานั้นขึ้นบนสุดตลอดไป
+        dl = deadlines.get(subj.code)
+        if dl and dl < start:
+            continue
         rec = dict(store.topic(topic.code))
         if rec.get("learned_on"):
             sim[topic.code] = rec
