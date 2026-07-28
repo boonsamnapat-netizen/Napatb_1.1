@@ -159,7 +159,10 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 }
 
 .topbar-in {
-  max-width: 940px; margin: 0 auto; padding: 12px 16px;
+  max-width: 940px; margin: 0 auto;
+  /* status-bar-style ของ iOS เป็น black-translucent + viewport-fit=cover
+     หน้าเว็บจึงไหลขึ้นไปใต้นาฬิกา/แบต ต้องเผื่อ safe area เองไม่งั้นหัวแอปทับกัน */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
 
@@ -179,6 +182,63 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .streak[hidden]{display:none}
 .streak-n{font-size:16px;font-weight:600;color:var(--marigold-f);line-height:1}
 .streak-l{font-size:11px;color:#b9c2d0}
+
+.gear{appearance:none;border:0;background:rgba(255,255,255,.08);color:#c8d0dc;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none}
+.gear:hover{background:rgba(255,255,255,.16);color:#fff}
+.gear svg{width:17px;height:17px}
+
+/* ── settings ─────────────────────────────────────────────── */
+.field{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.field:last-child{border-bottom:0}
+.field-l{font-size:14.5px;flex:1;min-width:0}
+.field input[type=text]{font-family:inherit;font-size:14px;color:var(--text);width:100%;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.hours-in{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:15px;
+  width:66px;text-align:center;color:var(--text);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:7px 4px}
+.hours-in:focus{border-color:var(--marigold-f);outline:none}
+.week-total{display:flex;align-items:baseline;gap:8px;padding-top:11px;font-size:13.5px;color:var(--text-2)}
+.week-total b{font-family:var(--mono);font-size:17px;color:var(--text)}
+
+/* ── first run + focus timer ──────────────────────────────── */
+.intro{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--marigold-f);
+  border-radius:var(--r);padding:15px 17px}
+.intro h2{font-size:16px;margin-bottom:6px}
+.intro ol{margin:8px 0 0;padding-left:20px}
+.intro li{font-size:14px;color:var(--text-2);margin-bottom:5px;line-height:1.7}
+.intro li b{color:var(--text)}
+
+.start{display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;text-align:left;
+  border:1px solid var(--ink);background:var(--ink);color:#f0f2f6;
+  border-radius:var(--r);padding:14px 16px}
+.start:hover{background:#1c2942}
+:root[data-theme="dark"] .start{background:var(--marigold-f);border-color:var(--marigold-f);color:#2a1e06}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .start{
+  background:var(--marigold-f);border-color:var(--marigold-f);color:#2a1e06}}
+.start-ico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.14)}
+:root[data-theme="dark"] .start-ico{background:rgba(0,0,0,.14)}
+.start-ico svg{width:16px;height:16px}
+.start-t{flex:1;min-width:0}
+.start-t b{display:block;font-size:15px}
+.start-t span{font-size:12.5px;opacity:.72;display:block}
+
+.timer{position:fixed;inset:0;z-index:80;background:var(--ink);color:#e8ebf1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))}
+.timer-topic{font-size:15px;color:#a9b3c2;text-align:center;max-width:32ch}
+.timer-n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:64px;font-weight:600;
+  letter-spacing:-.04em;line-height:1.1;color:var(--marigold-f)}
+.timer-sub{font-size:13px;color:#8f9bb0;margin-bottom:16px}
+.timer-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.timer .btn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#e8ebf1}
+.timer .btn:hover{background:rgba(255,255,255,.18)}
+.timer .btn-pri{background:var(--marigold-f);border-color:var(--marigold-f);color:#2a1e06}
+.timer-ring{width:180px;height:180px;margin-bottom:14px;transform:rotate(-90deg)}
+.timer-ring circle{fill:none;stroke-width:5}
+.timer-ring .bg{stroke:rgba(255,255,255,.12)}
+.timer-ring .fg{stroke:var(--marigold-f);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
 
 /* ═══════════════════════════════════════════════════════════════
    ON-TRACK STATUS
@@ -518,6 +578,9 @@ hr.rule { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
       <span class="streak-n num" id="streakN">0</span>
       <span class="streak-l">วันติด</span>
     </div>
+    <button class="gear" id="gearBtn" aria-label="ตั้งค่า">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </div>
 </div>
 
@@ -550,6 +613,7 @@ hr.rule { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
   <section class="view" id="v-tests"></section>
   <section class="view" id="v-quiz"></section>
   <section class="view" id="v-progress"></section>
+  <section class="view" id="v-settings"></section>
   <footer style="padding:26px 0 30px" id="foot"></footer>
 </main>
 
@@ -583,6 +647,7 @@ const Store = (() => {
     if (!mem.tests) mem.tests = {};      // "YYYY-MM-DD|kind" -> true
     if (!mem.runs) mem.runs = [];        // quiz history
     if (!mem.days) mem.days = {};        // "YYYY-MM-DD" -> ชั่วโมงที่ทำวันนั้น (ใช้นับ streak)
+    if (!mem.settings) mem.settings = {};
     if (!mem.log) mem.log = {};          // "YYYY-MM-DD" -> [{topic,kind,hours,rep}] ที่ทำเสร็จวันนั้น
     return mem;
   }
@@ -669,7 +734,16 @@ const CHOICE_LETTERS = ["ก", "ข", "ค", "ง", "จ"];
 /* ชิปในตารางมีที่แคบ — ใช้ชื่อสั้น ("ชีววิทยา") ไม่ใช่ชื่อเต็ม ("A-Level ชีววิทยา") */
 const subjLabel = code => (SUBJ[code] && (SUBJ[code].short || SUBJ[code].name)) || code;
 const subjName  = code => (SUBJ[code] && SUBJ[code].name) || code;
-const ST = DATA.study;
+/* ค่าที่ผู้ใช้ตั้งเองในแอปทับ config ที่ฝังมาตอน build
+   เก็บใน localStorage เท่านั้น — แก้บนมือถือแล้วตารางคำนวณใหม่ทันที ไม่ต้อง deploy */
+const ST = (() => {
+  const base = JSON.parse(JSON.stringify(DATA.study));
+  const ov = S.settings || {};
+  if (ov.hoursByWeekday) Object.assign(base.hoursByWeekday, ov.hoursByWeekday);
+  if (Array.isArray(ov.daysOff)) base.daysOff = ov.daysOff;
+  return base;
+})();
+const studentName = () => (S.settings && S.settings.name) || (DATA.student && DATA.student.name) || "";
 const DOW_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 /** ตัวนับถอยหลังหลักยึดเฉพาะสนามที่มีน้ำหนักใน กสพท — TGAT ไม่นับ */
@@ -887,7 +961,7 @@ function subjectStats() {
    COUNTDOWN BAR
    ───────────────────────────────────────────────────────────── */
 function renderTop() {
-  const name = (DATA.student && DATA.student.name) ? DATA.student.name : "";
+  const name = studentName();
   $("#brandName").textContent = name ? "TCAS70 · " + name : "TCAS70 · เตรียมสอบแพทย์";
   const e = nextExam(true);
   if (!e) {
@@ -988,6 +1062,78 @@ function blockRow(dayISO, b, opts) {
   return btn;
 }
 
+/* ── ตัวจับเวลาอ่านหนังสือ ─────────────────────────────────
+   กดเริ่มแล้วเต็มจอ นับถอยหลังตามเวลาของบล็อกนั้น
+   ครบเวลา (หรือกดจบก่อน) = ติ๊กบล็อกให้อัตโนมัติ */
+let timerState = null;
+
+function startTimer(b) {
+  const secs = Math.round(b.hours * 3600);
+  timerState = { block: b, total: secs, left: secs, paused: false, tick: null };
+  renderTimer();
+  timerState.tick = setInterval(() => {
+    if (!timerState || timerState.paused) return;
+    timerState.left -= 1;
+    if (timerState.left <= 0) finishTimer(true);
+    else updateTimerFace();
+  }, 1000);
+}
+
+function finishTimer(complete) {
+  if (!timerState) return;
+  const b = timerState.block;
+  clearInterval(timerState.tick);
+  const node = $("#timer"); if (node) node.remove();
+  timerState = null;
+  if (complete) { completeBlock(TODAY, b); celebrate(TODAY); }
+  render();
+}
+
+function fmtClock(s) {
+  const m = Math.floor(s / 60), r = s % 60;
+  return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+}
+
+function updateTimerFace() {
+  if (!timerState) return;
+  const n = $("#timerN"); if (n) n.textContent = fmtClock(Math.max(0, timerState.left));
+  const ring = $("#timerFg");
+  if (ring) {
+    const C = 2 * Math.PI * 82;
+    ring.style.strokeDasharray = C;
+    ring.style.strokeDashoffset = C * (1 - timerState.left / timerState.total);
+  }
+}
+
+function renderTimer() {
+  const b = timerState.block;
+  const node = el(
+    '<div class="timer" id="timer" role="dialog" aria-label="กำลังจับเวลา">' +
+      '<div class="timer-topic">' + esc(b.topicName) + "</div>" +
+      '<svg class="timer-ring" viewBox="0 0 180 180" aria-hidden="true">' +
+        '<circle class="bg" cx="90" cy="90" r="82"/>' +
+        '<circle class="fg" id="timerFg" cx="90" cy="90" r="82"/>' +
+      "</svg>" +
+      '<div class="timer-n" id="timerN">' + fmtClock(timerState.left) + "</div>" +
+      '<div class="timer-sub">' + (b.kind === "review" ? "ทบทวน" : "อ่านใหม่") +
+        " · " + esc(subjLabel(b.subject)) + "</div>" +
+      '<div class="timer-btns">' +
+        '<button class="btn" id="tPause">พัก</button>' +
+        '<button class="btn btn-pri" id="tDone">ทำเสร็จแล้ว</button>' +
+        '<button class="btn" id="tQuit">ยกเลิก</button>' +
+      "</div>" +
+    "</div>");
+  document.body.appendChild(node);
+  updateTimerFace();
+
+  $("#tPause").addEventListener("click", () => {
+    timerState.paused = !timerState.paused;
+    $("#tPause").textContent = timerState.paused ? "ไปต่อ" : "พัก";
+  });
+  $("#tDone").addEventListener("click", () => finishTimer(true));
+  $("#tQuit").addEventListener("click", () => finishTimer(false));
+}
+
 /* ฟีดแบ็กตอนทำเสร็จ — เงียบ ๆ ตอนทำได้ทีละบล็อก และชัดขึ้นเมื่อครบทั้งวัน */
 let toastTimer = null;
 function celebrate(dayISO) {
@@ -1021,6 +1167,38 @@ function viewToday() {
   const hoursDone = doneToday.reduce((a, b) => a + b.hours, 0);
   const allDone = hoursDone > 0 && blocks.length === 0;
   const st = streak();
+
+  /* ---- เปิดครั้งแรก: บอกก่อนว่านี่คืออะไร ใช้ยังไง แล้วเก็บทิ้ง */
+  if (!S.seenIntro) {
+    const intro = el(
+      '<div class="intro">' +
+        "<h2>ใช้ยังไง</h2>" +
+        '<p class="tiny" style="margin:0">ตารางคิดจากวันสอบและเวลาว่างของคุณ ' +
+          "ไม่ต้องวางแผนเอง</p>" +
+        "<ol>" +
+          "<li>กด <b>เริ่มอ่าน</b> ด้านล่าง จับเวลาให้ พออ่านจบมันติ๊กให้เอง</li>" +
+          "<li>ทำ <b>ข้อสอบ</b> ท้ายวัน ข้อที่ผิดจะถูกเอากลับมาถามซ้ำเอง</li>" +
+          "<li>ข้ามวันได้ <b>งานไม่หาย</b> — ตารางจัดใหม่ให้ทุกครั้งที่เปิด</li>" +
+        "</ol>" +
+      "</div>");
+    const ok = el('<button class="btn btn-sm" style="margin-top:11px">เข้าใจแล้ว</button>');
+    ok.addEventListener("click", () => { S.seenIntro = true; Store.save(); render(); });
+    intro.appendChild(ok);
+    wrap.appendChild(intro);
+  }
+
+  /* ---- ปุ่มหลัก: เริ่มลงมือ ไม่ใช่รายงานว่าเป็นศูนย์ */
+  if (blocks.length) {
+    const first = blocks[0];
+    const start = el(
+      '<button class="start">' +
+        '<span class="start-ico"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>' +
+        '<span class="start-t"><b>เริ่มอ่าน · ' + fmtHours(first.hours) + "</b>" +
+          "<span>" + esc(first.topicName) + "</span></span>" +
+      "</button>");
+    start.addEventListener("click", () => startTimer(first));
+    wrap.appendChild(start);
+  }
 
   /* ---- ยังทันไหม — ตอบคำถามที่สำคัญที่สุดก่อนเรื่องอื่น */
   const look = outlook().filter(o => o.need > 0);
@@ -1680,10 +1858,126 @@ function viewProgress() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   VIEW: ตั้งค่า
+   ───────────────────────────────────────────────────────────── */
+const DOW_TH = { mon: "จันทร์", tue: "อังคาร", wed: "พุธ", thu: "พฤหัสบดี",
+                 fri: "ศุกร์", sat: "เสาร์", sun: "อาทิตย์" };
+
+function saveSetting(patch) {
+  S.settings = Object.assign({}, S.settings, patch);
+  Store.save();
+  location.reload();   // ST ถูกคำนวณตอนโหลด — โหลดใหม่ให้ตารางคิดจากค่าใหม่ทั้งหมด
+}
+
+function viewSettings() {
+  const root = $("#v-settings");
+  root.innerHTML = "";
+  const wrap = el('<div class="stack"></div>');
+
+  /* ---- ชื่อ */
+  const nameCard = el('<div class="card card-pad"></div>');
+  nameCard.appendChild(el('<div class="section-title"><h2>ชื่อที่แสดง</h2></div>'));
+  const nameIn = el('<input type="text" maxlength="24" value="' + esc(studentName()) + '">');
+  nameIn.addEventListener("change", () => saveSetting({ name: nameIn.value.trim() }));
+  nameCard.appendChild(nameIn);
+  wrap.appendChild(nameCard);
+
+  /* ---- เวลาว่างรายวัน */
+  const hCard = el('<div class="card card-pad"></div>');
+  hCard.appendChild(el('<div class="section-title"><h2>เวลาว่างต่อวัน</h2></div>'));
+  hCard.appendChild(el('<p class="tiny" style="margin:-6px 0 6px">ตารางทั้งหมดคำนวณจากตรงนี้ ' +
+    'แก้แล้วแผนจะจัดใหม่ทันที — ใส่เท่าที่ทำได้จริง ไม่ใช่เท่าที่อยากให้เป็น</p>'));
+
+  ["mon","tue","wed","thu","fri","sat","sun"].forEach(k => {
+    const row = el('<div class="field"><span class="field-l">' + DOW_TH[k] + "</span></div>");
+    const inp = el('<input class="hours-in" type="number" min="0" max="16" step="0.5" value="' +
+      (ST.hoursByWeekday[k] || 0) + '">');
+    inp.addEventListener("change", () => {
+      const v = Math.max(0, Math.min(16, Number(inp.value) || 0));
+      saveSetting({ hoursByWeekday: Object.assign({}, S.settings.hoursByWeekday, { [k]: v }) });
+    });
+    row.appendChild(inp);
+    row.appendChild(el('<span class="tiny" style="width:26px">ชม.</span>'));
+    hCard.appendChild(row);
+  });
+
+  const weekly = ["mon","tue","wed","thu","fri","sat","sun"]
+    .reduce((a, k) => a + Number(ST.hoursByWeekday[k] || 0), 0);
+  hCard.appendChild(el('<div class="week-total">รวมสัปดาห์ละ <b>' + weekly +
+    "</b> ชม. · เดือนละราว <b>" + Math.round(weekly * 4.3) + "</b> ชม.</div>"));
+  wrap.appendChild(hCard);
+
+  /* ---- วันหยุด */
+  const offCard = el('<div class="card card-pad stack"></div>');
+  offCard.appendChild(el('<div class="section-title"><h2>วันหยุดเต็มวัน</h2></div>'));
+  offCard.appendChild(el('<p class="tiny" style="margin:-8px 0 0">วันที่ใส่ไว้จะไม่ถูกจัดตาราง ' +
+    "งานจะถูกกระจายไปวันอื่นให้เอง</p>"));
+
+  const list = el('<div class="stack" style="gap:6px"></div>');
+  (ST.daysOff || []).slice().sort().forEach(dt => {
+    const row = el('<div class="field"><span class="field-l num">' + esc(thaiDate(dt)) + "</span></div>");
+    const rm = el('<button class="btn btn-sm">ลบ</button>');
+    rm.addEventListener("click", () =>
+      saveSetting({ daysOff: ST.daysOff.filter(x => x !== dt) }));
+    row.appendChild(rm);
+    list.appendChild(row);
+  });
+  if (!(ST.daysOff || []).length)
+    list.appendChild(el('<p class="tiny" style="margin:0">ยังไม่ได้ตั้งวันหยุด</p>'));
+  offCard.appendChild(list);
+
+  const addRow = el('<div class="btn-row"></div>');
+  const dateIn = el('<input class="hours-in" type="date" style="width:auto;font-size:13px">');
+  const addBtn = el('<button class="btn btn-sm">เพิ่มวันหยุด</button>');
+  addBtn.addEventListener("click", () => {
+    const v = dateIn.value;
+    if (!v) return;
+    if ((ST.daysOff || []).includes(v)) return;
+    saveSetting({ daysOff: (ST.daysOff || []).concat(v).sort() });
+  });
+  addRow.appendChild(dateIn); addRow.appendChild(addBtn);
+  offCard.appendChild(addRow);
+  wrap.appendChild(offCard);
+
+  /* ---- ผลกระทบต่อแผน */
+  const look = outlook().filter(o => o.need > 0);
+  if (look.length) {
+    const im = el('<div class="card card-pad"></div>');
+    im.appendChild(el('<div class="section-title"><h2>ผลต่อแผน</h2></div>'));
+    look.forEach(o => im.appendChild(el(
+      '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;' +
+        'border-bottom:1px solid var(--line-soft)">' +
+        '<span style="font-size:13.5px;flex:1">' + esc(o.name) + "</span>" +
+        '<span class="num" style="font-size:13px;color:' +
+          (o.status === "over" ? "var(--brick)" : o.status === "tight" ? "var(--marigold)" : "var(--ok)") +
+        '">' + Math.round(o.need) + " / " + Math.round(o.avail) + " ชม.</span>" +
+      "</div>")));
+    im.appendChild(el('<p class="tiny" style="margin:8px 0 0">ต้องอ่าน / เวลาว่างที่มี — ' +
+      "ถ้าตัวซ้ายมากกว่าตัวขวา แปลว่าเวลาไม่พอ</p>"));
+    wrap.appendChild(im);
+  }
+
+  /* ---- คืนค่าเริ่มต้น */
+  const rst = el('<div class="card card-pad stack"></div>');
+  rst.appendChild(el('<p class="tiny" style="margin:0">ค่าที่ตั้งที่นี่เก็บในเครื่องนี้เท่านั้น ' +
+    "และทับค่าที่มากับตัวแอป</p>"));
+  const rb = el('<button class="btn btn-sm">คืนค่าเริ่มต้น</button>');
+  rb.addEventListener("click", () => {
+    if (!confirm("คืนค่าเวลาว่างและวันหยุดกลับเป็นค่าเริ่มต้น?")) return;
+    S.settings = {}; Store.save(); location.reload();
+  });
+  rst.appendChild(rb);
+  wrap.appendChild(rst);
+
+  root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
    ROUTER
    ───────────────────────────────────────────────────────────── */
 let current = "today";
-const VIEWS = { today: viewToday, plan: viewPlan, tests: viewTests, quiz: viewQuiz, progress: viewProgress };
+const VIEWS = { today: viewToday, plan: viewPlan, tests: viewTests,
+                quiz: viewQuiz, progress: viewProgress, settings: viewSettings };
 
 function go(name) {
   current = name;
@@ -1697,6 +1991,7 @@ function go(name) {
 
 document.querySelectorAll(".tab").forEach(t =>
   t.addEventListener("click", () => go(t.dataset.view)));
+$("#gearBtn").addEventListener("click", () => go(current === "settings" ? "today" : "settings"));
 
 function render() {
   renderTop();

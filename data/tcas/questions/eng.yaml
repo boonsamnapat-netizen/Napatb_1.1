@@ -119,3 +119,15 @@ questions:
     answer: 0
     explanation: "The fixed collocation is 'be associated with'. A past participle is needed after 'is' to form the passive."
     difficulty: 2
+
+  - qid: eng_org_001
+    topic: eng_organization
+    stem: "Arrange into a coherent paragraph: (1) However, the results have not yet been replicated. (2) A recent trial reported a marked drop in relapse rates. (3) Until then, clinicians are advised to keep current protocols."
+    choices:
+      - "1 - 2 - 3"
+      - "2 - 1 - 3"
+      - "3 - 2 - 1"
+      - "2 - 3 - 1"
+    answer: 1
+    explanation: "Sentence 2 introduces the finding, 'However' in 1 qualifies it, and 'Until then' in 3 follows from that qualification. Discourse markers fix the order."
+    difficulty: 2

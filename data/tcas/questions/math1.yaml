@@ -131,3 +131,27 @@ questions:
     answer: 1
     explanation: "รากที่สองของจำนวนจริงต้องมีสิ่งที่อยู่ในรากไม่ติดลบ จึงต้องมี x − 2 ≥ 0 นั่นคือ x ≥ 2 (รวม x = 2 ที่ให้ค่า 0)"
     difficulty: 2
+
+  - qid: math_set_001
+    topic: math_set_logic
+    stem: "เซต A มีสมาชิก 3 ตัว จำนวนสับเซตทั้งหมดของ A เท่ากับเท่าใด"
+    choices:
+      - "3"
+      - "6"
+      - "8"
+      - "9"
+    answer: 2
+    explanation: "เซตที่มีสมาชิก n ตัว มีสับเซต 2ⁿ ตัว ดังนั้น 2³ = 8 (รวมเซตว่างและตัวมันเอง)"
+    difficulty: 1
+
+  - qid: math_vector_001
+    topic: math_vector
+    stem: "กำหนดเวกเตอร์ u = (1, 2, 2) ขนาดของ u เท่ากับเท่าใด"
+    choices:
+      - "3"
+      - "5"
+      - "√5"
+      - "9"
+    answer: 0
+    explanation: "|u| = √(1² + 2² + 2²) = √9 = 3"
+    difficulty: 1
