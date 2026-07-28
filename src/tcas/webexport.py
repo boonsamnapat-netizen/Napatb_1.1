@@ -215,7 +215,7 @@ DEFAULT_SITE = REPO_ROOT / "web" / "dist"
 
 APP_NAME = "TCAS70 เตรียมสอบแพทย์"
 APP_SHORT = "TCAS70"
-THEME_COLOR = "#101826"
+THEME_COLOR = "#2a1d2e"
 
 TITLE_RE = re.compile(r"<title>(.*?)</title>\s*", re.S)
 

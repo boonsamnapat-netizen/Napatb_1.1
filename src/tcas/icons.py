@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Tuple
 
 # สีเดียวกับ token ในหน้าเว็บ
-NAVY = (0x10, 0x18, 0x26)
-MARIGOLD = (0xE0, 0xA0, 0x2B)
+NAVY = (0x2A, 0x1D, 0x2E)   # --ink: ม่วงเข้ม (เดิมเป็นกรมท่า)
+MARIGOLD = (0xF0, 0xAB, 0x2C)
 
 SS = 4  # supersample factor
 
@@ -51,7 +51,7 @@ def _render(size: int) -> bytes:
                 for sx in range(SS):
                     px = x * SS + sx + 0.5
 
-                    # นอกมุมโค้ง = โปร่ง -> ใช้สีกรมท่าเข้มกว่าเป็นขอบ
+                    # นอกมุมโค้ง = โปร่ง -> ใช้สีหมึกเข้มกว่าเป็นขอบ
                     inside_card = True
                     for ox, oy in ((corner, corner), (big - corner, corner),
                                    (corner, big - corner), (big - corner, big - corner)):
@@ -64,7 +64,7 @@ def _render(size: int) -> bytes:
                             break
 
                     if not inside_card:
-                        c = NAVY  # นอกมุมโค้งก็ยังเป็นกรมท่า (ไอคอนทึบ ระบบจะครอบเอง)
+                        c = NAVY  # นอกมุมโค้งก็ยังเป็นสีหมึก (ไอคอนทึบ ระบบจะครอบเอง)
                     else:
                         d = ((px - cx) ** 2 + (py - cy) ** 2) ** 0.5
                         if d <= r_dot:
