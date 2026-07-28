@@ -6,11 +6,11 @@
    ═══════════════════════════════════════════════════════════════ */
 :root {
   --ink:        #101826;
-  --paper:      #eef0f3;
+  --paper:      #e6e9ef;
   --surface:    #ffffff;
-  --surface-2:  #f6f7f9;
-  --line:       #d8dde5;
-  --line-soft:  #e6eaef;
+  --surface-2:  #f4f6f9;
+  --line:       #d3d9e2;
+  --line-soft:  #e7ebf1;
   --text:       #101826;
   --text-2:     #4a5566;
   --text-3:     #78838f;
@@ -37,11 +37,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper:      #0c121c;
-    --surface:    #141c2a;
-    --surface-2:  #1a2333;
-    --line:       #2a3547;
-    --line-soft:  #212b3c;
+    --paper:      #070c14;
+    --surface:    #18212f;
+    --surface-2:  #212b3a;
+    --line:       #303b4d;
+    --line-soft:  #26313f;
     --text:       #e6eaf0;
     --text-2:     #a2adbd;
     --text-3:     #788495;
@@ -61,11 +61,11 @@
 }
 
 :root[data-theme="dark"] {
-  --paper:      #0c121c;
-  --surface:    #141c2a;
-  --surface-2:  #1a2333;
-  --line:       #2a3547;
-  --line-soft:  #212b3c;
+  --paper:      #070c14;
+  --surface:    #18212f;
+  --surface-2:  #212b3a;
+  --line:       #303b4d;
+  --line-soft:  #26313f;
   --text:       #e6eaf0;
   --text-2:     #a2adbd;
   --text-3:     #788495;
@@ -83,11 +83,11 @@
 }
 
 :root[data-theme="light"] {
-  --paper:      #eef0f3;
+  --paper:      #e6e9ef;
   --surface:    #ffffff;
-  --surface-2:  #f6f7f9;
-  --line:       #d8dde5;
-  --line-soft:  #e6eaef;
+  --surface-2:  #f4f6f9;
+  --line:       #d3d9e2;
+  --line-soft:  #e7ebf1;
   --text:       #101826;
   --text-2:     #4a5566;
   --text-3:     #78838f;
@@ -278,17 +278,16 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 /* ═══════════════════════════════════════════════════════════════
    ON-TRACK STATUS
    ═══════════════════════════════════════════════════════════════ */
-.status{border:1px solid var(--line);border-left-width:4px;border-radius:var(--r);
-  padding:12px 14px;background:var(--surface)}
-.status.ok{border-left-color:var(--ok);background:var(--ok-dim)}
-.status.tight{border-left-color:var(--warn-f,var(--marigold-f));background:var(--warn-dim)}
-.status.over{border-left-color:var(--brick);background:var(--brick-dim)}
-.status-hd{display:flex;align-items:baseline;gap:8px;font-size:14.5px}
+.status{border-left:3px solid var(--line);padding:2px 0 2px 12px}
+.status.ok{border-left-color:var(--ok)}
+.status.tight{border-left-color:var(--warn)}
+.status.over{border-left-color:var(--brick)}
+.status-hd{display:flex;align-items:baseline;gap:8px;font-size:14px}
 .status-hd .spacer{margin-left:auto;font-size:13px;color:var(--text-2)}
-.status-dot{width:9px;height:9px;border-radius:50%;flex:none;align-self:center}
-.status.ok .status-dot{background:var(--ok)}
-.status.tight .status-dot{background:var(--marigold-f)}
-.status.over .status-dot{background:var(--brick)}
+.status-dot{display:none}
+.status.ok .status-hd b{color:var(--ok)}
+.status.tight .status-hd b{color:var(--warn)}
+.status.over .status-hd b{color:var(--brick)}
 
 /* ═══════════════════════════════════════════════════════════════
    DAY COMPLETE + TOAST
@@ -358,7 +357,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 /* ═══════════════════════════════════════════════════════════════
    CARDS / PANELS
    ═══════════════════════════════════════════════════════════════ */
-main { padding-top: 20px; }
+main { padding-top: 26px; }
 .view { display: none; }
 .view.on { display: block; }
 
@@ -401,13 +400,30 @@ main { padding-top: 20px; }
 .bub.bad  { background: var(--brick); border-color: var(--brick); color: var(--surface); }
 
 /* tiny bubbles used as progress dots */
-.dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.dots { display: flex; flex-wrap: wrap; gap: 5px; }
 .dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  border: 1.25px solid var(--line);
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.5px solid var(--line);
   background: transparent;
 }
-.dot.on { background: var(--marigold-f); border-color: var(--marigold-f); }
+.dot.on { background: var(--ok); border-color: var(--ok); }
+
+/* หัวสัปดาห์ — ทำให้ตารางยาว ๆ สแกนได้ แทนที่จะเป็นแถวเรียงไม่จบ */
+.wk {
+  position: sticky; top: var(--stick, 58px); z-index: 20;
+  display: flex; align-items: baseline; gap: 9px;
+  margin: 0 -16px; padding: 9px 16px;
+  background: var(--surface); border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer; width: calc(100% + 32px);
+  text-align: left; font: inherit; color: inherit;
+}
+.wk:first-child { border-top: 0; }
+.wk-t { font-size: 13px; font-weight: 700; }
+.wk-m { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--text-3); }
+.wk-c { font-size: 11px; color: var(--text-3); transition: transform .15s; }
+.wk[aria-expanded="false"] .wk-c { transform: rotate(-90deg); }
+.wk-body[hidden] { display: none; }
 
 /* ═══════════════════════════════════════════════════════════════
    DATE SPINE — dates are a real sequence, so a spine is honest
@@ -444,50 +460,52 @@ main { padding-top: 20px; }
 
 /* ═══════════════════════════════════════════════════════════════
    BLOCK ROWS
+   หนึ่งกล่องพอ — แถวข้างในไม่มีขอบของตัวเอง ใช้เส้นคั่นบางกับช่องไฟแทน
    ═══════════════════════════════════════════════════════════════ */
 .blk {
-  display: flex; align-items: flex-start; gap: 11px;
-  padding: 10px 12px;
-  border: 1px solid var(--line-soft);
-  border-left: 3px solid var(--indigo);
-  border-radius: var(--r);
-  background: var(--surface);
-  margin-bottom: 7px;
-  cursor: pointer;
-  text-align: left; width: 100%;
-  transition: border-color .12s, background .12s;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 2px;
+  border: 0; background: none;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer; text-align: left; width: 100%;
+  transition: opacity .12s;
 }
-.blk:hover { border-color: var(--line); }
-.blk.review { border-left-color: var(--marigold-f); }
-.blk.done { opacity: .52; }
+.blk-row:last-child .blk { border-bottom: 0; }
+.blk:hover .blk-name { color: var(--indigo); }
+.blk.done { opacity: .45; }
 .blk.done .blk-name { text-decoration: line-through; text-decoration-thickness: 1px; }
 
+/* ช่องติ๊กใช้ทรงเดียวกับวงฝนคำตอบ — ลายเดียวกันทั้งแอป */
 .blk-check {
-  flex: none; width: 20px; height: 20px; margin-top: 2px;
+  flex: none; width: 24px; height: 24px; margin-top: 1px;
   border: 1.5px solid var(--line); border-radius: 50%;
   display: grid; place-items: center;
   background: var(--surface);
+  transition: background .12s, border-color .12s;
 }
+.blk:hover .blk-check { border-color: var(--indigo); }
 .blk.done .blk-check { background: var(--ok); border-color: var(--ok); }
-.blk-check svg { width: 11px; height: 11px; opacity: 0; color: var(--surface); }
+.blk-check svg { width: 12px; height: 12px; opacity: 0; color: var(--surface); }
 .blk.done .blk-check svg { opacity: 1; }
 
 .blk-body { min-width: 0; flex: 1; }
-.blk-name { font-size: 14px; line-height: 1.5; }
-.blk-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.blk-name { font-size: 14.5px; line-height: 1.55; transition: color .12s; }
+.blk-meta { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 1px; align-items: baseline; }
+.blk-sub { font-size: 12px; color: var(--text-3); }
 
+/* เหลือชิปเดียวต่อแถว: เวลา — ที่เหลืออ่านได้จากหัวข้อกลุ่มอยู่แล้ว */
 .chip {
   display: inline-flex; align-items: center; gap: 4px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em;
-  padding: 1px 6px; border-radius: 2px;
-  background: var(--surface-2); color: var(--text-2);
-  border: 1px solid var(--line-soft);
-  white-space: nowrap;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .03em;
+  color: var(--text-3); white-space: nowrap;
 }
-.chip.learn   { background: var(--indigo-dim);   color: var(--indigo);   border-color: transparent; }
-.chip.review  { background: var(--warn-dim);     color: var(--warn);     border-color: transparent; }
-.chip.mock    { background: var(--brick-dim);    color: var(--brick);    border-color: transparent; }
-.chip.ok      { background: var(--ok-dim);       color: var(--ok);       border-color: transparent; }
+.chip.learn, .chip.review, .chip.mock, .chip.ok {
+  padding: 1px 7px; border-radius: 2px; font-size: 10.5px;
+}
+.chip.learn  { background: var(--indigo-dim); color: var(--indigo); }
+.chip.review { background: var(--warn-dim);   color: var(--warn); }
+.chip.mock   { background: var(--brick-dim);  color: var(--brick); }
+.chip.ok     { background: var(--ok-dim);     color: var(--ok); }
 
 /* ═══════════════════════════════════════════════════════════════
    BUTTONS
@@ -516,7 +534,10 @@ main { padding-top: 20px; }
 /* ═══════════════════════════════════════════════════════════════
    STAT TILES
    ═══════════════════════════════════════════════════════════════ */
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+/* ชุดที่มี 4 ใบใช้ 2x2 แทน — auto-fit ทำให้ใบสุดท้ายลอยเดี่ยวเต็มแถว */
+.tiles-4 { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 560px) { .tiles-4 { grid-template-columns: repeat(4, 1fr); } }
 .tile {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r); padding: 12px 13px;
@@ -1069,18 +1090,20 @@ function undoLogged(dayISO, index) {
 
 function blockRow(dayISO, b, opts) {
   const o = opts || {};
-  const kindChip = b.kind === "review"
-    ? '<span class="chip review">ทบทวน #' + b.repetition + "</span>"
-    : '<span class="chip learn">อ่านใหม่</span>';
+  // ชื่อวิชาโผล่เฉพาะตอนที่ต่างจากแถวก่อนหน้า — ไม่งั้นชิป "TPAT1" จะซ้ำติดกัน 40 แถว
+  const showSubj = o.showSubject !== false;
+  const meta =
+    (showSubj ? '<span class="blk-sub">' + esc(subjLabel(b.subject)) + "</span>" : "") +
+    '<span class="chip">' + fmtHours(b.hours) + "</span>" +
+    (b.kind === "review" && b.repetition > 1
+      ? '<span class="chip">ครั้งที่ ' + b.repetition + "</span>" : "");
+
   const btn = el(
-    '<button class="blk ' + (b.kind === "review" ? "review " : "") + (o.done ? "done" : "") + '">' +
+    '<button class="blk ' + (o.done ? "done" : "") + '">' +
       '<span class="blk-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>' +
       '<span class="blk-body">' +
         '<span class="blk-name">' + esc(b.topicName) + "</span>" +
-        '<span class="blk-meta">' + kindChip +
-          '<span class="chip">' + esc(subjLabel(b.subject)) + "</span>" +
-          '<span class="chip">' + fmtHours(b.hours) + "</span>" +
-        "</span>" +
+        '<span class="blk-meta">' + meta + "</span>" +
       "</span>" +
     "</button>"
   );
@@ -1335,7 +1358,8 @@ function viewToday() {
     wrap.appendChild(intro);
   }
 
-  /* ---- ปุ่มหลัก: เริ่มลงมือ ไม่ใช่รายงานว่าเป็นศูนย์ */
+  /* ---- ปุ่มหลัก: เริ่มลงมือ ไม่ใช่รายงานว่าเป็นศูนย์ (วางหลังแถบสถานะ) */
+  const startSlot = el('<div></div>');
   if (blocks.length) {
     const first = blocks[0];
     const start = el(
@@ -1345,7 +1369,7 @@ function viewToday() {
           "<span>" + esc(first.topicName) + "</span></span>" +
       "</button>");
     start.addEventListener("click", () => startTimer(first));
-    wrap.appendChild(start);
+    startSlot.appendChild(start);
   }
 
   /* ---- ยังทันไหม — ตอบคำถามที่สำคัญที่สุดก่อนเรื่องอื่น */
@@ -1368,6 +1392,8 @@ function viewToday() {
         '<p class="tiny" style="margin:3px 0 0">' + esc(detail) + "</p>" +
       "</div>"));
   }
+
+  wrap.appendChild(startSlot);   // ปุ่มเริ่มอ่าน วางต่อจากแถบสถานะ
 
   /* ---- summary tiles */
   wrap.appendChild(el(
@@ -1406,11 +1432,19 @@ function viewToday() {
     if (reviews.length) {
       body.appendChild(el('<div class="section-title"><h2>ทบทวนก่อน</h2></div>'));
       body.appendChild(el('<p class="tiny" style="margin:-6px 0 8px">อ่านแล้วลืมคือเสียเวลาเปล่า — คิวทบทวนมาก่อนของใหม่เสมอ</p>'));
-      reviews.forEach(b => body.appendChild(blockRow(TODAY, b, {})));
+      let prev = null;
+      reviews.forEach(b => {
+        body.appendChild(blockRow(TODAY, b, { showSubject: b.subject !== prev }));
+        prev = b.subject;
+      });
     }
     if (learns.length) {
       body.appendChild(el('<div class="section-title" style="margin-top:' + (reviews.length ? "14px" : "0") + '"><h2>อ่านใหม่</h2></div>'));
-      learns.forEach(b => body.appendChild(blockRow(TODAY, b, {})));
+      let prevL = null;
+      learns.forEach(b => {
+        body.appendChild(blockRow(TODAY, b, { showSubject: b.subject !== prevL }));
+        prevL = b.subject;
+      });
     }
   }
 
@@ -1469,11 +1503,10 @@ function viewToday() {
     const mc = el('<div class="card card-pad"></div>');
     mc.appendChild(el('<div class="section-title"><h2>หมุดหมายที่ใกล้ถึง</h2></div>'));
     ms.forEach(m => mc.appendChild(el(
-      '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line-soft)">' +
-        '<span class="num" style="font-size:13px;color:var(--marigold);min-width:62px">' +
-          (m.inDays === 0 ? "วันนี้" : "อีก " + m.inDays + " วัน") + "</span>" +
-        "<span style=\"font-size:13.5px\">" + esc(m.label) + "</span>" +
-        '<span class="tiny" style="margin-left:auto;white-space:nowrap">' + esc(thaiDate(m.date)) + "</span>" +
+      '<div style="padding:7px 0;border-bottom:1px solid var(--line-soft)">' +
+        '<div style="font-size:13.5px;line-height:1.5">' + esc(m.label) + "</div>" +
+        '<div class="tiny">' + (m.inDays === 0 ? "วันนี้" : "อีก " + m.inDays + " วัน") +
+          " · " + esc(thaiDate(m.date)) + "</div>" +
       "</div>"
     )));
     wrap.appendChild(mc);
@@ -1508,13 +1541,49 @@ function viewPlan() {
 
   const days = buildPlan(TODAY, planWindow);
   const card = el('<div class="card card-pad"></div>');
-  const spine = el('<div class="spine"></div>');
 
-  if (!days.length) {
+  if (!days.some(d => d.blocks.length)) {
     card.appendChild(el('<div class="empty">ไม่มีตารางในช่วงนี้แล้ว</div>'));
-  } else {
+    wrap.appendChild(card);
+    root.appendChild(wrap);
+    return;
+  }
+
+  // จัดกลุ่มเป็นสัปดาห์ (จันทร์เป็นวันแรก) — 30 วันจะได้สแกนได้ ไม่ใช่เลื่อนยาว 13 จอ
+  const weeks = [];
+  days.forEach(day => {
+    const dt = d(day.date);
+    const mon = d(day.date);
+    mon.setDate(mon.getDate() - ((dt.getDay() + 6) % 7));
+    const key = iso(mon);
+    let w = weeks[weeks.length - 1];
+    if (!w || w.key !== key) { w = { key, start: key, days: [] }; weeks.push(w); }
+    w.days.push(day);
+  });
+
+  weeks.forEach((w, wi) => {
+    const hours = w.days.reduce((a, x) => a + x.blocks.reduce((b, y) => b + y.hours, 0), 0);
+    const nTopics = new Set(w.days.flatMap(x => x.blocks.filter(y => y.kind === "learn").map(y => y.topic))).size;
+    const last = w.days[w.days.length - 1].date;
+    const open = wi < 2;   // กางสองสัปดาห์แรกไว้ ที่เหลือพับเก็บ
+
+    const head = el('<button class="wk" aria-expanded="' + open + '">' +
+      '<span class="wk-c">▾</span>' +
+      '<span class="wk-t">' + esc(thaiDate(w.start, false)) + " – " + esc(thaiDate(last, false)) + "</span>" +
+      '<span class="wk-m">' + (hours ? Math.round(hours) + " ชม." : "พัก") +
+        (nTopics ? " · " + nTopics + " หัวข้อ" : "") + "</span>" +
+      "</button>");
+    const body = el('<div class="wk-body"></div>');
+    body.hidden = !open;
+    head.addEventListener("click", () => {
+      body.hidden = !body.hidden;
+      head.setAttribute("aria-expanded", String(!body.hidden));
+    });
+    card.appendChild(head);
+
+    const spine = el('<div class="spine" style="padding-top:12px"></div>');
     let lastMonth = "";
-    days.forEach(day => {
+    w.days.forEach(day => {
       const dt = d(day.date);
       const monKey = dt.getFullYear() + "-" + dt.getMonth();
       const sd = el('<div class="sday' + (day.date === TODAY ? " today" : "") + '"></div>');
@@ -1523,26 +1592,32 @@ function viewPlan() {
           '<div class="sday-dow">' + DOW[dt.getDay()] + "</div>" +
           '<div class="sday-num">' + dt.getDate() + "</div>" +
           (monKey !== lastMonth ? '<div class="sday-mon">' + MON[dt.getMonth()] + "</div>" : "") +
-        "</div>"
-      ));
+        "</div>"));
       lastMonth = monKey;
 
       if (!day.blocks.length) {
         sd.appendChild(el('<div class="tiny" style="padding:3px 0 0">' + esc(day.note || "พัก") + "</div>"));
       } else {
-        day.blocks.forEach(b => sd.appendChild(blockRow(day.date,
-          b, { readonly: day.date !== TODAY })));
+        let prev = null;
+        day.blocks.forEach(b => {
+          sd.appendChild(blockRow(day.date, b, {
+            readonly: day.date !== TODAY,
+            showSubject: b.subject !== prev,
+          }));
+          prev = b.subject;
+        });
       }
-      const tests = DATA.tests.filter(t => t.date === day.date);
-      tests.forEach(t => sd.appendChild(el(
-        '<div class="blk" style="border-left-color:var(--brick);cursor:default">' +
-          '<span class="blk-body"><span class="blk-name">' + esc(t.title) + "</span>" +
-          '<span class="blk-meta"><span class="chip mock">' + esc(t.kindLabel) + "</span></span></span></div>"
-      )));
+      DATA.tests.filter(t => t.date === day.date).forEach(t => sd.appendChild(el(
+        '<div class="blk" style="cursor:default"><span class="blk-body">' +
+          '<span class="blk-name">' + esc(t.title) + "</span>" +
+          '<span class="blk-meta"><span class="chip mock">' + esc(t.kindLabel) + "</span></span>" +
+        "</span></div>")));
       spine.appendChild(sd);
     });
-    card.appendChild(spine);
-  }
+    body.appendChild(spine);
+    card.appendChild(body);
+  });
+
   wrap.appendChild(card);
   root.appendChild(wrap);
 }
@@ -1564,10 +1639,10 @@ function testRow(t) {
         '<span class="blk-name">' + esc(t.title) + "</span>" +
         '<span class="blk-meta">' +
           '<span class="chip ' + chipCls + '">' + esc(t.kindLabel) + "</span>" +
-          '<span class="chip">' + esc(thaiDate(t.date)) + "</span>" +
-          '<span class="chip">' + (inDays === 0 ? "วันนี้" : inDays > 0 ? "อีก " + inDays + " วัน" : "ผ่านมาแล้ว") + "</span>" +
-          (t.questions ? '<span class="chip">~' + t.questions + " ข้อ</span>" : "") +
-          (t.minutes ? '<span class="chip">' + t.minutes + " นาที</span>" : "") +
+          '<span class="blk-sub">' + esc(thaiDate(t.date)) + " · " +
+            (inDays === 0 ? "วันนี้" : inDays > 0 ? "อีก " + inDays + " วัน" : "ผ่านมาแล้ว") +
+            (t.questions ? " · ~" + t.questions + " ข้อ" : "") +
+            (t.minutes ? " " + t.minutes + " นาที" : "") + "</span>" +
         "</span>" +
         (t.note ? '<span class="tiny" style="display:block;margin-top:4px">' + esc(t.note) + "</span>" : "") +
       "</span>" +
@@ -1856,7 +1931,7 @@ function viewProgress() {
   Object.values(S.q).forEach(r => { seen += r.seen; ok += r.ok; });
 
   wrap.appendChild(el(
-    '<div class="tiles">' +
+    '<div class="tiles tiles-4">' +
       '<div class="tile"><div class="tile-n">' + Math.round(100 * doneTopics / allTopics) + '%</div><div class="tile-l">เนื้อหาที่อ่านจบ</div></div>' +
       '<div class="tile"><div class="tile-n">' + Math.round(hoursDone) + '</div><div class="tile-l">ชม. จาก ' + Math.round(hoursAll) + "</div></div>" +
       '<div class="tile"><div class="tile-n">' + (seen ? Math.round(100 * ok / seen) + "%" : "—") + '</div><div class="tile-l">ความแม่นข้อสอบ</div></div>' +
@@ -2144,18 +2219,29 @@ document.querySelectorAll(".tab").forEach(t =>
   t.addEventListener("click", () => go(t.dataset.view)));
 $("#gearBtn").addEventListener("click", () => go(current === "settings" ? "today" : "settings"));
 
+function syncStickyOffset() {
+  const bar = document.querySelector(".topbar");
+  const tabs = document.querySelector(".tabs");
+  let top = bar ? bar.getBoundingClientRect().height : 58;
+  // บนจอกว้าง แท็บเป็น sticky ต่อจากแถบบน จึงต้องบวกความสูงแท็บด้วย
+  if (tabs && getComputedStyle(tabs).position === "sticky")
+    top += tabs.getBoundingClientRect().height;
+  document.documentElement.style.setProperty("--stick", Math.round(top) + "px");
+}
+
 function render() {
   renderTop();
   VIEWS[current]();
+  syncStickyOffset();
 }
 
 /* footer */
 $("#foot").innerHTML =
   '<hr class="rule" style="margin-bottom:14px">' +
-  '<p class="tiny">วันสอบ เกณฑ์ กสพท และคะแนนต่ำสุดของทุกคณะในหน้านี้เป็น<b>ค่าประมาณ</b> ' +
+  '<p class="tiny" style="font-size:11.5px;line-height:1.65">วันสอบ เกณฑ์ กสพท และคะแนนต่ำสุดของทุกคณะในหน้านี้เป็น<b>ค่าประมาณ</b> ' +
   "ยังไม่ได้ยืนยันกับประกาศจริง (เครื่องที่สร้างต่อ mytcas.com ไม่ได้) — " +
   "ก่อนใช้ตัดสินใจจริงต้องตรวจกับ mytcas.com และประกาศ กสพท ปีการศึกษา 2570</p>" +
-  '<p class="tiny" style="margin-top:6px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
+  '<p class="tiny" style="margin-top:6px;font-size:11px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
   " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
   " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";
 
