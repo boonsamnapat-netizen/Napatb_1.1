@@ -407,6 +407,117 @@ def cmd_tests(args) -> int:
     return 0
 
 
+def cmd_cutoff(args) -> int:
+    """กรอกคะแนนต่ำสุดของคณะจากบรรทัดคำสั่ง แทนการแก้ YAML ด้วยมือ
+
+    เหตุผลที่ต้องมี: คณะในระบบมี 57 รายการ และ 41 รายการยังไม่มีคะแนน
+    การเปิดไฟล์แก้ทีละอันทั้งเสียเวลาและพลาดง่าย (เยื้อง, ตัวเลขผิดช่อง)
+    คำสั่งนี้แก้ให้ตรงคณะ ตรวจค่าให้ และตั้ง verified: true ให้ในคราวเดียว
+
+        python tcas_cli.py cutoff tu_dent 2568=70.4 2569=70.6
+        python tcas_cli.py cutoff --list ทันตแพทยศาสตร์
+    """
+    import yaml as _yaml
+
+    path = cfgmod.DEFAULT_PROGRAMS
+    doc = _yaml.safe_load(open(path, encoding="utf-8")) or {}
+    progs = doc.get("programs") or []
+
+    if args.list is not None:
+        want = (args.list or "").strip()
+        rows = [p for p in progs if not want or want in str(p.get("faculty", ""))]
+        if not rows:
+            print(f"ไม่พบคณะที่ตรงกับ '{want}' — กลุ่มที่มี: "
+                  + ", ".join(sorted({str(p.get("faculty")) for p in progs})))
+            return 1
+        print(f"{'code':16s} {'คะแนนต่ำสุดที่มี':>22s}  ชื่อ")
+        for p in rows:
+            cut = p.get("cutoffs") or {}
+            mark = "✓" if p.get("verified") else ("~" if cut else "—")
+            txt = ", ".join(f"{y}:{v}" for y, v in sorted(cut.items())) or "ยังไม่มี"
+            print(f"{p.get('code',''):16s} {mark} {txt:>20s}  {p.get('name','')}")
+        print("\n✓ = ยืนยันแล้ว · ~ = มีตัวเลขแต่ยังไม่ยืนยัน · — = ยังไม่มี")
+        return 0
+
+    target = next((p for p in progs if p.get("code") == args.code), None)
+    if target is None:
+        print(f"ไม่พบรหัสคณะ '{args.code}' — ดูรายการทั้งหมดด้วย --list")
+        return 1
+
+    if not args.pairs:
+        print("ต้องระบุคะแนนอย่างน้อยหนึ่งปี เช่น  2569=70.6")
+        return 1
+
+    cutoffs = dict(target.get("cutoffs") or {})
+    for pair in args.pairs:
+        if "=" not in pair:
+            print(f"รูปแบบไม่ถูกต้อง: '{pair}' — ต้องเป็น ปี=คะแนน เช่น 2569=70.6")
+            return 1
+        year_s, score_s = pair.split("=", 1)
+        try:
+            year, score = int(year_s), float(score_s)
+        except ValueError:
+            print(f"อ่านค่าไม่ได้: '{pair}'")
+            return 1
+        # คะแนน กสพท เต็ม 100 — ค่านอกช่วงนี้แปลว่ากรอกผิดช่องแน่ ๆ
+        if not 0 <= score <= 100:
+            print(f"คะแนน {score} อยู่นอกช่วง 0-100 — ตรวจอีกครั้งว่าไม่ได้กรอกคะแนนดิบ")
+            return 1
+        if not 2500 <= year <= 2600:
+            print(f"ปี {year} ไม่น่าใช่ พ.ศ. — ใช้ปีการศึกษาแบบ 2569")
+            return 1
+        cutoffs[year] = score
+
+    cutoffs = dict(sorted(cutoffs.items()))
+    verified = not args.unverified
+
+    # แก้เป็นข้อความทีละบรรทัด ไม่ใช้ yaml.safe_dump เขียนทับทั้งไฟล์
+    # เพราะ dump จะล้างคอมเมนต์ทิ้งหมด รวมถึงคำเตือนเรื่องข้อมูลที่ยังไม่ยืนยัน
+    # ซึ่งเป็นส่วนที่ต้องอยู่ให้นานที่สุด
+    lines = open(path, encoding="utf-8").read().split("\n")
+    start = next(i for i, l in enumerate(lines)
+                 if re.match(rf"\s*-\s*code:\s*{re.escape(args.code)}\s*$", l))
+    end = next((i for i in range(start + 1, len(lines))
+                if re.match(r"\s*-\s+code:", lines[i])), len(lines))
+
+    cut_txt = "{" + ", ".join(f"{y}: {v}" for y, v in cutoffs.items()) + "}"
+    block = lines[start:end]
+    seen_cut = seen_ver = False
+    for i, l in enumerate(block):
+        if re.match(r"\s*cutoffs:", l):
+            block[i] = f"    cutoffs: {cut_txt}"
+            seen_cut = True
+        elif re.match(r"\s*verified:", l):
+            block[i] = f"    verified: {str(verified).lower()}"
+            seen_ver = True
+    # คณะที่ยังไม่เคยมีสองบรรทัดนี้ (ไม่น่าเกิด แต่กันไว้) ให้เติมท้ายบล็อก
+    tail = len(block)
+    while tail > 0 and not block[tail - 1].strip():
+        tail -= 1
+    if not seen_cut:
+        block.insert(tail, f"    cutoffs: {cut_txt}"); tail += 1
+    if not seen_ver:
+        block.insert(tail, f"    verified: {str(verified).lower()}")
+
+    lines[start:end] = block
+    open(path, "w", encoding="utf-8").write("\n".join(lines))
+
+    # อ่านกลับมาตรวจว่าไฟล์ยังใช้ได้และค่าลงถูกที่จริง
+    check = _yaml.safe_load(open(path, encoding="utf-8")) or {}
+    got = next((x for x in (check.get("programs") or [])
+                if x.get("code") == args.code), None)
+    if got is None or got.get("cutoffs") != cutoffs or got.get("verified") != verified:
+        print("เขียนไฟล์แล้วอ่านกลับมาไม่ตรง — กู้คืนด้วย git checkout config/tcas_programs.yaml")
+        return 1
+
+    state = "ยังไม่ยืนยัน" if args.unverified else "ยืนยันแล้ว"
+    print(f"บันทึกแล้ว: {got.get('name')}")
+    print("  คะแนนต่ำสุด: " + ", ".join(f"{y} → {v}" for y, v in cutoffs.items()))
+    print(f"  สถานะ: {state}")
+    print("\nรัน  python tcas_cli.py export  เพื่อให้เว็บแอปเห็นค่าใหม่")
+    return 0
+
+
 def cmd_verify(args) -> int:
     """ไล่รายการทุกค่าที่ยังไม่ได้ยืนยันกับประกาศจริง
 
@@ -517,6 +628,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
     s.add_argument("--resources", help="ไฟล์แหล่งเรียนรู้ (ค่าเริ่มต้น config/tcas_resources.yaml)")
     s.set_defaults(func=cmd_export)
+
+    s = sub.add_parser("cutoff", help="กรอกคะแนนต่ำสุดของคณะ (แทนการแก้ YAML เอง)")
+    s.add_argument("code", nargs="?", help="รหัสคณะ เช่น tu_dent")
+    s.add_argument("pairs", nargs="*", help="ปี=คะแนน เช่น 2568=70.4 2569=70.6")
+    s.add_argument("--list", nargs="?", const="", metavar="คณะ",
+                   help="ดูรายการรหัสคณะ (กรองด้วยชื่อกลุ่มคณะได้)")
+    s.add_argument("--unverified", action="store_true",
+                   help="บันทึกแต่ยังไม่ตั้ง verified: true")
+    s.set_defaults(func=cmd_cutoff)
 
     s = sub.add_parser("verify", help="ไล่ตัวเลขที่ยังไม่ยืนยันกับประกาศจริง")
     s.add_argument("--strict", action="store_true",
