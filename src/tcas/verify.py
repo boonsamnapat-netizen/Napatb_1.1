@@ -18,10 +18,10 @@ from .config import load_config, load_programs, load_resources
 
 # แหล่งอ้างอิงจริงของแต่ละชนิดข้อมูล — เขียนไว้ที่เดียว จะได้ไม่กระจาย
 SOURCES = {
-    "exam": "https://www.mytcas.com  (ปฏิทิน TCAS) และประกาศ กสพท ปีการศึกษา 2570",
+    "exam": "https://www.mytcas.com  (ปฏิทินการสมัครสอบและปฏิทินการสอบ TCAS70)",
     "milestone": "https://www.mytcas.com  (ปฏิทินการรับสมัคร)",
-    "weights": "ประกาศ กสพท ปีการศึกษา 2570 — เอกสารเกณฑ์การคัดเลือก",
-    "minimum": "ประกาศ กสพท ปีการศึกษา 2570 — หัวข้อเกณฑ์คะแนนขั้นต่ำ",
+    "weights": "ประกาศ กสพท ฉบับที่ 1 — หลักเกณฑ์การคัดเลือก ข้อ 4 (https://cotmesadmission.com)",
+    "minimum": "ประกาศ กสพท ฉบับที่ 1 ข้อ 4 ช่องเงื่อนไข (https://cotmesadmission.com)",
     "cutoff": "ประกาศผลคะแนนต่ำสุด กสพท ย้อนหลัง (กสพท เผยแพร่หลังประกาศผลแต่ละปี)",
     "resource": "เปิดลิงก์แล้วดูว่ายังใช้ได้และเนื้อหาตรงกับวิชานั้นจริง",
 }
@@ -67,6 +67,21 @@ def _unverified(spec: Any) -> bool:
     return not bool((spec or {}).get("verified", False))
 
 
+def _stale(spec: Any, target_year: int | None) -> bool:
+    """ยืนยันแล้วจริง แต่เอกสารที่ใช้ยืนยันเป็นของปีอื่น.
+
+    เกณฑ์ กสพท นิ่งมาหลายปี แต่ กสพท มีสิทธิ์เปลี่ยนทุกปี การบอกว่า
+    "ยืนยันแล้ว" เฉย ๆ จึงยังไม่พอ — ต้องบอกด้วยว่ายืนยันกับประกาศปีไหน
+    """
+    year = (spec or {}).get("source_year")
+    return bool(target_year and year and int(year) != int(target_year))
+
+
+def _stale_note(spec: Any) -> str:
+    return (f' — ยืนยันกับประกาศปี {spec.get("source_year")} '
+            f'({spec.get("source", "ไม่ได้ระบุแหล่ง")})')
+
+
 def audit(
     cfg: Dict[str, Any] | None = None,
     programs: Dict[str, Any] | None = None,
@@ -77,6 +92,7 @@ def audit(
     resources = resources if resources is not None else load_resources()
 
     a = Audit()
+    target_year = cfg.get("target_year")
 
     # ── วันสอบ ──────────────────────────────────────────────────
     # ผิดแล้วเสียหายที่สุด เพราะทั้งตารางอ่านย้อนกลับมาจากวันสอบ
@@ -87,6 +103,12 @@ def audit(
             a.findings.append(Finding(
                 severity="critical", kind="exam", where=target, what=value,
                 why="ตารางอ่านทั้งหมดนับถอยหลังจากวันนี้ — เลื่อนไปหนึ่งเดือน แผนทั้งปีผิดหมด",
+            ))
+        elif _stale(spec, target_year):
+            a.findings.append(Finding(
+                severity="medium", kind="exam", where=target,
+                what=value + _stale_note(spec),
+                why="วันสอบของปีที่แล้วไม่ใช่วันสอบของปีนี้ ต้องเทียบกับปฏิทินปีปัจจุบัน",
             ))
         else:
             a.verified += 1
@@ -105,29 +127,47 @@ def audit(
 
     # ── สัดส่วนคะแนนและเกณฑ์ขั้นต่ำ ────────────────────────────
     k = cfg.get("kaspot") or {}
+    split = k.get("alevel_split") or {}
+    weights_value = (f'TPAT1 {k.get("tpat1_weight")}% + A-Level {k.get("alevel_weight")}% '
+                     f'(วิทย์ {split.get("science")} · คณิต {split.get("math1")} · '
+                     f'อังกฤษ {split.get("english")} · ไทย {split.get("thai")} · '
+                     f'สังคม {split.get("social")})')
     if _unverified(k):
-        split = k.get("alevel_split") or {}
         a.findings.append(Finding(
             severity="critical", kind="weights",
             where="config/tcas_config.yaml → kaspot.tpat1_weight / alevel_weight / alevel_split",
-            what=(f'TPAT1 {k.get("tpat1_weight")}% + A-Level {k.get("alevel_weight")}% '
-                  f'(วิทย์ {split.get("science")} · คณิต {split.get("math1")} · '
-                  f'อังกฤษ {split.get("english")} · ไทย {split.get("thai")} · '
-                  f'สังคม {split.get("social")})'),
+            what=weights_value,
             why="สัดส่วนนี้กำหนดว่าควรทุ่มเวลาให้วิชาไหน — ผิดแล้วอ่านผิดวิชาทั้งปี",
+        ))
+    elif _stale(k, target_year):
+        a.findings.append(Finding(
+            severity="medium", kind="weights",
+            where="config/tcas_config.yaml → kaspot",
+            what=weights_value + _stale_note(k),
+            why="กสพท เปลี่ยนสัดส่วนได้ทุกปี — ต้องเทียบกับประกาศฉบับที่ 1 ของปีนี้",
         ))
     else:
         a.verified += 1
 
     mins = k.get("minimums") or {}
+    # ตัดคีย์กำกับออก มันเป็นธง ไม่ใช่ค่าที่ต้องไปเทียบกับประกาศ
+    mins_value = ", ".join(
+        f"{key} = {'ไม่มีเกณฑ์' if val is None else val}"
+        for key, val in mins.items()
+        if key not in ("verified", "source", "source_year"))
     if mins and _unverified(mins):
         a.findings.append(Finding(
             severity="high", kind="minimum",
             where="config/tcas_config.yaml → kaspot.minimums",
-            # ตัดคีย์ verified ออก มันเป็นธงกำกับ ไม่ใช่ค่าที่ต้องไปเทียบ
-            what=", ".join(f"{key} = {val}" for key, val in mins.items()
-                           if key != "verified"),
+            what=mins_value,
             why="ตกเกณฑ์ขั้นต่ำคือคัดออกทันที ต่อให้คะแนนรวมสูงแค่ไหน",
+        ))
+    elif mins and _stale(mins, target_year):
+        a.findings.append(Finding(
+            severity="medium", kind="minimum",
+            where="config/tcas_config.yaml → kaspot.minimums",
+            what=mins_value + _stale_note(mins),
+            why="ตกเกณฑ์ขั้นต่ำคือคัดออกทันที — เกณฑ์ปีที่แล้วอาจไม่ใช่ของปีนี้",
         ))
     elif mins:
         a.verified += 1

@@ -2132,8 +2132,9 @@ function onboarding() {
     sel.value = onbDraft.target;
     sel.addEventListener("change", () => { onbDraft.target = sel.value; });
     b.appendChild(sel);
-    b.appendChild(el('<p class="tiny" style="margin:0">คะแนนต่ำสุดทุกคณะเป็น' +
-      "<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง</p>"));
+    b.appendChild(el('<p class="tiny" style="margin:0">คะแนนต่ำสุดเป็น' +
+      "<b>สถิติจริงของปีที่แล้ว</b> (TCAS ปีการศึกษา 2569 รอบ 3) " +
+      "ไม่ใช่เส้นตัดของปีที่กำลังจะสอบ — เปลี่ยนคณะทีหลังได้เสมอ</p>"));
     wrap.appendChild(onbShell(0, "อยากเข้าคณะไหน", "เพื่อให้รู้ว่าต้องไปให้ถึงกี่คะแนน", b));
     return wrap;
   }
@@ -2567,10 +2568,51 @@ function testRow(t) {
 
 let testFilter = "all";
 
+/* ตารางสอบ "ของจริง" — ถอดจากปฏิทินการสอบ TCAS70 ของ ทปอ.
+   ต้องแยกให้ขาดจากตารางทดสอบข้างล่าง ซึ่งเป็นของที่แอปจัดให้เองเพื่อซ้อมมือ
+   วันสอบจริงเปลี่ยนไม่ได้ ส่วนวันซ้อมเลื่อนได้ — ปนกันแล้วเสียหาย */
+function examTimetable() {
+  const sched = DATA.subjectExams || {};
+  const codes = Object.keys(sched).filter(c => SUBJ[c]);
+  if (!codes.length) return null;
+
+  const byDay = {};
+  codes.forEach(c => (byDay[sched[c].date] = byDay[sched[c].date] || []).push(c));
+
+  const card = el('<div class="card card-pad"></div>');
+  card.appendChild(el('<div class="section-title"><h2>ตารางสอบจริง</h2></div>'));
+  card.appendChild(el('<p class="tiny" style="margin:-6px 0 10px">จากปฏิทินการสอบ ' +
+    "TCAS70 ของ ทปอ. — นี่คือวันสอบจริง ไม่ใช่ตารางซ้อมด้านล่าง</p>"));
+
+  Object.keys(byDay).sort().forEach(day => {
+    const left = daysBetween(TODAY, day);
+    card.appendChild(el('<div style="display:flex;align-items:baseline;gap:8px;' +
+      'margin:10px 0 4px"><b style="font-size:13.5px">' + esc(thaiDate(day, true)) +
+      '</b><span class="tiny">' +
+      (left > 0 ? "อีก " + left + " วัน" : left === 0 ? "วันนี้" : "ผ่านไปแล้ว") +
+      "</span></div>"));
+
+    byDay[day]
+      .sort((a, b) => String(sched[a].time || "").localeCompare(String(sched[b].time || "")))
+      .forEach(c => card.appendChild(el(
+        '<div class="wrow" data-s="' + esc(c) + '" style="padding:3px 0">' +
+          '<span class="wrow-l" style="display:flex;align-items:center;gap:8px">' +
+            '<i style="width:9px;height:9px;border-radius:50%;flex:none;' +
+              'background:var(--sc,var(--line))"></i>' + esc(SUBJ[c].name) + "</span>" +
+          '<span class="wrow-n num" style="min-width:92px">' +
+            esc(sched[c].time || "") + "</span>" +
+        "</div>")));
+  });
+  return card;
+}
+
 function viewTests() {
   const root = $("#v-tests");
   root.innerHTML = "";
   const wrap = el('<div class="stack"></div>');
+
+  const tt = examTimetable();
+  if (tt) wrap.appendChild(tt);
 
   wrap.appendChild(el(
     '<div class="card card-pad">' +
@@ -2826,7 +2868,8 @@ function viewQuiz() {
 
    สูตรเดียวกับ src/tcas/scoring.py เป๊ะ ๆ เพื่อให้ CLI กับแอปตอบตรงกัน
    น้ำหนักและเกณฑ์ขั้นต่ำมาจาก config ที่ฝังมาตอน build ไม่ได้ฮาร์ดโค้ดที่นี่
-   (ทั้งสองค่ายัง verified: false อยู่ — หน้าจอจึงต้องบอกไว้เสมอ)
+   ทั้งสองค่าถอดจากประกาศ กสพท ฉบับที่ 1 ปีการศึกษา 2569 ข้อ 4 — เป็นของจริง
+   แต่เป็นของ*ปีที่แล้ว* (ประกาศปี 2570 ยังไม่ออก) หน้าจอจึงยังต้องกำกับไว้
    ───────────────────────────────────────────────────────────── */
 const W = DATA.weights || {};
 const GROUP_LABEL = DATA.groupLabels || {};
@@ -2870,19 +2913,42 @@ function scoreCard(scores) {
     breakdown.push({ group: g, pct, weight, weighted, filled: g in pcts });
   }
 
-  // เกณฑ์ขั้นต่ำ: ตกข้อเดียวคือคัดออก ต่อให้คะแนนรวมสูงแค่ไหน
-  const failures = [];
-  const tpatMin = Number(MINS.tpat1_pct != null ? MINS.tpat1_pct : 30);
-  const eachMin = Number(MINS.alevel_each_group_pct != null ? MINS.alevel_each_group_pct : 30);
-  const engMin = Number(MINS.english_pct != null ? MINS.english_pct : eachMin);
-  for (const [g, pct] of Object.entries(pcts)) {
-    const floor = g === "tpat1" ? tpatMin : g === "english" ? engMin : eachMin;
-    if (pct < floor)
-      failures.push((GROUP_LABEL[g] || g) + " ได้ " + pct.toFixed(1) +
-                    "% ต่ำกว่าเกณฑ์ " + floor.toFixed(0) + "%");
-  }
+  return {
+    total, breakdown,
+    failures: checkMinimums(scores),
+    missing: missingSubjects(scores),
+  };
+}
 
-  return { total, breakdown, failures, missing: missingSubjects(scores) };
+/* เกณฑ์ขั้นต่ำของวิชานี้ (%) — null = ประกาศไม่ได้กำหนดเกณฑ์ไว้
+   ลอกตรรกะจาก scoring.minimum_floor() ใน src/tcas/scoring.py */
+function minimumFloor(code) {
+  const subj = SUBJ[code];
+  if (!subj) return null;
+  let floor;
+  if (subj.group === "tpat1") floor = MINS.tpat1_pct;
+  else if (subj.group === "english" && MINS.english_pct != null) floor = MINS.english_pct;
+  else floor = MINS.alevel_each_subject_pct != null
+    ? MINS.alevel_each_subject_pct
+    : MINS.alevel_each_group_pct;   // รองรับ config รุ่นก่อน
+  return floor == null ? null : Number(floor);
+}
+
+/* ประกาศ กสพท เขียนว่า "ไม่น้อยกว่า 30% ของคะแนนเต็ม**ในแต่ละวิชา**"
+   คำว่า *แต่ละวิชา* คือหัวใจ: ฟิสิกส์ 20 / เคมี 40 / ชีวะ 40 เฉลี่ยกลุ่มได้ 33%
+   ถ้าเช็คที่ระดับกลุ่มจะขึ้นว่าผ่าน ทั้งที่ความจริงตกเพราะฟิสิกส์ไม่ถึง 30 */
+function checkMinimums(scores) {
+  const out = [];
+  Object.keys(SUBJ).forEach(code => {
+    if (scores[code] === "" || scores[code] == null) return;
+    const floor = minimumFloor(code);
+    if (floor == null) return;
+    const pct = toPercent(code, scores[code]);
+    if (pct < floor)
+      out.push((SUBJ[code].name || code) + " ได้ " + pct.toFixed(1) +
+               "% ต่ำกว่าเกณฑ์ " + floor.toFixed(0) + "%");
+  });
+  return out;
 }
 
 /* ต้องทำ % เท่าไรในวิชาที่ยังไม่ได้กรอก จึงจะไปถึงเป้า
@@ -3092,12 +3158,17 @@ function scorePanel() {
       "</div>"));
   });
 
+  body.appendChild(el('<p class="tiny" style="margin:0">น้ำหนัก TPAT1 30 · วิทย์ 28 · ' +
+    "คณิต 1 14 · อังกฤษ 14 · ไทย 7 · สังคม 7 — จากประกาศ กสพท ฉบับที่ 1 " +
+    "<b>ปีการศึกษา 2569</b> ข้อ 4 (ของปี 2570 ยังไม่ประกาศ)</p>"));
+
   /* ---- ตกเกณฑ์ขั้นต่ำหรือยัง — สำคัญกว่าคะแนนรวม */
   if (sc.failures.length) {
     body.appendChild(el('<div class="note" style="border-color:var(--brick);' +
       'background:var(--brick-dim)"><b>ตกเกณฑ์ขั้นต่ำ</b><br>' +
       sc.failures.map(esc).join("<br>") +
-      "<br><br>ตกเกณฑ์แม้ข้อเดียวคือคัดออกทันที ไม่ว่าคะแนนรวมจะสูงแค่ไหน</div>"));
+      "<br><br>ประกาศกำหนดว่า A-Level ต้องได้ไม่น้อยกว่า 30% ของคะแนนเต็ม" +
+      "<b>ในแต่ละวิชา</b> ตกวิชาเดียวคือคัดออกทันที ไม่ว่าคะแนนรวมจะสูงแค่ไหน</div>"));
   }
 
   /* ---- ที่เหลือต้องทำได้เท่าไร */
@@ -3690,6 +3761,13 @@ function icsEvent(o) {
 
 /* สร้างปฏิทินจากตารางที่ buildPlan คำนวณสด — ไม่ใช่ตารางที่ build ไว้ตอน export
    ผู้ใช้จึงได้ตารางที่ปรับตามงานค้างจริงเสมอ */
+/* "08.30-10.00" -> [8, 30, 10, 0] · คืน [null,...] ถ้ารูปแบบไม่ตรง
+   ปฏิทินใช้จุดคั่นแบบไทย ไม่ใช่ทวิภาค จึงรับทั้งสองแบบไว้ */
+function parseSlot(s) {
+  const m = String(s || "").match(/(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})/);
+  return m ? [+m[1], +m[2], +m[3], +m[4]] : [null, null, null, null];
+}
+
 function buildICS(nDays, startHour, opts) {
   const o = opts || {};
   const L = ["BEGIN:VCALENDAR", "VERSION:2.0",
@@ -3733,6 +3811,36 @@ function buildICS(nDays, startHour, opts) {
       allDay: true, date: e.date,
       summary: "สอบ: " + e.name + (e.verified ? "" : " (วันสอบยังไม่ยืนยัน)"),
       desc: e.verified ? "" : "วันสอบนี้เป็นค่าประมาณ ตรวจกับ mytcas.com ก่อนเสมอ",
+      alarms: ["-P7D", "-P1D"],
+    })));
+
+    /* วิชาที่สอบวันไหนกี่โมง — ลงเป็นอีเวนต์ตามเวลาจริง ไม่ใช่ all-day
+       เพราะสิ่งที่ต้องรู้เช้าวันสอบคือ "ห้องเปิดกี่โมง" ไม่ใช่ "วันนี้มีสอบ" */
+    Object.entries(DATA.subjectExams || {}).forEach(([code, sp]) => {
+      if (!SUBJ[code] || sp.date < TODAY) return;
+      const [h1, m1, h2, m2] = parseSlot(sp.time);
+      L.push(...icsEvent(h1 == null ? {
+        uid: ICS_PREFIX + "s-" + sp.date + "-" + code + "@tcas70",
+        allDay: true, date: sp.date, summary: "สอบ " + SUBJ[code].name, alarms: ["-P1D"],
+      } : {
+        uid: ICS_PREFIX + "s-" + sp.date + "-" + code + "@tcas70",
+        start: icsLocal(sp.date, h1, m1),
+        end: icsLocal(sp.date, h2, m2),
+        summary: "สอบ " + SUBJ[code].name,
+        desc: "ตารางสอบ TCAS70 · " + sp.time + " น.",
+        alarms: ["-P1D", "-PT90M"],
+      }));
+    });
+  }
+
+  /* หมุดหมายการสมัคร — พลาดวันสมัครคือจบเกม ไม่มีรอบแก้ตัว
+     จึงเตือนล่วงหน้าถึงสองครั้ง และกำกับไว้ถ้าวันนั้นยังเป็นการคาดการณ์ */
+  if (o.milestones !== false) {
+    (DATA.milestones || []).filter(m => m.date >= TODAY).forEach((m, i) => L.push(...icsEvent({
+      uid: ICS_PREFIX + "m-" + m.date + "-" + i + "@tcas70",
+      allDay: true, date: m.date,
+      summary: "TCAS: " + m.label,
+      desc: m.verified === false ? "วันนี้ยังเป็นการคาดการณ์ — ตรวจกับ mytcas.com" : "",
       alarms: ["-P7D", "-P1D"],
     })));
   }
@@ -4175,11 +4283,14 @@ function viewSettings() {
   const calAll = el('<button class="btn btn-pri btn-sm">ดาวน์โหลดปฏิทิน</button>');
   calAll.addEventListener("click", () => downloadICS(calCfg.days, calCfg.startHour, {}));
   calBtns.appendChild(calAll);
-  const calExam = el('<button class="btn btn-sm">เอาเฉพาะวันสอบ</button>');
+  const calExam = el('<button class="btn btn-sm">เอาเฉพาะวันสอบ + วันสมัคร</button>');
   calExam.addEventListener("click", () =>
     downloadICS(calCfg.days, calCfg.startHour, { blocks: false, tests: false }));
   calBtns.appendChild(calExam);
   cal.appendChild(calBtns);
+  cal.appendChild(el('<p class="tiny" style="margin:2px 0 0">ปุ่มที่สองใส่เฉพาะ' +
+    "<b>วันสอบจริงรายวิชา</b> (พร้อมเวลาเข้าห้อง) และ<b>วันสมัคร/พิมพ์บัตร/ประกาศผล</b> " +
+    "ตามปฏิทิน TCAS70 — ไม่มีตารางอ่านมาปน เหมาะกับปฏิทินที่ใช้ร่วมกับคนอื่น</p>"));
 
   cal.appendChild(el('<p class="tiny" style="margin:2px 0 0"><b>iPhone:</b> กดปุ่มแล้วเลือก ' +
     '“เพิ่มทั้งหมด” · <b>Android:</b> เปิด Google Calendar → ตั้งค่า → นำเข้า แล้วเลือกไฟล์นี้</p>'));
@@ -4362,8 +4473,9 @@ $("#foot").innerHTML =
   "<b>คะแนนต่ำสุดของคณะ</b> เป็นสถิติจริงจากประกาศ TCAS ปีการศึกษา 2569 รอบ 3 " +
   "ประมวลผลครั้งที่ 1 — เป็นตัวเลขของปีที่แล้ว ไม่ใช่เส้นตัดของปี 2570 ที่กำลังจะสอบ " +
   "และบางคณะยังไม่มีข้อมูล<br>" +
-  "<b>วันสอบและเกณฑ์ กสพท</b> ยังเป็น<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง — " +
-  "ก่อนใช้ตัดสินใจต้องตรวจกับ mytcas.com และประกาศ กสพท ปีการศึกษา 2570</p>" +
+  "<b>วันสอบ</b> ถอดจากปฏิทินการสอบ TCAS70 ของ ทปอ. ที่ประกาศแล้ว<br>" +
+  "<b>สัดส่วนคะแนนและเกณฑ์ขั้นต่ำ</b> ถอดจากประกาศ กสพท ฉบับที่ 1 <b>ปีการศึกษา 2569</b> — " +
+  "ประกาศของปี 2570 ยังไม่ออก เกณฑ์ชุดนี้นิ่งมาหลายปีแต่ กสพท เปลี่ยนได้ทุกปี</p>" +
   '<p class="tiny" style="margin-top:6px;font-size:11px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
   " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
   " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";

@@ -64,6 +64,48 @@ def missing_subjects(raw_scores: Dict[str, float]) -> List[str]:
     return [c for c in syllabus.SUBJECTS if c not in raw_scores]
 
 
+def minimum_floor(cfg: Dict[str, Any], subject_code: str) -> Optional[float]:
+    """เกณฑ์ขั้นต่ำ (%) ของวิชานี้ — None = ประกาศไม่ได้กำหนดเกณฑ์ไว้.
+
+    ประกาศ กสพท เขียนว่า "ต้องได้คะแนนไม่น้อยกว่า 30% ของคะแนนเต็ม**ในแต่ละวิชา**"
+    คำว่า *แต่ละวิชา* คือหัวใจ: ฟิสิกส์ 20 / เคมี 40 / ชีวะ 40 เฉลี่ยกลุ่มได้ 33%
+    ถ้าเช็คที่ระดับกลุ่มจะขึ้นว่าผ่าน ทั้งที่ความจริงตกเพราะฟิสิกส์ไม่ถึง 30
+    """
+    mins = (cfg.get("kaspot") or {}).get("minimums") or {}
+    subj = syllabus.SUBJECTS.get(subject_code)
+    if subj is None:
+        return None
+    if subj.group == "tpat1":
+        floor = mins.get("tpat1_pct")
+    elif subj.group == "english" and mins.get("english_pct") is not None:
+        floor = mins.get("english_pct")
+    else:
+        # รองรับคีย์เดิม (`alevel_each_group_pct`) ของ config รุ่นก่อน
+        floor = mins.get("alevel_each_subject_pct",
+                         mins.get("alevel_each_group_pct"))
+    return None if floor is None else float(floor)
+
+
+def check_minimums(cfg: Dict[str, Any], raw_scores: Dict[str, float]) -> List[str]:
+    """รายการวิชาที่ตกเกณฑ์ขั้นต่ำ — ตกข้อเดียวคือถูกคัดออกทันที.
+
+    เช็ครายวิชา ไม่ใช่รายกลุ่ม และเช็คเฉพาะวิชาที่กรอกคะแนนมาแล้ว
+    (วิชาที่ยังไม่สอบไม่ควรถูกนับว่า "ตก" ทั้งที่ยังไม่มีคะแนน)
+    """
+    failures: List[str] = []
+    for code in syllabus.SUBJECTS:
+        if code not in raw_scores:
+            continue
+        floor = minimum_floor(cfg, code)
+        if floor is None:
+            continue
+        pct = to_percent(code, raw_scores[code])
+        if pct < floor:
+            name = syllabus.get_subject(code).name
+            failures.append(f"{name} ได้ {pct:.1f}% ต่ำกว่าเกณฑ์ {floor:.0f}%")
+    return failures
+
+
 def compute(cfg: Dict[str, Any], raw_scores: Dict[str, float]) -> ScoreCard:
     """คำนวณคะแนนรวม กสพท จากคะแนนดิบที่มี.
 
@@ -81,26 +123,8 @@ def compute(cfg: Dict[str, Any], raw_scores: Dict[str, float]) -> ScoreCard:
         total += weighted
         breakdown[group] = (round(pct, 2), round(weighted, 2))
 
-    # ---------------------------------------------------- เกณฑ์ขั้นต่ำ
-    failures: List[str] = []
+    failures = check_minimums(cfg, raw_scores)
     missing = missing_subjects(raw_scores)
-
-    tpat1_min = float(mins.get("tpat1_pct", 30.0))
-    if "tpat1" in pcts and pcts["tpat1"] < tpat1_min:
-        failures.append(
-            f"TPAT1 ได้ {pcts['tpat1']:.1f}% ต่ำกว่าเกณฑ์ {tpat1_min:.0f}%"
-        )
-
-    each_min = float(mins.get("alevel_each_group_pct", 30.0))
-    eng_min = float(mins.get("english_pct", each_min))
-    for group, pct in pcts.items():
-        if group == "tpat1":
-            continue
-        floor = eng_min if group == "english" else each_min
-        if pct < floor:
-            failures.append(
-                f"{GROUP_LABELS.get(group, group)} ได้ {pct:.1f}% ต่ำกว่าเกณฑ์ {floor:.0f}%"
-            )
 
     return ScoreCard(
         total=round(total, 2),

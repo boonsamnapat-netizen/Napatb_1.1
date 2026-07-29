@@ -83,6 +83,20 @@ def exam_dates(cfg: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     return dict(sorted(out.items(), key=lambda kv: kv[1]["date"]))
 
 
+def subject_schedule(cfg: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """ตารางสอบรายวิชา {code: {date, time}} — ว่างได้ถ้า config ไม่ได้ระบุ.
+
+    A-Level กระจายอยู่หลายวัน การรู้ว่าวิชาไหนสอบวันไหนทำให้เส้นตายของ
+    planner แม่นขึ้น และผู้ใช้เห็นได้ว่าต้องพร้อมอะไรก่อน
+    """
+    out: Dict[str, Dict[str, Any]] = {}
+    for code, spec in (cfg.get("subject_schedule") or {}).items():
+        if not spec or not spec.get("date"):
+            continue
+        out[code] = {"date": parse_date(spec["date"]), "time": spec.get("time")}
+    return out
+
+
 def next_exam(
     cfg: Dict[str, Any], ref: date | None = None, counting_only: bool = False
 ) -> Dict[str, Any] | None:

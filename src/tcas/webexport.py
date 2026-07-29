@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from . import icons, planner, ranking, scoring, syllabus, testplan, verify
-from .config import REPO_ROOT, exam_dates, parse_date, resolve_path
+from .config import REPO_ROOT, exam_dates, parse_date, resolve_path, subject_schedule
 from .models import StudyDay
 
 # ตัวคั่นกินค่า null ที่ตามมาด้วย เพื่อให้ผลลัพธ์เป็น `const DATA = {...};`
@@ -113,12 +113,22 @@ def build_payload(
     ]
 
     # เส้นตายของแต่ละวิชา — ใช้ให้เบราว์เซอร์คำนวณความเร่งด่วนเองได้
+    # ตารางสอบรายวิชา (ถ้ามี) ชนะวันสอบรวมของสนามเสมอ เพราะ A-Level กระจาย
+    # หลายวัน — ชีวะสอบเช้าวันแรก ส่วนเคมีสอบบ่ายวันถัดไป คนละเส้นตายกัน
+    sched = subject_schedule(cfg)
     tpat1_day = exam_specs.get("tpat1", {}).get("date")
     alevel_day = exam_specs.get("alevel", {}).get("date")
-    deadlines = {
-        code: (tpat1_day if subj.exam == "tpat1" else alevel_day).isoformat()
-        for code, subj in syllabus.SUBJECTS.items()
-        if (tpat1_day if subj.exam == "tpat1" else alevel_day)
+    deadlines = {}
+    for code, subj in syllabus.SUBJECTS.items():
+        day = (sched.get(code) or {}).get("date") or (
+            tpat1_day if subj.exam == "tpat1" else alevel_day)
+        if day:
+            deadlines[code] = day.isoformat()
+
+    subject_exams = {
+        code: {"date": spec["date"].isoformat(), "time": spec.get("time")}
+        for code, spec in sched.items()
+        if code in syllabus.SUBJECTS
     }
 
     # config การวางแผน — เบราว์เซอร์ใช้จัดตารางใหม่จากสิ่งที่ยังไม่ได้ทำจริง
@@ -168,6 +178,7 @@ def build_payload(
         "startDate": start.isoformat(),
         "student": cfg.get("student") or {},
         "exams": exams,
+        "subjectExams": subject_exams,
         "study": study,
         "milestones": milestones,
         "weights": scoring.group_weights(cfg),
