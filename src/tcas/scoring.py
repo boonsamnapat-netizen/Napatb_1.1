@@ -142,25 +142,32 @@ def required_percent(
 ) -> Optional[float]:
     """ต้องทำ % เท่าไรในวิชาที่ยังไม่ได้กรอก จึงจะไปถึงคะแนนรวมเป้าหมาย.
 
-    สมมติว่าทุกวิชาที่เหลือทำได้ % เท่ากันหมด
+    สมมติว่าทุกวิชาที่เหลือทำได้ % เท่ากันหมด (เรียกว่า x) แล้วแก้สมการ
+
+        คะแนนกลุ่ม = (ผลรวม % ของวิชาที่กรอกแล้ว + m·x) / n   (n = วิชาทั้งหมดในกลุ่ม)
+        คะแนนรวม   = Σ w·S/(100n)  +  x · Σ w·m/(100n)
+
+    จุดที่เคยพลาด: เอา `group_percents()` ซึ่งเฉลี่ย *เฉพาะวิชาที่กรอก* มาเป็น
+    คะแนนกลุ่ม เท่ากับให้เครดิตน้ำหนักเต็มของกลุ่มไปแล้ว แต่ยังนับว่ากลุ่มนั้น
+    ว่างอยู่อีก — กรอกชีวะ 80 วิชาเดียวถูกคิดเหมือนได้ 80 ทั้งกลุ่มวิทย์
+    ผลคือตัวเลขที่ตอบต่ำกว่าความจริงมาก (เคสจริง: ตอบ 37% ทั้งที่ต้องได้ 62%)
+
     คืน None ถ้ากรอกครบแล้ว, คืน >100 ถ้าเป็นไปไม่ได้แล้ว (ผู้เรียกควรเตือน)
     """
     weights = group_weights(cfg)
-    pcts = group_percents(raw_scores)
-    missing = missing_subjects(raw_scores)
-    if not missing:
+    if not missing_subjects(raw_scores):
         return None
 
-    have = sum(weights.get(g, 0.0) * p / 100.0 for g, p in pcts.items())
-
-    # น้ำหนักที่ยังว่างอยู่ — กลุ่มวิทย์คิดตามสัดส่วนวิชาที่ยังขาดในกลุ่ม
+    have = 0.0
     open_weight = 0.0
     for group, weight in weights.items():
         subject_codes = syllabus.GROUPS.get(group, [])
         if not subject_codes:
             continue
-        n_missing = sum(1 for c in subject_codes if c in missing)
-        open_weight += weight * n_missing / len(subject_codes)
+        filled = [c for c in subject_codes if c in raw_scores]
+        got = sum(to_percent(c, raw_scores[c]) for c in filled)
+        have += weight * got / (100.0 * len(subject_codes))
+        open_weight += weight * (len(subject_codes) - len(filled)) / len(subject_codes)
 
     if open_weight <= 0:
         return None

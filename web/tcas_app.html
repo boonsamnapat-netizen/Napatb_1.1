@@ -934,6 +934,33 @@ main { padding-top: 26px; }
 }
 .prow-b { font-size: 11px; color: var(--text-3); white-space: nowrap; }
 
+/* เส้นเป้าหมายรายวิชา — สามคอลัมน์ตายตัว เพื่อให้กวาดสายตาลงตรง ๆ ได้ */
+.tline {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+}
+.tline:last-child { border-bottom: 0; }
+.tline-n { flex: 1; min-width: 0; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.tline-n::before {
+  content: ""; width: 4px; height: 17px; border-radius: 2px; flex: none;
+  background: var(--sc, var(--line));
+}
+.tline-v {
+  flex: none; min-width: 62px; text-align: right;
+  font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700;
+  letter-spacing: -.02em;
+}
+.tline-v small { font-size: 11px; font-weight: 500; color: var(--text-3); }
+.tline-r {
+  flex: none; min-width: 78px; text-align: right;
+  font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--text-3);
+}
+.tline.done .tline-v { color: var(--ok); }
+.tline.under .tline-v { color: var(--brick); }
+.tline-hd { font-size: 11px; color: var(--text-3); letter-spacing: .02em; }
+/* หัวตารางไม่ใช่วิชา จึงไม่ควรมีแถบสีนำหน้าเหมือนแถวข้อมูล */
+.tline-hd::before { display: none; }
+
 /* ═══════════════════════════════════════════════════════════════
    PROGRESS RING — วาดตัวเองตอนโผล่ ไม่ใช่ขึ้นมาเต็มวงเลย
    ═══════════════════════════════════════════════════════════════ */
@@ -2956,25 +2983,40 @@ function checkMinimums(scores) {
 function requiredPercent(scores, targetTotal) {
   const missing = missingSubjects(scores);
   if (!missing.length) return null;
-  const pcts = groupPercents(scores);
-  let have = 0;
-  for (const [g, w] of Object.entries(W)) have += w * (pcts[g] || 0) / 100;
 
-  // น้ำหนักที่ยังเปิดอยู่: กลุ่มที่ยังไม่มีคะแนนเลย + ส่วนที่ขาดของกลุ่มวิทย์
-  let openWeight = 0;
+  /* ให้วิชาที่เหลือได้ x% เท่ากันหมด แล้วแก้สมการหา x
+       คะแนนกลุ่ม = (ผลรวม % ของวิชาที่กรอกแล้ว + m·x) / n     (n = วิชาทั้งหมดในกลุ่ม)
+       คะแนนรวม  = Σ w·S/(100n)  +  x · Σ w·m/(100n)
+
+     จุดที่เคยพลาด: เอา "ค่าเฉลี่ยของเฉพาะวิชาที่กรอก" มาเป็นคะแนนกลุ่ม
+     เท่ากับให้เครดิตน้ำหนักเต็มของกลุ่มไปแล้ว แต่ยังนับว่ากลุ่มนั้นว่างอยู่อีก
+     กรอกชีวะ 80 วิชาเดียวจึงถูกคิดเหมือนได้ 80 ทั้งกลุ่มวิทย์ ตัวเลขที่ตอบ
+     ออกมาเลยต่ำกว่าความจริงมาก (เคสจริง: ตอบ 37% ทั้งที่ต้องได้ 62%) */
+  let have = 0, openWeight = 0;
   for (const [g, w] of Object.entries(W)) {
     const inGroup = Object.keys(SUBJ).filter(c => SUBJ[c].group === g);
-    const done = inGroup.filter(c => scores[c] !== "" && scores[c] != null).length;
-    openWeight += w * (inGroup.length - done) / inGroup.length;
+    if (!inGroup.length) continue;
+    let sum = 0, miss = 0;
+    inGroup.forEach(c => {
+      if (scores[c] === "" || scores[c] == null) miss++;
+      else sum += toPercent(c, scores[c]);
+    });
+    have += w * sum / (100 * inGroup.length);
+    openWeight += w * miss / inGroup.length;
   }
   if (openWeight <= 0) return null;
   return 100 * (targetTotal - have) / openWeight;
 }
 
+/* คณะเป้าหมาย — สตริงว่างแปลว่า "ผู้ใช้เลือกยังไม่เลือกเอง" ไม่ใช่ "ไม่มีค่า"
+   ถ้าใช้ || ธรรมดา ค่าว่างจะตกกลับไปใช้คณะตั้งต้นใน config ทันที
+   ผลคือกด "— ยังไม่เลือก —" แล้วเด้งกลับเป็นคณะเดิมทุกครั้ง เหมือนปุ่มเสีย */
 const targetProgram = () => {
-  const code = (S.settings || {}).targetProgram ||
-               ((DATA.student || {}).target_program);
-  return (DATA.programs || []).find(p => p.code === code) || null;
+  const s = S.settings || {};
+  const code = s.targetProgram != null
+    ? s.targetProgram
+    : (DATA.student || {}).target_program;
+  return code ? ((DATA.programs || []).find(p => p.code === code) || null) : null;
 };
 
 /* คะแนนที่ต้องไปให้ถึง — ค่าที่ผู้ใช้ตั้งเองชนะค่าที่มากับตัวแอปเสมอ
@@ -3105,14 +3147,24 @@ function scorePanel() {
     manualRow.appendChild(manual);
     manualRow.appendChild(el('<span class="tiny">/ 100</span>'));
     body.appendChild(manualRow);
-    body.appendChild(el('<p class="tiny" style="margin:0">คณะที่ขึ้นว่า ' +
-      '"ยังไม่มีคะแนน" คือยังไม่ได้ใส่คะแนนต่ำสุดย้อนหลังไว้ในระบบ — ' +
-      "ไปดูจากประกาศ กสพท แล้วกรอกช่องบนนี้ได้เลย</p>"));
+    body.appendChild(el('<p class="tiny" style="margin:0">ตั้งคะแนนรวมที่อยากได้ตรงนี้' +
+      "ก็พอ ไม่ต้องเลือกคณะ — ระบบจะไล่ให้ดูว่าคะแนนเท่านี้ติดที่ไหนได้บ้าง " +
+      "และแต่ละวิชาต้องทำได้ประมาณเท่าไร</p>"));
   }
 
   /* ---- ช่องกรอกคะแนนรายวิชา */
-  body.appendChild(el('<div class="section-title" style="margin-top:4px">' +
-    "<h2>คะแนนที่สอบได้</h2></div>"));
+  const sHead = el('<div class="section-title" style="margin-top:4px">' +
+    "<h2>คะแนนที่สอบได้</h2></div>");
+  if (filled.length) {
+    const clr = el('<button class="btn btn-sm" style="margin-left:auto">ล้างคะแนน</button>');
+    clr.addEventListener("click", () => {
+      if (!confirm("ล้างคะแนนที่กรอกไว้ทั้ง " + filled.length + " วิชา?")) return;
+      S.scores = {};
+      Store.save(); render();
+    });
+    sHead.appendChild(clr);
+  }
+  body.appendChild(sHead);
   body.appendChild(el('<p class="tiny" style="margin:-8px 0 0">กรอกเท่าที่สอบไปแล้ว ' +
     "วิชาที่ยังไม่ได้สอบเว้นว่างไว้ ระบบจะคิดให้ว่าที่เหลือต้องทำได้กี่เปอร์เซ็นต์</p>"));
 
@@ -3248,21 +3300,30 @@ const assumedPercent = () => {
   return v == null || v === "" ? avgFilledPercent() : Number(v);
 };
 
-/* คะแนนรวมที่เอาไปเทียบกับคณะต่าง ๆ
-   กรอกครบ  -> คะแนนจริง
-   ยังไม่ครบ -> เติมวิชาที่ว่างด้วย % ที่สมมติไว้ แล้วคิดใหม่ทั้งก้อน
-   ต้องเติมกลับเป็น "คะแนนดิบ" ไม่ใช่บวก % เข้าไปตรง ๆ เพราะกลุ่มวิทยาศาสตร์
+/* คะแนนรวมที่เอาไปเทียบกับคณะต่าง ๆ พร้อมบอกว่ามาจากไหน (mode)
+   real    = กรอกครบแล้ว เป็นคะแนนจริง
+   partial = กรอกบางส่วน เติมที่เหลือด้วย % ที่สมมติไว้ แล้วคิดใหม่ทั้งก้อน
+   goal    = ยังไม่กรอกเลย แต่ตั้งคะแนนรวมเป้าหมายไว้ — ตอบว่า "ถ้าได้เท่านี้ ติดที่ไหน"
+
+   ที่ต้องเติมกลับเป็น "คะแนนดิบ" ไม่ใช่บวก % เข้าไปตรง ๆ เพราะกลุ่มวิทยาศาสตร์
    เฉลี่ยจากสามวิชา การเติมทีละวิชาจึงไม่ได้ขยับคะแนนกลุ่มเป็นเส้นตรง */
-function assessedScore() {
+function assessment() {
   const scores = myScores();
-  if (!filledSubjects(scores).length) return null;
+  const filled = filledSubjects(scores);
   const gaps = missingSubjects(scores);
-  if (!gaps.length) return scoreCard(scores).total;
+
+  // ยังไม่กรอกอะไรเลย แต่ตั้งคะแนนเป้าหมายไว้ -> ตอบคำถาม "ถ้าได้เท่านี้ ติดที่ไหน"
+  if (!filled.length) {
+    const goal = targetScore();
+    return goal == null ? null : { score: goal, mode: "goal" };
+  }
+  if (!gaps.length) return { score: scoreCard(scores).total, mode: "real" };
+
   const pct = assumedPercent();
   if (pct == null) return null;
   const filledIn = Object.assign({}, scores);
   gaps.forEach(c => { filledIn[c] = (SUBJ[c].maxScore || 0) * pct / 100; });
-  return scoreCard(filledIn).total;
+  return { score: scoreCard(filledIn).total, mode: "partial", pct: pct, gaps: gaps.length };
 }
 
 const watchList = () => ((S.settings || {}).watch || []).slice();
@@ -3333,28 +3394,38 @@ function chancePanel() {
   if (!all.length) return card;
 
   const scores = myScores();
-  const filled = filledSubjects(scores);
-  if (!filled.length) {
-    card.appendChild(el('<p class="tiny" style="margin:0">กรอกคะแนนที่สอบได้ในการ์ดด้านบนก่อน ' +
-      "แล้วตรงนี้จะไล่ให้ดูทีละคณะว่าคะแนนชุดนั้นไปถึงไหนแล้วบ้าง — " +
-      "ยังไม่ครบทุกวิชาก็ดูได้ ระบบจะเดาที่เหลือให้จากค่าเฉลี่ยที่ทำได้</p>"));
+  const A = assessment();
+  if (!A) {
+    card.appendChild(el('<p class="tiny" style="margin:0">ทำได้สองทาง — ' +
+      "<b>กรอกคะแนนที่สอบได้</b>ในการ์ดด้านบน หรือถ้ายังไม่ได้สอบ " +
+      "<b>ใส่คะแนนรวมเป้าหมาย</b>ที่อยากได้ก็พอ แล้วตรงนี้จะไล่ให้ดูทีละคณะ" +
+      "ว่าคะแนนเท่านั้นไปถึงไหนบ้าง</p>"));
     return card;
   }
 
   const gaps = missingSubjects(scores);
-  const score = assessedScore();
+  const score = A.score;
   const sc = scoreCard(scores);
 
-  /* ---- ประโยคเดียวที่ตอบคำถามหัวข้อ */
+  /* ---- ประโยคเดียวที่ตอบคำถามหัวข้อ
+     ต้องบอกด้วยว่าคะแนนที่ใช้เทียบมาจากไหน ไม่งั้น "ผ่าน 34 คณะ" จากคะแนน
+     ที่ยังไม่ได้สอบเลย จะอ่านเหมือนเป็นผลจริง */
   const passed = withData.filter(p => score >= p.projected).length;
+  const lead = A.mode === "goal" ? "ถ้าทำได้ตามเป้า"
+    : A.mode === "partial" ? "ด้วยคะแนนที่ประเมินได้"
+    : "ด้วยคะแนน";
   card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
-    "ด้วยคะแนน <b class=\"num\">" + score.toFixed(2) + "</b> ผ่านคะแนนต่ำสุดของปีที่แล้ว " +
-    '<b class="num">' + passed + "</b> จาก " + withData.length + " คณะที่มีข้อมูล</p>"));
+    lead + ' <b class="num">' + score.toFixed(2) + "</b> ผ่านคะแนนต่ำสุดของปีที่แล้ว " +
+    '<b class="num">' + passed + "</b> จาก " + withData.length + " คณะที่มีข้อมูล</p>" ));
+  if (A.mode === "goal")
+    card.appendChild(el('<p class="tiny" style="margin:0">มาจาก<b>คะแนนเป้าหมาย' +
+      "ที่ตั้งไว้</b> ยังไม่ได้กรอกคะแนนสอบจริงสักวิชา — " +
+      "กรอกเมื่อไรตัวเลขนี้จะเปลี่ยนเป็นของจริงเอง</p>"));
 
   /* ---- สมมติฐานของวิชาที่ยังไม่ได้สอบ
      ถ้าไม่เปิดให้ปรับ ตัวเลขข้างบนจะเป็นคำทำนายที่ผู้ใช้ไม่มีสิทธิ์เถียง
      ปรับได้เมื่อไร มันจะกลายเป็นเครื่องมือถามว่า "ต้องทำได้เท่าไรถึงจะติดที่นี่" */
-  if (gaps.length) {
+  if (gaps.length && A.mode === "partial") {
     const pct = assumedPercent();
     const auto = (S.settings || {}).assumePct == null || S.settings.assumePct === "";
     const row = el('<div class="field"><span class="field-l">' +
@@ -3500,6 +3571,110 @@ function chancePanel() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   เส้นเป้าหมายรายวิชา — แปล "อยากได้ 70 คะแนน" เป็น "แต่ละวิชาต้องได้เท่าไร"
+
+   คะแนนรวมเป็นตัวเลขที่เอาไปอ่านหนังสือไม่ได้ ต้องแตกลงเป็นรายวิชาก่อน
+   ถึงจะรู้ว่าวันนี้ควรทำอะไร
+   ───────────────────────────────────────────────────────────── */
+
+/* น้ำหนักของ "วิชา" ไม่ใช่ของ "กลุ่ม" — กลุ่มวิทย์ 28 หารสามวิชาได้วิชาละ 9.33
+   ตัวเลขนี้คือหัวใจของทั้งการ์ด เพราะมันบอกว่าวิชาไหนคุ้มที่จะทุ่ม */
+function subjectWeight(code) {
+  const g = (SUBJ[code] || {}).group;
+  if (!g) return 0;
+  const n = Object.keys(SUBJ).filter(c => SUBJ[c].group === g).length;
+  return n ? (W[g] || 0) / n : 0;
+}
+
+function targetLinePanel() {
+  const goal = targetScore();
+  const card = el('<div class="card card-pad stack"></div>');
+  card.appendChild(el('<div class="section-title"><h2>แต่ละวิชาต้องได้เท่าไร</h2></div>'));
+
+  if (goal == null) {
+    card.appendChild(el('<p class="tiny" style="margin:0">ตั้ง<b>คะแนนรวมเป้าหมาย</b> ' +
+      "หรือเลือกคณะในการ์ดคะแนนด้านบนก่อน แล้วตรงนี้จะแตกให้ว่าแต่ละวิชา" +
+      "ต้องทำได้ประมาณเท่าไร</p>"));
+    return card;
+  }
+
+  const scores = myScores();
+  const gaps = missingSubjects(scores);
+  /* น้ำหนักทุกกลุ่มรวมกันได้ 100 ดังนั้น "ได้ p% ทุกวิชา" = คะแนนรวม p พอดี
+     เส้นเสมอกันจึงเท่ากับตัวเลขเป้าหมายตรง ๆ ไม่ต้องคำนวณอะไรเพิ่ม
+     แต่ถ้ากรอกบางวิชาไปแล้ว เส้นของวิชาที่เหลือต้องขยับตามของที่ทำได้จริง */
+  const need = gaps.length && gaps.length < Object.keys(SUBJ).length
+    ? requiredPercent(scores, goal) : null;
+  const line = need != null ? need : goal;
+
+  card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
+    "เป้า <b class=\"num\">" + goal.toFixed(2) + "</b> คะแนน = ทำได้ <b>" +
+    line.toFixed(0) + "%</b> " +
+    (need != null ? "ในวิชาที่ยังเหลือ" : "เท่ากันทุกวิชา") + "</p>"));
+  if (need != null)
+    card.appendChild(el('<p class="tiny" style="margin:0">ปรับขึ้นลงตามคะแนน ' +
+      (Object.keys(SUBJ).length - gaps.length) + " วิชาที่กรอกไปแล้ว — " +
+      "ทำได้ดีกว่าเป้า วิชาที่เหลือก็เบาลง</p>"));
+
+  if (line > 100) {
+    card.appendChild(el('<div class="note" style="border-color:var(--brick);' +
+      'background:var(--brick-dim)">ต้องได้เกิน 100% ในวิชาที่เหลือ ซึ่งเป็นไปไม่ได้ — ' +
+      "เป้านี้ไปไม่ถึงแล้วด้วยคะแนนชุดนี้ ลองตั้งเป้าใหม่หรือดูคณะอื่น</div>"));
+  }
+
+  card.appendChild(el('<div class="tline" style="border-bottom-color:var(--line)">' +
+    '<span class="tline-n tline-hd" style="gap:0">วิชา</span>' +
+    '<span class="tline-v tline-hd" style="font-weight:500">เป้า</span>' +
+    '<span class="tline-r tline-hd">ช่วงที่ยังเอาอยู่</span></div>'));
+
+  Object.entries(SUBJ).forEach(([code, subj]) => {
+    const w = subjectWeight(code);
+    const max = subj.maxScore || 100;
+    const floor = minimumFloor(code);
+    const done = scores[code] !== "" && scores[code] != null;
+    const aim = done ? null : Math.max(0, Math.min(100, line));
+
+    /* ช่วง = ขยับได้เท่าไรโดยที่คะแนนรวมกระเพื่อมไม่เกิน 1 คะแนน
+       วิชาน้ำหนักมากช่วงจะแคบ (TPAT1 ±10 จาก 300) วิชาน้ำหนักน้อยช่วงกว้าง
+       (สังคม ±14 จาก 100) — อ่านแล้วรู้ทันทีว่าวิชาไหนพลาดไม่ได้ */
+    const swing = w > 0 ? max / w : null;
+    const aimRaw = aim == null ? null : aim * max / 100;
+    let range = "";
+    if (aimRaw != null && swing != null) {
+      const lo = Math.max(floor != null ? floor * max / 100 : 0, aimRaw - swing);
+      const hi = Math.min(max, aimRaw + swing);
+      range = Math.round(lo) + "–" + Math.round(hi);
+    }
+
+    const pct = done ? toPercent(code, scores[code]) : null;
+    const state = !done ? "" : pct >= line ? " done" : " under";
+    card.appendChild(el(
+      '<div class="tline' + state + '" data-s="' + esc(code) + '">' +
+        '<span class="tline-n">' + esc(subj.short || subj.name) +
+          '<span class="tiny" style="font-size:10.5px">น้ำหนัก ' + w.toFixed(1) + "</span></span>" +
+        '<span class="tline-v">' +
+          (done ? Math.round(scores[code]) : Math.round(aimRaw)) +
+          "<small>/" + max + "</small></span>" +
+        '<span class="tline-r">' +
+          (done
+            ? (pct >= line ? "ถึงเป้าแล้ว" : "ต่ำกว่าเป้า " + (line - pct).toFixed(0) + "%")
+            : esc(range)) +
+        "</span>" +
+      "</div>"));
+  });
+
+  card.appendChild(el('<p class="tiny" style="margin:4px 0 0"><b>ช่วงที่ยังเอาอยู่</b> ' +
+    "คือขยับในช่วงนี้แล้วคะแนนรวมกระเพื่อมไม่เกิน 1 คะแนน — " +
+    "วิชาที่ช่วงแคบคือวิชาที่พลาดแล้วเจ็บที่สุด ต่ำกว่าช่วงในวิชาหนึ่ง " +
+    "ต้องไปเก็บคืนในวิชาอื่นเสมอ</p>"));
+  if (Object.keys(SUBJ).some(c => minimumFloor(c) != null))
+    card.appendChild(el('<p class="tiny" style="margin:0">ขอบล่างของช่วงไม่ต่ำกว่า' +
+      "เกณฑ์ขั้นต่ำ 30% ของแต่ละวิชาอยู่แล้ว เพราะต่ำกว่านั้นคือถูกคัดออกทันที</p>"));
+
+  return card;
+}
+
+/* ─────────────────────────────────────────────────────────────
    VIEW: ความคืบหน้า
    ───────────────────────────────────────────────────────────── */
 function viewProgress() {
@@ -3523,6 +3698,10 @@ function viewProgress() {
      ต่อจากการ์ดคะแนนทันที เพราะเป็นคำถามถัดไปในหัวเสมอ — กรอกคะแนนเสร็จ
      ไม่มีใครอยากรู้ว่าอ่านหนังสือไปกี่ % ก่อนจะรู้ว่าคะแนนนี้ติดที่ไหน */
   wrap.appendChild(chancePanel());
+
+  /* ---- แล้วต้องทำได้เท่าไรถึงจะไปถึงตรงนั้น
+     คะแนนรวมเอาไปอ่านหนังสือไม่ได้ ต้องแตกเป็นรายวิชาก่อนถึงจะลงมือได้ */
+  wrap.appendChild(targetLinePanel());
 
   /* วงใหญ่ตอบคำถามเดียว: อ่านไปแล้วกี่เปอร์เซ็นต์ของทั้งหมด
      เลขสี่ตัวที่เหลือเป็นรายละเอียด จึงอยู่ในไทล์เล็กด้านล่าง */

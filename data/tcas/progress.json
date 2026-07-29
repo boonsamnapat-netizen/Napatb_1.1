@@ -1,7 +1,10 @@
 {
   "questions": {},
   "quiz_log": [],
-  "scores": {},
+  "scores": {
+    "bio": 80.0,
+    "tpat1": 250.0
+  },
   "study_log": {},
   "topics": {},
   "version": 1
