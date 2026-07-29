@@ -2848,6 +2848,15 @@ const targetProgram = () => {
   return (DATA.programs || []).find(p => p.code === code) || null;
 };
 
+/* คะแนนที่ต้องไปให้ถึง — ค่าที่ผู้ใช้ตั้งเองชนะค่าที่มากับตัวแอปเสมอ
+   เพราะเขาไปเปิดประกาศจริงมา ส่วนของเรายังเป็นค่าประมาณ */
+function targetScore() {
+  const manual = (S.settings || {}).targetScore;
+  if (manual != null && manual !== "") return Number(manual);
+  const p = targetProgram();
+  return p && p.projected != null ? p.projected : null;
+}
+
 /* ─────────────────────────────────────────────────────────────
    การ์ดคะแนน — กรอกคะแนนสอบแล้วบอกว่าห่างจากคณะเป้าหมายเท่าไร
    ───────────────────────────────────────────────────────────── */
@@ -2860,15 +2869,16 @@ function scorePanel() {
   const sc = filled.length ? scoreCard(scores) : null;
   const allSubjects = Object.keys(SUBJ).length;
   const complete = sc && !sc.missing.length;
-  const hasTarget = target && target.projected != null;
-  const gap = sc && hasTarget ? sc.total - target.projected : null;
+  const goal = targetScore();
+  const hasTarget = goal != null;
+  const gap = sc && hasTarget ? sc.total - goal : null;
 
   /* ที่ยังกรอกไม่ครบ คะแนนรวมย่อมต่ำเพราะวิชาที่ยังไม่สอบนับเป็นศูนย์
      ถ้าพาดหัวว่า "ยังขาดอีก 32 คะแนน" ทั้งที่เพิ่งสอบไป 4 วิชา
      มันคือการขู่ให้ตกใจโดยไม่มีข้อมูลรองรับ — จึงเปลี่ยนเป็นบอกว่า
      วิชาที่เหลือต้องทำได้เฉลี่ยเท่าไร ซึ่งเป็นตัวเลขที่เอาไปใช้ได้จริง */
   const need = sc && hasTarget && !complete
-    ? requiredPercent(scores, target.projected) : null;
+    ? requiredPercent(scores, goal) : null;
 
   /* ตกเกณฑ์ขั้นต่ำคือถูกคัดออกทันที ไม่ว่าคะแนนรวมจะสูงแค่ไหน
      จึงต้องกลบทุกสัญญาณอื่น ไม่งั้นแถบจะขึ้นว่า "เกือบถึงแล้ว" ให้คนที่หมดสิทธิ์ */
@@ -2884,9 +2894,9 @@ function scorePanel() {
     ? "ตกเกณฑ์ขั้นต่ำ " + sc.failures.length + " วิชา — ดูรายละเอียดด้านล่าง"
     :
     !filled.length ? "กรอกคะแนนที่สอบได้ด้านล่าง แล้วจะรู้ว่าห่างเป้าเท่าไร"
-    : !target ? "กรอกแล้ว " + filled.length + " จาก " + allSubjects +
-                " วิชา — เลือกคณะเป้าหมายเพื่อดูว่าต้องไปให้ถึงเท่าไร"
-    : !hasTarget ? "คณะนี้ยังไม่มีคะแนนต่ำสุดย้อนหลังในระบบ"
+    : !hasTarget ? "กรอกแล้ว " + filled.length + " จาก " + allSubjects + " วิชา — " +
+                   (target ? "คณะนี้ยังไม่มีคะแนนต่ำสุดในระบบ ใส่คะแนนเป้าหมายเองด้านล่าง"
+                           : "ตั้งคะแนนเป้าหมายเพื่อดูว่าต้องไปให้ถึงเท่าไร")
     : complete ? (gap >= 0
         ? "เกินคะแนนต่ำสุดที่คาดไว้ " + gap.toFixed(2) + " คะแนน"
         : "ยังขาดอีก " + Math.abs(gap).toFixed(2) + " คะแนน")
@@ -2903,7 +2913,9 @@ function scorePanel() {
   const band = el(
     '<div class="scoreband ' + tone + '">' +
       '<div class="dayband-t">' +
-        "<h2>" + (target ? esc(target.name) : "ยังไม่ได้เลือกคณะเป้าหมาย") + "</h2>" +
+        "<h2>" + (target ? esc(target.name)
+                  : hasTarget ? "เป้าหมาย " + goal.toFixed(1) + " คะแนน"
+                  : "ยังไม่ได้เลือกคณะเป้าหมาย") + "</h2>" +
         '<div class="dayband-sub">' + esc(sub) + "</div>" +
       "</div>" +
       (filled.length
@@ -2921,13 +2933,22 @@ function scorePanel() {
   const progs = DATA.programs || [];
   if (progs.length) {
     const row = el('<div class="field"><span class="field-l">คณะเป้าหมาย</span></div>');
-    const sel = el('<select class="sel" style="max-width:60%"></select>');
+    const sel = el('<select class="sel" style="max-width:62%"></select>');
     sel.appendChild(el('<option value="">— ยังไม่เลือก —</option>'));
-    progs.forEach(p => {
-      const o = el('<option value="' + esc(p.code) + '">' + esc(p.name) +
-        (p.projected != null ? " · " + p.projected.toFixed(1) : "") + "</option>");
-      if (target && p.code === target.code) o.selected = true;
-      sel.appendChild(o);
+
+    // จัดกลุ่มตามคณะ — รายการยาว 57 รายการ ถ้าเรียงรวดเดียวจะหาไม่เจอ
+    const byFaculty = {};
+    progs.forEach(p => (byFaculty[p.faculty] = byFaculty[p.faculty] || []).push(p));
+    Object.entries(byFaculty).forEach(([faculty, list]) => {
+      const grp = el('<optgroup label="' + esc(faculty) + '"></optgroup>');
+      list.forEach(p => {
+        const o = el('<option value="' + esc(p.code) + '">' + esc(p.name) +
+          (p.projected != null ? " · " + p.projected.toFixed(1) : " · ยังไม่มีคะแนน") +
+          "</option>");
+        if (target && p.code === target.code) o.selected = true;
+        grp.appendChild(o);
+      });
+      sel.appendChild(grp);
     });
     sel.addEventListener("change", () => {
       S.settings = Object.assign({}, S.settings, { targetProgram: sel.value });
@@ -2935,6 +2956,29 @@ function scorePanel() {
     });
     row.appendChild(sel);
     body.appendChild(row);
+
+    /* คะแนนเป้าหมายที่ตั้งเอง — คณะส่วนใหญ่ยังไม่มีคะแนนต่ำสุดในระบบ
+       ถ้าไปเปิดประกาศจริงมาแล้ว ใส่ตรงนี้ได้เลย ไม่ต้องรอแก้ไฟล์ config
+       ค่าที่ใส่เองจะถูกใช้แทนค่าที่มากับตัวแอปเสมอ */
+    const manualRow = el('<div class="field"><span class="field-l">' +
+      "คะแนนเป้าหมายที่ตั้งเอง</span></div>");
+    const manual = el('<input class="hours-in" type="number" min="0" max="100" step="0.01" ' +
+      'style="width:78px" placeholder="—" value="' +
+      ((S.settings || {}).targetScore != null ? esc(S.settings.targetScore) : "") + '">');
+    manual.addEventListener("change", () => {
+      const v = manual.value.trim();
+      const patch = {};
+      if (v === "") patch.targetScore = null;
+      else patch.targetScore = Math.max(0, Math.min(100, Number(v) || 0));
+      S.settings = Object.assign({}, S.settings, patch);
+      Store.save(); render();
+    });
+    manualRow.appendChild(manual);
+    manualRow.appendChild(el('<span class="tiny">/ 100</span>'));
+    body.appendChild(manualRow);
+    body.appendChild(el('<p class="tiny" style="margin:0">คณะที่ขึ้นว่า ' +
+      '"ยังไม่มีคะแนน" คือยังไม่ได้ใส่คะแนนต่ำสุดย้อนหลังไว้ในระบบ — ' +
+      "ไปดูจากประกาศ กสพท แล้วกรอกช่องบนนี้ได้เลย</p>"));
   }
 
   /* ---- ช่องกรอกคะแนนรายวิชา */
@@ -3006,7 +3050,7 @@ function scorePanel() {
           : need <= 0
             ? "ถึงเป้าแล้วแม้ไม่ได้คะแนนเพิ่มเลยจากวิชาที่เหลือ"
             : "ต้องได้เฉลี่ย <b>" + need.toFixed(1) + "%</b> ในทุกวิชาที่เหลือ จึงจะถึง " +
-              target.projected.toFixed(1) + " คะแนน") + "</div>"));
+              goal.toFixed(1) + " คะแนน") + "</div>"));
     }
   }
 

@@ -126,3 +126,269 @@ programs:
     seats: 90
     cutoffs: {2568: 61.5, 2569: 62.2}
     verified: false
+
+# ── รายชื่อสถาบันที่เหลือในระบบ กสพท ─────────────────────────────
+#
+# ⚠️ รายการด้านล่าง **ไม่ใส่ cutoffs** โดยตั้งใจ ไม่ใช่ลืม
+#    คะแนนต่ำสุดย้อนหลังหาจากเครื่องที่สร้างไฟล์นี้ไม่ได้ และการเดาตัวเลข
+#    ให้ครบ ๆ ไปก่อนจะอันตรายกว่าการปล่อยว่าง เพราะผู้ใช้เอาไปตัดสินใจจริง
+#    เติมเองได้เลยในรูปแบบ  cutoffs: {2568: 70.1, 2569: 70.8}
+#    แล้วตั้ง verified: true เมื่อเทียบกับประกาศ กสพท ตัวจริงแล้ว
+#
+# ⚠️ รายชื่อสถาบันที่เข้าร่วม กสพท **เปลี่ยนได้ทุกปี** และบางแห่งเปิดบาง
+#    หลักสูตรเท่านั้น ก่อนยื่นจริงต้องเทียบกับประกาศปีนั้นเสมอ
+#    ระหว่างนี้ถ้าคณะที่อยากได้ยังไม่มีในลิสต์ ใส่คะแนนเป้าหมายเองได้ในแอป
+
+  # แพทยศาสตร์
+  - code: cpird_rama_cra
+    name: "แพทยศาสตร์ รามาธิบดี-วิทยาลัยวิทยาศาสตร์การแพทย์เจ้าฟ้าจุฬาภรณ์"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: nmu_med
+    name: "แพทยศาสตร์วชิรพยาบาล ม.นวมินทราธิราช"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: bu_med
+    name: "แพทยศาสตร์ ม.บูรพา"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: sut_med
+    name: "แพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: mfu_med
+    name: "แพทยศาสตร์ ม.แม่ฟ้าหลวง"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: up_med
+    name: "แพทยศาสตร์ ม.พะเยา"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: msu_med
+    name: "แพทยศาสตร์ ม.มหาสารคาม"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: rsu_med
+    name: "วิทยาลัยแพทยศาสตร์ ม.รังสิต (รพ.ราชวิถี)"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: siam_med
+    name: "แพทยศาสตร์ ม.สยาม"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+
+  # ทันตแพทยศาสตร์
+  - code: tu_dent
+    name: "ทันตแพทยศาสตร์ ม.ธรรมศาสตร์"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: cmu_dent
+    name: "ทันตแพทยศาสตร์ ม.เชียงใหม่"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: psu_dent
+    name: "ทันตแพทยศาสตร์ ม.สงขลานครินทร์"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: swu_dent
+    name: "ทันตแพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: kku_dent
+    name: "ทันตแพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: nu_dent
+    name: "ทันตแพทยศาสตร์ ม.นเรศวร"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: sut_dent
+    name: "ทันตแพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: mfu_dent
+    name: "ทันตแพทยศาสตร์ ม.แม่ฟ้าหลวง"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: rsu_dent
+    name: "ทันตแพทยศาสตร์ ม.รังสิต"
+    faculty: "ทันตแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+
+  # เภสัชศาสตร์
+  - code: cu_pharm_ind
+    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (อุตสาหการ)"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: cmu_pharm
+    name: "เภสัชศาสตร์ ม.เชียงใหม่"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: su_pharm
+    name: "เภสัชศาสตร์ ม.ศิลปากร"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: kku_pharm
+    name: "เภสัชศาสตร์ ม.ขอนแก่น"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: psu_pharm
+    name: "เภสัชศาสตร์ ม.สงขลานครินทร์"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: nu_pharm
+    name: "เภสัชศาสตร์ ม.นเรศวร"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: swu_pharm
+    name: "เภสัชศาสตร์ ม.ศรีนครินทรวิโรฒ"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: tu_pharm
+    name: "เภสัชศาสตร์ ม.ธรรมศาสตร์"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: msu_pharm
+    name: "เภสัชศาสตร์ ม.มหาสารคาม"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: bu_pharm
+    name: "เภสัชศาสตร์ ม.บูรพา"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: up_pharm
+    name: "เภสัชศาสตร์ ม.พะเยา"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: ubu_pharm
+    name: "เภสัชศาสตร์ ม.อุบลราชธานี"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: rsu_pharm
+    name: "เภสัชศาสตร์ ม.รังสิต"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: siam_pharm
+    name: "เภสัชศาสตร์ ม.สยาม"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: hcu_pharm
+    name: "เภสัชศาสตร์ ม.หัวเฉียวเฉลิมพระเกียรติ"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: payap_pharm
+    name: "เภสัชศาสตร์ ม.พายัพ"
+    faculty: "เภสัชศาสตร์"
+    cutoffs: {}
+    verified: false
+
+
+  # สัตวแพทยศาสตร์
+  - code: cmu_vet
+    name: "สัตวแพทยศาสตร์ ม.เชียงใหม่"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: kku_vet
+    name: "สัตวแพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: mu_vet
+    name: "สัตวแพทยศาสตร์ ม.มหิดล"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: msu_vet
+    name: "สัตวแพทยศาสตร์ ม.มหาสารคาม"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: mut_vet
+    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีมหานคร"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: rmutto_vet
+    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลตะวันออก"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
+  - code: western_vet
+    name: "สัตวแพทยศาสตร์ ม.เวสเทิร์น"
+    faculty: "สัตวแพทยศาสตร์"
+    cutoffs: {}
+    verified: false
+
