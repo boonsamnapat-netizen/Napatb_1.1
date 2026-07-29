@@ -3054,8 +3054,23 @@ function scorePanel() {
     }
   }
 
-  body.appendChild(el('<p class="tiny" style="margin:0">คะแนนต่ำสุดของทุกคณะที่ใช้เทียบ' +
-    "เป็น<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง — ใช้ดูทิศทาง ไม่ใช่เส้นตัดจริง</p>"));
+  /* บอกที่มาของเส้นเป้าหมายให้ชัด — ตัวเลขที่เอาไปตัดสินใจต้องรู้ว่ามาจากไหน
+     และรู้ว่ามันเป็นสถิติของปีที่แล้ว ไม่ใช่เส้นตัดของปีที่กำลังจะสอบ */
+  if (target && target.verified) {
+    const range = target.top != null
+      ? " ปีนั้นคนที่ผ่านได้ตั้งแต่ " + target.projected.toFixed(2) +
+        " ถึง " + target.top.toFixed(2) + " คะแนน"
+      : "";
+    body.appendChild(el('<p class="tiny" style="margin:0">เส้นเป้าหมายมาจาก' +
+      "<b>สถิติจริง</b> ของ TCAS ปีการศึกษา 2569 รอบ 3 ประมวลผลครั้งที่ 1" +
+      (target.seats ? " (รับ " + target.seats + " ที่นั่ง" +
+        (target.applicants ? " · สมัคร " + target.applicants + " คน)" : ")") : "") +
+      esc(range) +
+      " — <b>ไม่ใช่เส้นตัดของปี 2570</b> ที่กำลังจะสอบ คะแนนขยับได้ทุกปี</p>"));
+  } else if (target) {
+    body.appendChild(el('<p class="tiny" style="margin:0">คณะนี้ยังไม่มีคะแนนต่ำสุด' +
+      "ในระบบ ใส่เป้าหมายเองได้ที่ช่องด้านบน</p>"));
+  }
 
   card.appendChild(body);
   return card;
@@ -3149,17 +3164,25 @@ function viewProgress() {
   wrap.appendChild(effortPanel());
 
   /* programs */
+  const target = targetProgram();
   if (DATA.programs && DATA.programs.length) {
     const pc = el('<div class="card card-pad"></div>');
     pc.appendChild(el('<div class="section-title"><h2>คะแนนต่ำสุดที่ต้องไปให้ถึง</h2></div>'));
-    pc.appendChild(el('<p class="tiny" style="margin:-6px 0 9px">คาดการณ์จากสถิติย้อนหลัง ' +
-      "ทุกตัวเลขยังไม่ได้ยืนยันกับประกาศจริง</p>"));
-    DATA.programs.slice(0, 10).forEach(p => pc.appendChild(el(
-      '<div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft)">' +
+    pc.appendChild(el('<p class="tiny" style="margin:-6px 0 9px">สถิติจริง TCAS ' +
+      "ปีการศึกษา 2569 รอบ 3 ประมวลผลครั้งที่ 1 — เป็นตัวเลขของ<b>ปีที่แล้ว</b> " +
+      "ไม่ใช่เส้นตัดของปี 2570</p>"));
+    /* เรียงตามคะแนนอยู่แล้ว แสดงเฉพาะคณะในกลุ่มเดียวกับเป้าหมาย
+       เพื่อให้เทียบกันได้จริง — คนอยากเข้าทันตะไม่ได้อยากดูอันดับคณะแพทย์ */
+    const myFac = target ? target.faculty : null;
+    const shown = (myFac ? DATA.programs.filter(p => p.faculty === myFac) : DATA.programs)
+      .filter(p => p.projected !== null);
+    shown.slice(0, 14).forEach(p => pc.appendChild(el(
+      '<div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft)' +
+        (target && p.code === target.code ? ";background:var(--warn-dim);margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px" : "") + '">' +
         '<span class="num" style="font-size:14px;min-width:52px;color:var(--marigold)">' +
-          (p.projected !== null ? p.projected.toFixed(1) : "—") + "</span>" +
-        '<span style="font-size:13.5px">' + esc(p.name) + "</span>" +
-        '<span class="tiny" style="margin-left:auto;white-space:nowrap">' +
+          p.projected.toFixed(2) + "</span>" +
+        '<span style="font-size:13.5px;flex:1;min-width:0">' + esc(p.name) + "</span>" +
+        '<span class="tiny" style="white-space:nowrap">' +
           (p.seats ? p.seats + " ที่นั่ง" : "") + "</span>" +
       "</div>"
     )));
@@ -4003,9 +4026,12 @@ function render() {
 /* footer */
 $("#foot").innerHTML =
   '<hr class="rule" style="margin-bottom:14px">' +
-  '<p class="tiny" style="font-size:11.5px;line-height:1.65">วันสอบ เกณฑ์ กสพท และคะแนนต่ำสุดของทุกคณะในหน้านี้เป็น<b>ค่าประมาณ</b> ' +
-  "ยังไม่ได้ยืนยันกับประกาศจริง (เครื่องที่สร้างต่อ mytcas.com ไม่ได้) — " +
-  "ก่อนใช้ตัดสินใจจริงต้องตรวจกับ mytcas.com และประกาศ กสพท ปีการศึกษา 2570</p>" +
+  '<p class="tiny" style="font-size:11.5px;line-height:1.65">' +
+  "<b>คะแนนต่ำสุดของคณะ</b> เป็นสถิติจริงจากประกาศ TCAS ปีการศึกษา 2569 รอบ 3 " +
+  "ประมวลผลครั้งที่ 1 — เป็นตัวเลขของปีที่แล้ว ไม่ใช่เส้นตัดของปี 2570 ที่กำลังจะสอบ " +
+  "และบางคณะยังไม่มีข้อมูล<br>" +
+  "<b>วันสอบและเกณฑ์ กสพท</b> ยังเป็น<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง — " +
+  "ก่อนใช้ตัดสินใจต้องตรวจกับ mytcas.com และประกาศ กสพท ปีการศึกษา 2570</p>" +
   '<p class="tiny" style="margin-top:6px;font-size:11px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
   " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
   " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";

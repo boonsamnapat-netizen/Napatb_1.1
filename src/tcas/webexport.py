@@ -141,6 +141,8 @@ def build_payload(
 
     program_list: List[Dict[str, Any]] = []
     if programs:
+        spec_of = {str(x.get("code")): x for x in (programs.get("programs") or [])}
+        latest_year = max((programs.get("meta") or {}).get("years") or [0]) - 1
         for c in ranking.rank(programs, None):
             program_list.append(
                 {
@@ -151,6 +153,10 @@ def build_payload(
                     "projected": c.projected_cutoff,
                     "trend": c.trend,
                     "verified": c.verified,
+                    # ช่วงคะแนนของผู้ผ่านจริง — ช่วยให้เห็นว่าคะแนนต่ำสุด
+                    # เป็นเส้นบาง ๆ หรือมีระยะห่างจากคนที่ได้สูงสุดมาก
+                    "top": (spec_of.get(c.code) or {}).get("top", {}).get(latest_year),
+                    "applicants": (spec_of.get(c.code) or {}).get("applicants"),
                 }
             )
 

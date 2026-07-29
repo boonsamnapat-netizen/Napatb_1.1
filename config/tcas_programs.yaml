@@ -1,147 +1,475 @@
 # คณะในระบบ กสพท — ใช้จัดอันดับและประเมินโอกาส
 #
-# ⚠️⚠️ สำคัญมาก: ค่า `cutoffs` ด้านล่างเป็น **ค่าประมาณจากความจำของโมเดล**
-#    ไม่ใช่ข้อมูลที่ดึงมาจากประกาศจริง (sandbox นี้ต่อเน็ตออกไม่ได้)
-#    ทุกรายการตั้ง verified: false ไว้ — ก่อนใช้ตัดสินใจจริงต้องแทนที่ด้วย
-#    "คะแนนต่ำสุด กสพท" ที่ประกาศจริงย้อนหลัง 3 ปี แล้วตั้ง verified: true
-#    วิธีแก้: แก้ตัวเลขในไฟล์นี้อย่างเดียว ไม่ต้องแตะโค้ด
+# ✅ คะแนนต่ำสุดในไฟล์นี้เป็น **ข้อมูลจริง** ถอดจากประกาศ
+#    "สถิติการคัดเลือกกลางบุคคลเข้าศึกษาในสถาบันอุดมศึกษา (TCAS)
+#     ปีการศึกษา 2569 รอบที่ 3 การประมวลผลครั้งที่ 1"
+#    ข้อมูล ณ วันที่ 20 พ.ค. 2569 (ปรับปรุง 19/5/2569 23.00 น.)
+#    ผู้ใช้เป็นผู้ส่งภาพประกาศมาให้ ไม่ใช่ค่าที่ระบบเดาขึ้นเอง
 #
-# cutoffs = คะแนนรวม กสพท เต็ม 100 ของ "คนสุดท้ายที่ติด" ในแต่ละปี
-# ranking จะใช้ค่าล่าสุด + ส่วนเบี่ยงเบนของ 3 ปี เพื่อประเมินโอกาส
+# ⚠️ ข้อควรรู้ก่อนใช้ตัดสินใจ
+#    1. เป็นสถิติของ **ปีการศึกษา 2569** ไม่ใช่ 2570 ที่กำลังจะสอบ
+#       คะแนนแต่ละปีขยับได้ตามความยากข้อสอบและจำนวนผู้สมัคร
+#    2. เป็น **การประมวลผลครั้งที่ 1** ของรอบ 3 ตัวเลขหลังประมวลผล
+#       ครั้งที่ 2 (รับตรงอิสระ/สละสิทธิ์) อาจต่างไปจากนี้
+#    3. คณะที่ยังไม่มี cutoffs คือแถวที่อยู่ในหน้าที่ยังไม่ได้ส่งภาพมา
+#       ไม่ใช่ว่าไม่ได้เข้าร่วม กสพท — ดูหมายเหตุท้ายไฟล์
+#
+# cutoffs = คะแนนรวม กสพท เต็ม 100 ของ "คนสุดท้ายที่ผ่าน"
+# top     = คะแนนสูงสุดของผู้ผ่านในคณะนั้น (ไว้ดูช่วงคะแนน ไม่ได้ใช้คำนวณ)
+# seats   = จำนวนที่ประกาศรับ · applicants = จำนวนผู้สมัคร
 
 meta:
   score_scale: 100.0
-  note: "คะแนนต่ำสุด กสพท (TPAT1 30% + A-Level 70%)"
-  years: [2568, 2569, 2570]
+  note: "คะแนนต่ำสุด กสพท (TPAT1 30% + A-Level 70%) — สถิติ TCAS69 รอบ 3 ครั้งที่ 1"
+  source: "ประกาศสถิติการคัดเลือกกลาง TCAS ปีการศึกษา 2569 รอบ 3 (ข้อมูล ณ 20 พ.ค. 2569)"
+  years: [2569, 2570]
 
 programs:
+  # ══ แพทยศาสตร์ ══
+
+  - code: kku_med
+    name: "แพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "แพทยศาสตร์"
+    seats: 21
+    applicants: 509
+    cutoffs: {2569: 69.2422}
+    top: {2569: 73.0866}
+    verified: true
+
   - code: cu_med
     name: "แพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
     faculty: "แพทยศาสตร์"
     seats: 176
-    cutoffs: {2568: 73.5, 2569: 74.2}
-    verified: false
+    applicants: 536
+    cutoffs: {2569: 76.8402}
+    top: {2569: 90.0503}
+    verified: true
+
+  - code: cu_med_af
+    name: "แพทยศาสตร์ จุฬาฯ - กรมแพทย์ทหารอากาศ กองทัพอากาศ"
+    faculty: "แพทยศาสตร์"
+    seats: 30
+    applicants: 471
+    cutoffs: {2569: 72.8552}
+    top: {2569: 76.8814}
+    verified: true
+
+  - code: pmk_med_f
+    name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า (เพศหญิง)"
+    faculty: "แพทยศาสตร์"
+    seats: 45
+    applicants: 560
+    cutoffs: {2569: 66.0027}
+    top: {2569: 72.1172}
+    verified: true
+
+  - code: sut_med
+    name: "แพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
+    faculty: "แพทยศาสตร์"
+    seats: 12
+    applicants: 448
+    cutoffs: {2569: 64.9998}
+    top: {2569: 65.8272}
+    verified: true
+
+  - code: bu_med
+    name: "แพทยศาสตร์ ม.บูรพา"
+    faculty: "แพทยศาสตร์"
+    seats: 64
+    applicants: 956
+    cutoffs: {2569: 64.3377}
+    top: {2569: 67.6804}
+    verified: true
+
+  - code: mfu_med
+    name: "แพทยศาสตร์ ม.แม่ฟ้าหลวง"
+    faculty: "แพทยศาสตร์"
+    seats: 16
+    applicants: 537
+    cutoffs: {2569: 64.6251}
+    top: {2569: 65.5913}
+    verified: true
+
+  - code: siam_med
+    name: "แพทยศาสตร์ ม.สยาม (เอกชน)"
+    faculty: "แพทยศาสตร์"
+    seats: 20
+    applicants: 101
+    cutoffs: {2569: 56.1182}
+    top: {2569: 58.8897}
+    verified: true
+
+  - code: western_med
+    name: "แพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
+    faculty: "แพทยศาสตร์"
+    seats: 10
+    applicants: 45
+    cutoffs: {2569: 53.2711}
+    top: {2569: 56.2725}
+    verified: true
+
+  - code: cra_med
+    name: "แพทยศาสตร์ศรีสวางควัฒน ราชวิทยาลัยจุฬาภรณ์"
+    faculty: "แพทยศาสตร์"
+    seats: 14
+    applicants: 330
+    cutoffs: {2569: 69.1464}
+    top: {2569: 70.9562}
+    verified: true
+
+  - code: ku_med
+    name: "แพทยศาสตร์ ม.เกษตรศาสตร์"
+    faculty: "แพทยศาสตร์"
+    seats: 28
+    applicants: 773
+    cutoffs: {2569: 67.6109}
+    top: {2569: 72.369}
+    verified: true
+
+  # ══ ทันตแพทยศาสตร์ ══
+
+  - code: cu_dent
+    name: "ทันตแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 53
+    applicants: 424
+    cutoffs: {2569: 73.3253}
+    top: {2569: 86.1277}
+    verified: true
+
+  - code: mu_dent
+    name: "ทันตแพทยศาสตร์ ม.มหิดล"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 80
+    applicants: 692
+    cutoffs: {2569: 70.6838}
+    top: {2569: 82.1991}
+    verified: true
+
+  - code: cmu_dent
+    name: "ทันตแพทยศาสตร์ ม.เชียงใหม่"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 15
+    applicants: 435
+    cutoffs: {2569: 67.9539}
+    top: {2569: 71.1109}
+    verified: true
+
+  - code: psu_dent
+    name: "ทันตแพทยศาสตร์ ม.สงขลานครินทร์"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 21
+    applicants: 543
+    cutoffs: {2569: 65.9019}
+    top: {2569: 70.3233}
+    verified: true
+
+  - code: swu_dent
+    name: "ทันตแพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 35
+    applicants: 550
+    cutoffs: {2569: 68.4386}
+    top: {2569: 70.6403}
+    verified: true
+
+  - code: kku_dent
+    name: "ทันตแพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 10
+    applicants: 471
+    cutoffs: {2569: 67.7069}
+    top: {2569: 70.5316}
+    verified: true
+
+  - code: tu_dent
+    name: "ทันตแพทยศาสตร์ ม.ธรรมศาสตร์"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 30
+    applicants: 442
+    cutoffs: {2569: 69.3856}
+    top: {2569: 71.9889}
+    verified: true
+
+  - code: nu_dent
+    name: "ทันตแพทยศาสตร์ ม.นเรศวร"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 53
+    applicants: 891
+    cutoffs: {2569: 64.5366}
+    top: {2569: 67.7049}
+    verified: true
+
+  - code: sut_dent
+    name: "ทันตแพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 26
+    applicants: 483
+    cutoffs: {2569: 62.8844}
+    top: {2569: 65.356}
+    verified: true
+
+  - code: western_dent
+    name: "ทันตแพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 20
+    applicants: 15
+    cutoffs: {2569: 42.7772}
+    top: {2569: 50.5602}
+    verified: true
+
+  - code: rsu_dent
+    name: "ทันตแพทยศาสตร์ ม.รังสิต (เอกชน)"
+    faculty: "ทันตแพทยศาสตร์"
+    seats: 60
+    applicants: 198
+    cutoffs: {2569: 52.8744}
+    top: {2569: 60.5588}
+    verified: true
+
+  # ══ เภสัชศาสตร์ ══
+
+  - code: cu_pharm
+    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (บริบาลทางเภสัชกรรม)"
+    faculty: "เภสัชศาสตร์"
+    seats: 81
+    applicants: 737
+    cutoffs: {2569: 63.5801}
+    top: {2569: 72.6658}
+    verified: true
+
+  - code: cu_pharm_ind
+    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (เภสัชอุตสาหการ)"
+    faculty: "เภสัชศาสตร์"
+    seats: 76
+    applicants: 856
+    cutoffs: {2569: 63.3013}
+    top: {2569: 72.4772}
+    verified: true
+
+  - code: mu_pharm
+    name: "เภสัชศาสตร์ ม.มหิดล"
+    faculty: "เภสัชศาสตร์"
+    seats: 115
+    applicants: 1296
+    cutoffs: {2569: 62.2806}
+    top: {2569: 67.4182}
+    verified: true
+
+  - code: cmu_pharm
+    name: "เภสัชศาสตร์ ม.เชียงใหม่"
+    faculty: "เภสัชศาสตร์"
+    seats: 95
+    applicants: 1077
+    cutoffs: {2569: 60.3171}
+    top: {2569: 64.093}
+    verified: true
+
+  - code: msu_pharm
+    name: "เภสัชศาสตร์ ม.มหาสารคาม (บริบาลทางเภสัชกรรม)"
+    faculty: "เภสัชศาสตร์"
+    seats: 50
+    applicants: 476
+    cutoffs: {2569: 56.6556}
+    top: {2569: 59.8791}
+    verified: true
+
+  - code: bu_pharm
+    name: "เภสัชศาสตร์ ม.บูรพา"
+    faculty: "เภสัชศาสตร์"
+    seats: 60
+    applicants: 834
+    cutoffs: {2569: 56.9465}
+    top: {2569: 61.5932}
+    verified: true
+
+  - code: hcu_pharm
+    name: "เภสัชศาสตร์ ม.หัวเฉียวเฉลิมพระเกียรติ (เอกชน)"
+    faculty: "เภสัชศาสตร์"
+    seats: 35
+    applicants: 186
+    cutoffs: {2569: 52.8924}
+    top: {2569: 56.7323}
+    verified: true
+
+  - code: payap_pharm
+    name: "เภสัชศาสตร์ ม.พายัพ (เอกชน) (บริบาลทางเภสัชกรรม)"
+    faculty: "เภสัชศาสตร์"
+    seats: 10
+    applicants: 80
+    cutoffs: {2569: 52.5583}
+    top: {2569: 55.0931}
+    verified: true
+
+  - code: ubu_pharm
+    name: "เภสัชศาสตร์ ม.อุบลราชธานี (บริบาลทางเภสัชกรรม)"
+    faculty: "เภสัชศาสตร์"
+    seats: 10
+    applicants: 278
+    cutoffs: {2569: 58.5484}
+    top: {2569: 59.9482}
+    verified: true
+
+  - code: ubu_pharm_ind
+    name: "เภสัชศาสตร์ ม.อุบลราชธานี (เภสัชอุตสาหการ)"
+    faculty: "เภสัชศาสตร์"
+    seats: 10
+    applicants: 263
+    cutoffs: {2569: 56.8079}
+    top: {2569: 59.1444}
+    verified: true
+
+  - code: western_pharm
+    name: "เภสัชศาสตร์ ม.เวสเทิร์น (เอกชน)"
+    faculty: "เภสัชศาสตร์"
+    seats: 20
+    applicants: 26
+    cutoffs: {2569: 44.8476}
+    top: {2569: 51.7316}
+    verified: true
+
+  # ══ สัตวแพทยศาสตร์ ══
+
+  - code: cu_vet
+    name: "สัตวแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 110
+    applicants: 720
+    cutoffs: {2569: 61.5523}
+    top: {2569: 74.2904}
+    verified: true
+
+  - code: ku_vet
+    name: "สัตวแพทยศาสตร์ ม.เกษตรศาสตร์"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 34
+    applicants: 491
+    cutoffs: {2569: 60.6862}
+    top: {2569: 70.2824}
+    verified: true
+
+  - code: kku_vet
+    name: "สัตวแพทยศาสตร์ ม.ขอนแก่น"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 35
+    applicants: 378
+    cutoffs: {2569: 58.0535}
+    top: {2569: 60.9967}
+    verified: true
+
+  - code: cmu_vet
+    name: "สัตวแพทยศาสตร์ ม.เชียงใหม่"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 45
+    applicants: 341
+    cutoffs: {2569: 58.134}
+    top: {2569: 66.4717}
+    verified: true
+
+  - code: mu_vet
+    name: "สัตวแพทยศาสตร์ ม.มหิดล"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 65
+    applicants: 691
+    cutoffs: {2569: 59.7795}
+    top: {2569: 71.0064}
+    verified: true
+
+  - code: msu_vet
+    name: "สัตวแพทยศาสตร์ ม.มหาสารคาม"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 25
+    applicants: 225
+    cutoffs: {2569: 56.1749}
+    top: {2569: 58.3615}
+    verified: true
+
+  - code: rmutto_vet
+    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลตะวันออก"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 15
+    applicants: 181
+    cutoffs: {2569: 55.6873}
+    top: {2569: 57.9919}
+    verified: true
+
+  - code: rmutsv_vet
+    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลศรีวิชัย"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 10
+    applicants: 141
+    cutoffs: {2569: 54.4568}
+    top: {2569: 56.8378}
+    verified: true
+
+  - code: psu_vet
+    name: "สัตวแพทยศาสตร์ ม.สงขลานครินทร์"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 22
+    applicants: 247
+    cutoffs: {2569: 57.4442}
+    top: {2569: 61.7058}
+    verified: true
+
+  - code: western_vet
+    name: "สัตวแพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
+    faculty: "สัตวแพทยศาสตร์"
+    seats: 10
+    applicants: 10
+    cutoffs: {2569: 43.5405}
+    top: {2569: 50.8112}
+    verified: true
+
+  # ══ รอภาพหน้า 414 ══
+  #
+  # คณะเหล่านี้อยู่ในกลุ่มสถาบันแพทยศาสตร์แห่งประเทศไทย (กสพท) แน่นอน
+  # แต่แถวของมันอยู่ในหน้า 414 ของประกาศ ซึ่งยังไม่มีภาพ จึงยังไม่มีคะแนน
+  # ส่งภาพหน้านั้นมาแล้วกรอกได้ด้วย  python tcas_cli.py cutoff <code> 2569=<ต่ำสุด>
 
   - code: si_med
     name: "แพทยศาสตร์ศิริราชพยาบาล ม.มหิดล"
     faculty: "แพทยศาสตร์"
-    seats: 260
-    cutoffs: {2568: 72.8, 2569: 73.4}
+    cutoffs: {}
     verified: false
 
   - code: rama_med
     name: "แพทยศาสตร์โรงพยาบาลรามาธิบดี ม.มหิดล"
     faculty: "แพทยศาสตร์"
-    seats: 148
-    cutoffs: {2568: 72.0, 2569: 72.6}
+    cutoffs: {}
     verified: false
 
   - code: tu_med
     name: "แพทยศาสตร์ ม.ธรรมศาสตร์"
     faculty: "แพทยศาสตร์"
-    seats: 65
-    cutoffs: {2568: 69.5, 2569: 70.1}
-    verified: false
-
-  - code: pmk_med
-    name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า"
-    faculty: "แพทยศาสตร์"
-    seats: 100
-    cutoffs: {2568: 68.9, 2569: 69.7}
-    verified: false
-
-  - code: swu_med
-    name: "แพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
-    faculty: "แพทยศาสตร์"
-    seats: 165
-    cutoffs: {2568: 68.5, 2569: 69.2}
+    cutoffs: {}
     verified: false
 
   - code: cmu_med
     name: "แพทยศาสตร์ ม.เชียงใหม่"
     faculty: "แพทยศาสตร์"
-    seats: 55
-    cutoffs: {2568: 69.0, 2569: 69.6}
-    verified: false
-
-  - code: kku_med
-    name: "แพทยศาสตร์ ม.ขอนแก่น"
-    faculty: "แพทยศาสตร์"
-    seats: 20
-    cutoffs: {2568: 67.4, 2569: 68.0}
+    cutoffs: {}
     verified: false
 
   - code: psu_med
     name: "แพทยศาสตร์ ม.สงขลานครินทร์"
     faculty: "แพทยศาสตร์"
-    seats: 40
-    cutoffs: {2568: 66.8, 2569: 67.3}
+    cutoffs: {}
+    verified: false
+
+  - code: swu_med
+    name: "แพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
+    faculty: "แพทยศาสตร์"
+    cutoffs: {}
     verified: false
 
   - code: nu_med
     name: "แพทยศาสตร์ ม.นเรศวร"
     faculty: "แพทยศาสตร์"
-    seats: 30
-    cutoffs: {2568: 66.2, 2569: 66.9}
+    cutoffs: {}
     verified: false
 
-  - code: cu_dent
-    name: "ทันตแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
-    faculty: "ทันตแพทยศาสตร์"
-    seats: 80
-    cutoffs: {2568: 70.1, 2569: 70.8}
-    verified: false
-
-  - code: mu_dent
-    name: "ทันตแพทยศาสตร์ ม.มหิดล"
-    faculty: "ทันตแพทยศาสตร์"
-    seats: 83
-    cutoffs: {2568: 69.4, 2569: 70.0}
-    verified: false
-
-  - code: cu_pharm
-    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (บริบาล)"
-    faculty: "เภสัชศาสตร์"
-    seats: 75
-    cutoffs: {2568: 65.2, 2569: 65.9}
-    verified: false
-
-  - code: mu_pharm
-    name: "เภสัชศาสตร์ ม.มหิดล"
-    faculty: "เภสัชศาสตร์"
-    seats: 60
-    cutoffs: {2568: 64.6, 2569: 65.1}
-    verified: false
-
-  - code: cu_vet
-    name: "สัตวแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
-    faculty: "สัตวแพทยศาสตร์"
-    seats: 100
-    cutoffs: {2568: 62.8, 2569: 63.4}
-    verified: false
-
-  - code: ku_vet
-    name: "สัตวแพทยศาสตร์ ม.เกษตรศาสตร์"
-    faculty: "สัตวแพทยศาสตร์"
-    seats: 90
-    cutoffs: {2568: 61.5, 2569: 62.2}
-    verified: false
-
-# ── รายชื่อสถาบันที่เหลือในระบบ กสพท ─────────────────────────────
-#
-# ⚠️ รายการด้านล่าง **ไม่ใส่ cutoffs** โดยตั้งใจ ไม่ใช่ลืม
-#    คะแนนต่ำสุดย้อนหลังหาจากเครื่องที่สร้างไฟล์นี้ไม่ได้ และการเดาตัวเลข
-#    ให้ครบ ๆ ไปก่อนจะอันตรายกว่าการปล่อยว่าง เพราะผู้ใช้เอาไปตัดสินใจจริง
-#    เติมเองได้เลยในรูปแบบ  cutoffs: {2568: 70.1, 2569: 70.8}
-#    แล้วตั้ง verified: true เมื่อเทียบกับประกาศ กสพท ตัวจริงแล้ว
-#
-# ⚠️ รายชื่อสถาบันที่เข้าร่วม กสพท **เปลี่ยนได้ทุกปี** และบางแห่งเปิดบาง
-#    หลักสูตรเท่านั้น ก่อนยื่นจริงต้องเทียบกับประกาศปีนั้นเสมอ
-#    ระหว่างนี้ถ้าคณะที่อยากได้ยังไม่มีในลิสต์ ใส่คะแนนเป้าหมายเองได้ในแอป
-
-  # แพทยศาสตร์
-  - code: cpird_rama_cra
-    name: "แพทยศาสตร์ รามาธิบดี-วิทยาลัยวิทยาศาสตร์การแพทย์เจ้าฟ้าจุฬาภรณ์"
+  - code: pmk_med
+    name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า (เพศชาย)"
     faculty: "แพทยศาสตร์"
     cutoffs: {}
     verified: false
@@ -152,243 +480,9 @@ programs:
     cutoffs: {}
     verified: false
 
-  - code: bu_med
-    name: "แพทยศาสตร์ ม.บูรพา"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: sut_med
-    name: "แพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: mfu_med
-    name: "แพทยศาสตร์ ม.แม่ฟ้าหลวง"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: up_med
-    name: "แพทยศาสตร์ ม.พะเยา"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: msu_med
-    name: "แพทยศาสตร์ ม.มหาสารคาม"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
   - code: rsu_med
-    name: "วิทยาลัยแพทยศาสตร์ ม.รังสิต (รพ.ราชวิถี)"
+    name: "วิทยาลัยแพทยศาสตร์ ม.รังสิต"
     faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: siam_med
-    name: "แพทยศาสตร์ ม.สยาม"
-    faculty: "แพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-
-  # ทันตแพทยศาสตร์
-  - code: tu_dent
-    name: "ทันตแพทยศาสตร์ ม.ธรรมศาสตร์"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: cmu_dent
-    name: "ทันตแพทยศาสตร์ ม.เชียงใหม่"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: psu_dent
-    name: "ทันตแพทยศาสตร์ ม.สงขลานครินทร์"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: swu_dent
-    name: "ทันตแพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: kku_dent
-    name: "ทันตแพทยศาสตร์ ม.ขอนแก่น"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: nu_dent
-    name: "ทันตแพทยศาสตร์ ม.นเรศวร"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: sut_dent
-    name: "ทันตแพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: mfu_dent
-    name: "ทันตแพทยศาสตร์ ม.แม่ฟ้าหลวง"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: rsu_dent
-    name: "ทันตแพทยศาสตร์ ม.รังสิต"
-    faculty: "ทันตแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-
-  # เภสัชศาสตร์
-  - code: cu_pharm_ind
-    name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (อุตสาหการ)"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: cmu_pharm
-    name: "เภสัชศาสตร์ ม.เชียงใหม่"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: su_pharm
-    name: "เภสัชศาสตร์ ม.ศิลปากร"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: kku_pharm
-    name: "เภสัชศาสตร์ ม.ขอนแก่น"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: psu_pharm
-    name: "เภสัชศาสตร์ ม.สงขลานครินทร์"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: nu_pharm
-    name: "เภสัชศาสตร์ ม.นเรศวร"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: swu_pharm
-    name: "เภสัชศาสตร์ ม.ศรีนครินทรวิโรฒ"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: tu_pharm
-    name: "เภสัชศาสตร์ ม.ธรรมศาสตร์"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: msu_pharm
-    name: "เภสัชศาสตร์ ม.มหาสารคาม"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: bu_pharm
-    name: "เภสัชศาสตร์ ม.บูรพา"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: up_pharm
-    name: "เภสัชศาสตร์ ม.พะเยา"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: ubu_pharm
-    name: "เภสัชศาสตร์ ม.อุบลราชธานี"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: rsu_pharm
-    name: "เภสัชศาสตร์ ม.รังสิต"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: siam_pharm
-    name: "เภสัชศาสตร์ ม.สยาม"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: hcu_pharm
-    name: "เภสัชศาสตร์ ม.หัวเฉียวเฉลิมพระเกียรติ"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: payap_pharm
-    name: "เภสัชศาสตร์ ม.พายัพ"
-    faculty: "เภสัชศาสตร์"
-    cutoffs: {}
-    verified: false
-
-
-  # สัตวแพทยศาสตร์
-  - code: cmu_vet
-    name: "สัตวแพทยศาสตร์ ม.เชียงใหม่"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: kku_vet
-    name: "สัตวแพทยศาสตร์ ม.ขอนแก่น"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: mu_vet
-    name: "สัตวแพทยศาสตร์ ม.มหิดล"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: msu_vet
-    name: "สัตวแพทยศาสตร์ ม.มหาสารคาม"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: mut_vet
-    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีมหานคร"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: rmutto_vet
-    name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลตะวันออก"
-    faculty: "สัตวแพทยศาสตร์"
-    cutoffs: {}
-    verified: false
-
-  - code: western_vet
-    name: "สัตวแพทยศาสตร์ ม.เวสเทิร์น"
-    faculty: "สัตวแพทยศาสตร์"
     cutoffs: {}
     verified: false
 
