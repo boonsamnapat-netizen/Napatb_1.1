@@ -28,6 +28,7 @@ import sys
 from datetime import timedelta
 
 from src.tcas import config as cfgmod
+from src.tcas import verify
 from src.tcas import planner, quiz, ranking, report, scoring, srs, syllabus
 from src.tcas.notifier import TelegramNotifier
 from src.tcas.store import ProgressStore
@@ -406,6 +407,20 @@ def cmd_tests(args) -> int:
     return 0
 
 
+def cmd_verify(args) -> int:
+    """ไล่รายการทุกค่าที่ยังไม่ได้ยืนยันกับประกาศจริง
+
+    ออกด้วย exit code 1 ถ้ายังเหลือระดับ critical เพื่อให้เอาไปคั่นใน CI ได้
+    ก่อนปล่อยเวอร์ชันที่มีคนใช้จริง
+    """
+    cfg = cfgmod.load_config(args.config)
+    a = verify.audit(cfg)
+    print(verify.render(a))
+    if args.strict and a.counts().get("critical"):
+        return 1
+    return 0
+
+
 def cmd_notify(args) -> int:
     cfg, store, on = _load(args)
     tg = TelegramNotifier(cfg)
@@ -502,6 +517,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
     s.add_argument("--resources", help="ไฟล์แหล่งเรียนรู้ (ค่าเริ่มต้น config/tcas_resources.yaml)")
     s.set_defaults(func=cmd_export)
+
+    s = sub.add_parser("verify", help="ไล่ตัวเลขที่ยังไม่ยืนยันกับประกาศจริง")
+    s.add_argument("--strict", action="store_true",
+                   help="ออกด้วย exit 1 ถ้ายังเหลือระดับ 'ห้ามปล่อยผ่าน' (ใช้ใน CI)")
+    s.set_defaults(func=cmd_verify)
 
     s = sub.add_parser("notify", help="ส่งสรุปประจำวันเข้า Telegram")
     s.add_argument("--test", action="store_true", help="ส่งข้อความทดสอบการเชื่อมต่อ")

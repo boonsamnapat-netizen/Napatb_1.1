@@ -978,6 +978,7 @@ const DATA = /*__TCAS_DATA__*/null;
 const Store = (() => {
   const KEY = "tcas70.v1";
   let mem = null, usable = true;
+  const listeners = [];
   try {
     const probe = "__t";
     localStorage.setItem(probe, "1");
@@ -1004,13 +1005,119 @@ const Store = (() => {
     return mem;
   }
   function save() {
-    if (!usable) return;
-    try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { usable = false; }
+    if (usable) {
+      try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { usable = false; }
+    }
+    // แจ้งผู้ฟัง (ไฟล์สำรองอัตโนมัติ) แม้ localStorage จะเขียนไม่ได้ —
+    // โหมดส่วนตัวยังเขียนไฟล์สำรองได้อยู่ ซึ่งดีกว่าไม่เหลืออะไรเลย
+    listeners.forEach(fn => { try { fn(mem); } catch (e) {} });
   }
-  return { read, save, get persistent() { return usable; } };
+  return {
+    read, save,
+    get persistent() { return usable; },
+    subscribe(fn) { listeners.push(fn); },
+    notify() { listeners.forEach(fn => { try { fn(mem); } catch (e) {} }); },
+  };
 })();
 
 const S = Store.read();
+
+/* ─────────────────────────────────────────────────────────────
+   ความปลอดภัยของข้อมูลในเครื่อง
+
+   ทุกอย่างเก็บใน localStorage ของเบราว์เซอร์นี้เครื่องเดียว ไม่มีเซิร์ฟเวอร์
+   นั่นแปลว่ามีสามทางที่ข้อมูลหายได้: เบราว์เซอร์ไล่ที่คืน (eviction),
+   ผู้ใช้ล้างข้อมูลเว็บ, และเปลี่ยนเครื่อง โค้ดชุดนี้จัดการทั้งสามทาง
+   โดยไม่ต้องมีบัญชีผู้ใช้
+   ───────────────────────────────────────────────────────────── */
+const Vault = (() => {
+  let persisted = null;      // ผลของ storage.persist() — null = ยังไม่รู้
+  let quota = null;
+
+  /* ขอให้เบราว์เซอร์ "ปักหมุด" ข้อมูลไว้ ไม่ไล่ที่คืนตอนพื้นที่ใกล้เต็ม
+     Safari/iOS จะลบข้อมูลเว็บที่ไม่ได้เปิด 7 วันถ้าไม่ได้ปักหมุด
+     เบราว์เซอร์ส่วนใหญ่ให้อัตโนมัติเมื่อผู้ใช้ติดตั้งเป็นแอปหรือใช้บ่อยพอ */
+  async function requestPersist() {
+    if (!navigator.storage || !navigator.storage.persist) return null;
+    try {
+      persisted = await navigator.storage.persisted();
+      if (!persisted) persisted = await navigator.storage.persist();
+    } catch (e) { persisted = null; }
+    return persisted;
+  }
+
+  async function measure() {
+    if (!navigator.storage || !navigator.storage.estimate) return null;
+    try { quota = await navigator.storage.estimate(); } catch (e) { quota = null; }
+    return quota;
+  }
+
+  /* ── ไฟล์สำรองอัตโนมัติ ─────────────────────────────────
+     ถ้าเบราว์เซอร์รองรับ File System Access (Chrome/Edge บนคอม)
+     ให้ผู้ใช้เลือกไฟล์ครั้งเดียว แล้วเขียนทับทุกครั้งที่ข้อมูลเปลี่ยน
+     ตัว handle เก็บใน IndexedDB เพราะ localStorage เก็บ object ไม่ได้ */
+  const IDB_DB = "tcas70", IDB_STORE = "kv", IDB_KEY = "backupHandle";
+  const canAutoBackup = () => typeof window.showSaveFilePicker === "function";
+
+  function idb(mode, fn) {
+    return new Promise((resolve, reject) => {
+      const open = indexedDB.open(IDB_DB, 1);
+      open.onupgradeneeded = () => open.result.createObjectStore(IDB_STORE);
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const tx = open.result.transaction(IDB_STORE, mode);
+        const req = fn(tx.objectStore(IDB_STORE));
+        tx.oncomplete = () => { open.result.close(); resolve(req && req.result); };
+        tx.onerror = () => { open.result.close(); reject(tx.error); };
+      };
+    });
+  }
+  const getHandle = () => idb("readonly", st => st.get(IDB_KEY)).catch(() => null);
+  const putHandle = h => idb("readwrite", st => st.put(h, IDB_KEY)).catch(() => null);
+  const dropHandle = () => idb("readwrite", st => st.delete(IDB_KEY)).catch(() => null);
+
+  async function chooseBackupFile() {
+    const h = await window.showSaveFilePicker({
+      suggestedName: "tcas70-progress.json",
+      types: [{ description: "ไฟล์สำรอง TCAS70", accept: { "application/json": [".json"] } }],
+    });
+    await putHandle(h);
+    await writeTo(h);
+    return h;
+  }
+
+  async function writeTo(handle) {
+    const w = await handle.createWritable();
+    await w.write(backupBlob());
+    await w.close();
+    S.lastBackup = todayISO();
+    Store.save();
+  }
+
+  /* เขียนไฟล์สำรองแบบเงียบ ๆ ทุกครั้งที่ข้อมูลเปลี่ยน
+     ถ้าสิทธิ์หมดอายุ (ผู้ใช้ปิดแท็บไปนาน) จะไม่ขอใหม่เอง — เงียบไว้
+     แล้วปล่อยให้หน้าตั้งค่าบอกว่าต้องเลือกไฟล์ใหม่ */
+  let writing = false;
+  async function autoBackup() {
+    if (writing || !canAutoBackup()) return;
+    const h = await getHandle();
+    if (!h) return;
+    try {
+      const perm = await h.queryPermission({ mode: "readwrite" });
+      if (perm !== "granted") return;
+      writing = true;
+      await writeTo(h);
+    } catch (e) { /* ไฟล์ถูกย้าย/ลบ — ปล่อยผ่าน */ }
+    finally { writing = false; }
+  }
+
+  return {
+    requestPersist, measure, canAutoBackup, chooseBackupFile, autoBackup,
+    getHandle, dropHandle,
+    get persisted() { return persisted; },
+    get quota() { return quota; },
+  };
+})();
 
 /* ย้ายข้อมูลจากรูปแบบเดิม (v1) ที่เก็บเป็น "วันที่|หัวข้อ" มาเป็นชั่วโมงต่อหัวข้อ
    ทำครั้งเดียวแล้วทิ้งของเดิม — ผู้ใช้เดิมจึงไม่เสียความคืบหน้าที่เคยติ๊กไว้ */
@@ -1063,6 +1170,24 @@ function fmtHours(h) {
    ให้ยึดวันเริ่มแผนแทน จะได้ไม่เจอหน้าว่าง */
 const REAL_TODAY = iso(new Date());
 const TODAY = REAL_TODAY < DATA.startDate ? DATA.startDate : REAL_TODAY;
+
+/* รูปแบบไฟล์สำรองมีที่เดียว — ปุ่มสำรองข้อมูล ไฟล์สำรองอัตโนมัติ
+   และการย้ายเครื่อง ใช้ตัวนี้ร่วมกัน จะได้ไม่มีวันหลุดจากกัน */
+function backupPayload() { return { app: "tcas70", version: 2, saved: TODAY, data: S }; }
+function backupBlob() {
+  return new Blob([JSON.stringify(backupPayload(), null, 2)], { type: "application/json" });
+}
+function todayISO() { return TODAY; }
+
+/* จำนวนวันตั้งแต่สำรองข้อมูลครั้งล่าสุด — null = ยังไม่เคยสำรองเลย */
+function daysSinceBackup() {
+  if (!S.lastBackup) return null;
+  return Math.max(0, daysBetween(S.lastBackup, TODAY));
+}
+/* มีของให้เสียหรือยัง — เตือนเรื่องสำรองข้อมูลตอนยังไม่มีอะไรเลยคือรบกวนเปล่า */
+function hasProgressWorthKeeping() {
+  return Object.keys(S.topics).length + Object.keys(S.q).length + S.runs.length >= 5;
+}
 
 const SUBJ = DATA.subjects;
 const TOPIC_OF = (() => {
@@ -2525,8 +2650,8 @@ function viewProgress() {
 
   const backup = el('<button class="btn btn-sm">สำรองข้อมูล</button>');
   backup.addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify({ app: "tcas70", saved: TODAY, data: S }, null, 2)],
-      { type: "application/json" });
+    const blob = backupBlob();
+    S.lastBackup = TODAY; Store.save();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -2601,6 +2726,140 @@ function viewProgress() {
   wrap.appendChild(rc);
 
   root.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ปฏิทิน (.ics) — ช่องทางแจ้งเตือนที่ไม่ต้องมีเซิร์ฟเวอร์
+
+   PWA ส่ง push เองไม่ได้ถ้าไม่มีหลังบ้าน แต่ปฏิทินของเครื่องส่งได้
+   แอปจึงสร้างไฟล์ .ics จากตารางที่คำนวณสด ๆ ให้ผู้ใช้นำเข้าครั้งเดียว
+   แล้วปล่อยให้ iOS/Google Calendar เป็นคนเตือน — เชื่อถือได้กว่าและ
+   ไม่ต้องตั้ง secret อะไรทั้งนั้น
+
+   ข้อแลก: ไฟล์เป็นภาพนิ่ง ณ วันที่กด ถ้าตารางขยับเยอะต้องนำเข้าใหม่
+   ทุก event จึงมี UID คงที่ (ผูกกับวันและหัวข้อ) ปฏิทินจะได้ทับของเดิม
+   แทนที่จะซ้อนกันเป็นสองรายการ
+   ───────────────────────────────────────────────────────────── */
+const ICS_PREFIX = "tcas70-";
+
+function icsEscape(t) {
+  return String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;")
+    .replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+
+/* RFC 5545 บังคับให้บรรทัดยาวไม่เกิน 75 ออกเทต แล้วพับด้วย CRLF + ช่องว่าง
+   ภาษาไทยเป็น UTF-8 หลายไบต์ต่อตัว จึงต้องนับไบต์แต่ตัดที่ขอบตัวอักษร
+   ถ้าตัดกลางตัวอักษรปฏิทินจะอ่านเป็นอักขระเสีย */
+function icsFold(line) {
+  const enc = new TextEncoder();
+  if (enc.encode(line).length <= 75) return line;
+  const out = [];
+  let cur = "", curBytes = 0, limit = 75;
+  for (const ch of line) {
+    const n = enc.encode(ch).length;
+    if (curBytes + n > limit) { out.push(cur); cur = " "; curBytes = 1; limit = 75; }
+    cur += ch; curBytes += n;
+  }
+  out.push(cur);
+  return out.join("\r\n");
+}
+
+const icsStamp = () => new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+const icsDate = isoStr => isoStr.replace(/-/g, "");
+function icsLocal(isoStr, hour, minute) {
+  // เวลาแบบ "ลอย" (ไม่มี Z ไม่มี TZID) = เวลาท้องถิ่นของเครื่องที่เปิด
+  // ตรงกับความหมายที่ต้องการพอดี และไม่ต้องแนบ VTIMEZONE ให้ยุ่ง
+  const hh = String(Math.floor(hour)).padStart(2, "0");
+  const mm = String(minute).padStart(2, "0");
+  return icsDate(isoStr) + "T" + hh + mm + "00";
+}
+
+function icsEvent(o) {
+  const L = ["BEGIN:VEVENT", "UID:" + o.uid, "DTSTAMP:" + icsStamp()];
+  if (o.allDay) {
+    const end = d(o.date); end.setDate(end.getDate() + 1);
+    L.push("DTSTART;VALUE=DATE:" + icsDate(o.date));
+    L.push("DTEND;VALUE=DATE:" + icsDate(iso(end)));
+  } else {
+    L.push("DTSTART:" + o.start, "DTEND:" + o.end);
+  }
+  L.push("SUMMARY:" + icsEscape(o.summary));
+  if (o.desc) L.push("DESCRIPTION:" + icsEscape(o.desc));
+  L.push("TRANSP:TRANSPARENT");
+  // หลายเตือนต่อหนึ่งรายการ — ไม่ใช่หลายรายการอันละหนึ่งเตือน
+  // ไม่งั้นวันสอบจะโผล่ซ้ำสองบรรทัดในปฏิทิน
+  (o.alarms || []).forEach(trig =>
+    L.push("BEGIN:VALARM", "ACTION:DISPLAY",
+           "DESCRIPTION:" + icsEscape(o.summary),
+           "TRIGGER:" + trig, "END:VALARM"));
+  L.push("END:VEVENT");
+  return L;
+}
+
+/* สร้างปฏิทินจากตารางที่ buildPlan คำนวณสด — ไม่ใช่ตารางที่ build ไว้ตอน export
+   ผู้ใช้จึงได้ตารางที่ปรับตามงานค้างจริงเสมอ */
+function buildICS(nDays, startHour, opts) {
+  const o = opts || {};
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0",
+             "PRODID:-//TCAS70//ตารางเตรียมสอบแพทย์//TH",
+             "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+             "X-WR-CALNAME:TCAS70 ตารางอ่านหนังสือ",
+             "X-WR-TIMEZONE:Asia/Bangkok"];
+
+  if (o.blocks !== false) {
+    buildPlan(TODAY, nDays).forEach(day => {
+      let at = startHour;
+      day.blocks.forEach((b, i) => {
+        const endAt = at + b.hours;
+        L.push(...icsEvent({
+          uid: ICS_PREFIX + "b-" + day.date + "-" + b.topic + "-" + b.kind + "@tcas70",
+          start: icsLocal(day.date, at, Math.round((at % 1) * 60)),
+          end: icsLocal(day.date, endAt, Math.round((endAt % 1) * 60)),
+          summary: (b.kind === "review" ? "ทบทวน: " : "อ่าน: ") + b.topicName,
+          desc: subjName(b.subject) + " · " + fmtHours(b.hours) +
+                (b.kind === "review" ? " · ทบทวนครั้งที่ " + b.repetition : ""),
+          alarms: i === 0 ? ["-PT10M"] : [],   // เตือนเฉพาะบล็อกแรกของวัน
+        }));
+        at = endAt + 0.25;                     // พัก 15 นาทีระหว่างบล็อก
+      });
+    });
+  }
+
+  if (o.tests !== false) {
+    DATA.tests.filter(t => t.date >= TODAY).forEach(t => L.push(...icsEvent({
+      uid: ICS_PREFIX + "t-" + t.date + "-" + t.kind + "@tcas70",
+      allDay: true, date: t.date,
+      summary: "ทดสอบ: " + t.title,
+      desc: (t.note || "") + (t.minutes ? "\nประมาณ " + t.minutes + " นาที" : ""),
+      alarms: ["-P1D"],
+    })));
+  }
+
+  if (o.exams !== false) {
+    (DATA.exams || []).filter(e => e.date >= TODAY).forEach(e => L.push(...icsEvent({
+      uid: ICS_PREFIX + "e-" + e.date + "-" + e.key + "@tcas70",
+      allDay: true, date: e.date,
+      summary: "สอบ: " + e.name + (e.verified ? "" : " (วันสอบยังไม่ยืนยัน)"),
+      desc: e.verified ? "" : "วันสอบนี้เป็นค่าประมาณ ตรวจกับ mytcas.com ก่อนเสมอ",
+      alarms: ["-P7D", "-P1D"],
+    })));
+  }
+
+  L.push("END:VCALENDAR");
+  return L.map(icsFold).join("\r\n") + "\r\n";
+}
+
+function downloadICS(nDays, startHour, opts) {
+  const blob = new Blob([buildICS(nDays, startHour, opts)],
+    { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tcas70-" + TODAY + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -2704,6 +2963,173 @@ function viewSettings() {
     wrap.appendChild(im);
   }
 
+  /* ---- ตัวเลขที่ยังไม่ยืนยัน
+     footer เดิมบอกแค่ว่า "ทุกอย่างเป็นค่าประมาณ" ซึ่งอ่านแล้วไม่รู้ว่าจะไม่เชื่อ
+     ตรงไหน ตรงนี้บอกเป็นรายการจริงว่าค่าไหนบ้าง และอันไหนเสียหายแค่ไหนถ้าผิด */
+  const V = DATA.verification;
+  if (V && V.total) {
+    const vc = el('<div class="card card-pad stack"></div>');
+    vc.appendChild(el('<div class="section-title"><h2>ความน่าเชื่อถือของตัวเลข</h2></div>'));
+
+    const pct = V.total ? V.verified / V.total : 0;
+    const head = el('<div style="display:flex;align-items:center;gap:16px"></div>');
+    head.appendChild(el(ringHTML(pct, 62, 7, "verifyRing")));
+    head.appendChild(el('<div style="flex:1;min-width:0">' +
+      '<div style="font-size:14.5px;font-weight:600">ยืนยันกับประกาศจริงแล้ว ' +
+        V.verified + " จาก " + V.total + " ค่า</div>" +
+      '<p class="tiny" style="margin:2px 0 0">ที่เหลือตั้งตามรูปแบบปีก่อน ' +
+        "ยังไม่ได้เทียบกับ mytcas.com และประกาศ กสพท ปี 2570</p></div>"));
+    vc.appendChild(head);
+
+    const SEV = {
+      critical: { label: "กระทบทั้งแผน", tone: "brick" },
+      high:     { label: "กระทบการตัดสินใจ", tone: "warn" },
+      medium:   { label: "ควรตรวจ", tone: "warn" },
+      low:      { label: "เล็กน้อย", tone: "text-2" },
+    };
+    ["critical", "high", "medium", "low"].forEach(sev => {
+      const items = V.items.filter(i => i.severity === sev);
+      if (!items.length) return;
+      const meta = SEV[sev];
+      vc.appendChild(el('<div style="margin-top:6px;font-size:12.5px;font-weight:700;' +
+        'color:var(--' + meta.tone + ')">' + esc(meta.label) + " · " + items.length + " ค่า</div>"));
+      items.slice(0, 6).forEach(i => vc.appendChild(el(
+        '<div class="tiny" style="margin:0;padding-left:11px;border-left:3px solid var(--' +
+          meta.tone + ')">' + esc(i.what) + "</div>")));
+      if (items.length > 6) vc.appendChild(el('<div class="tiny" style="padding-left:11px">' +
+        "…และอีก " + (items.length - 6) + " ค่า</div>"));
+    });
+
+    vc.appendChild(el('<p class="tiny" style="margin:8px 0 0">แก้ได้ที่ไฟล์ ' +
+      "<b>config/tcas_config.yaml</b> และ <b>config/tcas_programs.yaml</b> " +
+      "แล้วตั้ง <b>verified: true</b> · ดูรายการเต็มด้วยคำสั่ง " +
+      "<b>python tcas_cli.py verify</b></p>"));
+    wrap.appendChild(vc);
+  }
+
+  /* ---- แจ้งเตือนผ่านปฏิทินของเครื่อง */
+  const cal = el('<div class="card card-pad stack"></div>');
+  cal.appendChild(el('<div class="section-title"><h2>เตือนผ่านปฏิทิน</h2></div>'));
+  cal.appendChild(el('<p class="tiny" style="margin:-8px 0 0">แอปส่งแจ้งเตือนเองไม่ได้ ' +
+    "เพราะไม่มีเซิร์ฟเวอร์ — แต่ปฏิทินของเครื่องคุณส่งได้ กดปุ่มแล้วเปิดไฟล์ที่ได้ " +
+    "ตารางจะเข้าไปอยู่ในปฏิทินพร้อมตั้งเตือนล่วงหน้าให้เอง</p>"));
+
+  const calCfg = Object.assign({ startHour: 18, days: 30 }, S.settings.calendar || {});
+  const setCal = patch => {
+    S.settings = Object.assign({}, S.settings,
+      { calendar: Object.assign({}, calCfg, patch) });
+    Store.save(); render();
+  };
+
+  const hourRow = el('<div class="field"><span class="field-l">เริ่มอ่านกี่โมง</span></div>');
+  const hourIn = el('<input class="hours-in" type="number" min="0" max="23" step="1" value="' +
+    calCfg.startHour + '">');
+  hourIn.addEventListener("change", () => {
+    const v = Math.max(0, Math.min(23, Math.round(Number(hourIn.value) || 0)));
+    setCal({ startHour: v });
+  });
+  hourRow.appendChild(hourIn);
+  hourRow.appendChild(el('<span class="tiny">น.</span>'));
+  cal.appendChild(hourRow);
+
+  const dayRow = el('<div class="field"><span class="field-l">ส่งไปข้างหน้ากี่วัน</span></div>');
+  const dayIn = el('<input class="hours-in" type="number" min="7" max="180" step="1" value="' +
+    calCfg.days + '">');
+  dayIn.addEventListener("change", () => {
+    const v = Math.max(7, Math.min(180, Math.round(Number(dayIn.value) || 30)));
+    setCal({ days: v });
+  });
+  dayRow.appendChild(dayIn);
+  dayRow.appendChild(el('<span class="tiny">วัน</span>'));
+  cal.appendChild(dayRow);
+
+  const calBtns = el('<div class="btn-row"></div>');
+  const calAll = el('<button class="btn btn-pri btn-sm">ดาวน์โหลดปฏิทิน</button>');
+  calAll.addEventListener("click", () => downloadICS(calCfg.days, calCfg.startHour, {}));
+  calBtns.appendChild(calAll);
+  const calExam = el('<button class="btn btn-sm">เอาเฉพาะวันสอบ</button>');
+  calExam.addEventListener("click", () =>
+    downloadICS(calCfg.days, calCfg.startHour, { blocks: false, tests: false }));
+  calBtns.appendChild(calExam);
+  cal.appendChild(calBtns);
+
+  cal.appendChild(el('<p class="tiny" style="margin:2px 0 0"><b>iPhone:</b> กดปุ่มแล้วเลือก ' +
+    '“เพิ่มทั้งหมด” · <b>Android:</b> เปิด Google Calendar → ตั้งค่า → นำเข้า แล้วเลือกไฟล์นี้</p>'));
+  cal.appendChild(el('<p class="tiny" style="margin:0">ไฟล์เป็นภาพนิ่งของตาราง ณ ตอนที่กด — ' +
+    "ถ้าข้ามไปหลายวันจนตารางขยับเยอะ ให้กดโหลดใหม่แล้วนำเข้าทับ " +
+    "(รายการเดิมจะถูกเขียนทับ ไม่ซ้อนกัน)</p>"));
+  wrap.appendChild(cal);
+
+  /* ---- ความปลอดภัยของข้อมูล */
+  const vault = el('<div class="card card-pad stack"></div>');
+  vault.appendChild(el('<div class="section-title"><h2>กันข้อมูลหาย</h2></div>'));
+
+  const since = daysSinceBackup();
+  const risky = hasProgressWorthKeeping() && (since === null || since > 14);
+  vault.appendChild(el('<p class="tiny" style="margin:-8px 0 0">' +
+    (Store.persistent
+      ? "ความคืบหน้าเก็บอยู่ในเบราว์เซอร์นี้เครื่องเดียว ไม่ได้ส่งขึ้นเซิร์ฟเวอร์ที่ไหน " +
+        "— ล้างข้อมูลเว็บหรือเปลี่ยนเครื่องเมื่อไร ก็หายเมื่อนั้น ถ้าไม่ได้สำรองไว้"
+      : "⚠️ เบราว์เซอร์นี้ไม่ยอมให้บันทึกถาวร (อาจเปิดอยู่ในโหมดส่วนตัว) " +
+        "ความคืบหน้าจะหายทันทีที่ปิดหน้านี้") + "</p>"));
+
+  const stat = el('<div class="stack" style="gap:6px"></div>');
+  vault.appendChild(stat);
+
+  function paintVaultStatus() {
+    stat.innerHTML = "";
+    const row = (label, value, tone) => stat.appendChild(el(
+      '<div style="display:flex;gap:10px;align-items:baseline;font-size:13px">' +
+        '<span style="flex:1;color:var(--text-2)">' + esc(label) + "</span>" +
+        '<span class="num" style="font-weight:600' +
+          (tone ? ";color:var(--" + tone + ")" : "") + '">' + esc(value) + "</span>" +
+      "</div>"));
+
+    row("สำรองล่าสุด",
+        since === null ? "ยังไม่เคย" : since === 0 ? "วันนี้" : since + " วันก่อน",
+        since === null || since > 14 ? "brick" : since > 7 ? "warn" : "ok");
+    if (Vault.persisted !== null)
+      row("เบราว์เซอร์ปักหมุดข้อมูลให้", Vault.persisted ? "แล้ว" : "ยัง",
+          Vault.persisted ? "ok" : "warn");
+    if (Vault.quota && Vault.quota.usage != null)
+      row("พื้นที่ที่ใช้", Math.max(1, Math.round(Vault.quota.usage / 1024)) + " KB");
+  }
+  paintVaultStatus();
+
+  // ถามเบราว์เซอร์แบบไม่บล็อกหน้าจอ แล้วค่อยเติมผลลงไปเมื่อรู้
+  Promise.all([Vault.requestPersist(), Vault.measure()]).then(paintVaultStatus);
+
+  if (risky) vault.appendChild(el('<div class="note">' +
+    (since === null
+      ? "ยังไม่เคยสำรองข้อมูลเลย — ถ้าเครื่องนี้มีอะไร ความคืบหน้าทั้งหมดหายถาวร"
+      : "สำรองครั้งล่าสุด " + since + " วันแล้ว") +
+    " กด <b>สำรองข้อมูล</b> ในหน้าความคืบหน้า แล้วเก็บไฟล์ไว้ที่อื่น</div>"));
+
+  if (Vault.canAutoBackup()) {
+    vault.appendChild(el('<p class="tiny" style="margin:4px 0 0">เบราว์เซอร์นี้เขียนไฟล์สำรอง' +
+      "ให้อัตโนมัติได้ — เลือกไฟล์ครั้งเดียว จากนั้นทุกครั้งที่ติ๊กงาน " +
+      "ไฟล์นั้นจะถูกเขียนทับให้เอง ไม่ต้องกดสำรองอีก</p>"));
+    const ab = el('<div class="btn-row"></div>');
+    const pick = el('<button class="btn btn-sm">เลือกไฟล์สำรองอัตโนมัติ</button>');
+    pick.addEventListener("click", async () => {
+      try { await Vault.chooseBackupFile(); alert("ตั้งไฟล์สำรองอัตโนมัติแล้ว"); render(); }
+      catch (e) { /* ผู้ใช้กดยกเลิก */ }
+    });
+    ab.appendChild(pick);
+    Vault.getHandle().then(h => {
+      if (!h) return;
+      const off = el('<button class="btn btn-sm">เลิกสำรองอัตโนมัติ</button>');
+      off.addEventListener("click", async () => { await Vault.dropHandle(); render(); });
+      ab.appendChild(off);
+    });
+    vault.appendChild(ab);
+  } else {
+    vault.appendChild(el('<p class="tiny" style="margin:4px 0 0">เบราว์เซอร์นี้ ' +
+      "(Safari บน iPhone รวมอยู่ด้วย) ยังเขียนไฟล์สำรองอัตโนมัติไม่ได้ " +
+      "ต้องกดสำรองเองเป็นระยะ — ตั้งเตือนในปฏิทินเดือนละครั้งก็พอ</p>"));
+  }
+  wrap.appendChild(vault);
+
   /* ---- คืนค่าเริ่มต้น */
   const rst = el('<div class="card card-pad stack"></div>');
   rst.appendChild(el('<p class="tiny" style="margin:0">ค่าที่ตั้งที่นี่เก็บในเครื่องนี้เท่านั้น ' +
@@ -2759,6 +3185,10 @@ function syncStickyOffset() {
     top += tabs.getBoundingClientRect().height;
   document.documentElement.style.setProperty("--stick", Math.round(top) + "px");
 }
+
+/* ผูกไฟล์สำรองอัตโนมัติเข้ากับทุกครั้งที่ข้อมูลเปลี่ยน
+   ทำหลัง Vault ถูกประกาศครบแล้ว จึงอยู่ตรงนี้ไม่ใช่ในตัว Store */
+Store.subscribe(() => { Vault.autoBackup(); });
 
 function render() {
   renderTop();

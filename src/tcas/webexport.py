@@ -19,7 +19,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from . import icons, planner, ranking, scoring, syllabus, testplan
+from . import icons, planner, ranking, scoring, syllabus, testplan, verify
 from .config import REPO_ROOT, exam_dates, parse_date, resolve_path
 from .models import StudyDay
 
@@ -183,6 +183,11 @@ def build_payload(
         "questions": questions,
         "programs": program_list,
         "resources": resources or {},
+        # ผู้ใช้ปลายทางแก้ YAML ไม่ได้ จึงต้องเห็นอย่างน้อยว่าตัวเลขไหน
+        # ในหน้าจอที่กำลังดูอยู่ยังไม่ได้ยืนยันกับประกาศจริง
+        "verification": verify.summary_for_web(
+            verify.audit(cfg, programs or {}, resources or {})
+        ),
     }
 
 

@@ -53,6 +53,11 @@ jobs:
       - name: Validate question bank
         run: python tcas_cli.py bank
 
+      # ไม่ใช้ --strict เพราะจะบล็อกการ deploy ไปตลอดจนกว่าจะกรอกข้อมูลจริงครบ
+      # แต่ให้ log บอกทุกครั้งว่าเหลือค่าที่ยังไม่ยืนยันกี่ตัว
+      - name: Report unverified data
+        run: python tcas_cli.py verify
+
       - name: Build the app
         run: python tcas_cli.py export
 
