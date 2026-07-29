@@ -292,7 +292,9 @@ def cmd_rank(args) -> int:
         elif store.scores():
             my_score = scoring.compute(cfg, store.scores()).total
 
-    chances = ranking.rank(programs, my_score, faculty=args.faculty)
+    chances = ranking.rank(
+        programs, my_score, faculty=args.faculty, university=args.university
+    )
     if not chances:
         print("ไม่มีคณะที่ตรงเงื่อนไข")
         return 0
@@ -603,7 +605,8 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("rank", help="จัดอันดับคณะและประเมินโอกาส")
     s.add_argument("--score", type=float, help="คะแนนรวม กสพท ที่ใช้เทียบ")
     s.add_argument("--from-mastery", action="store_true", help="ใช้คะแนนที่ประมาณจากผล quiz")
-    s.add_argument("--faculty", help="กรองเฉพาะคณะนี้ เช่น แพทยศาสตร์")
+    s.add_argument("--faculty", help="กรองเฉพาะคณะนี้ เช่น ทันตแพทยศาสตร์")
+    s.add_argument("--university", help="กรองเฉพาะสถาบันนี้ เช่น ธรรมศาสตร์")
     s.add_argument("--limit", type=int, default=20, help="แสดงกี่คณะ")
     s.add_argument("--programs", help="ไฟล์คณะ (ค่าเริ่มต้น config/tcas_programs.yaml)")
     s.set_defaults(func=cmd_rank)

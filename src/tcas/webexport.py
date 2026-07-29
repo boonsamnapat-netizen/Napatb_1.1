@@ -149,6 +149,9 @@ def build_payload(
                     "code": c.code,
                     "name": c.name,
                     "faculty": c.faculty,
+                    # แยกสถาบันออกมาเป็นอีกแกนหนึ่ง เพื่อให้หน้าประเมินโอกาส
+                    # กรองได้ทั้ง "คณะที่อยากเข้า" และ "มหาวิทยาลัยที่อยากอยู่"
+                    "university": c.university,
                     "seats": c.seats,
                     "projected": c.projected_cutoff,
                     "trend": c.trend,

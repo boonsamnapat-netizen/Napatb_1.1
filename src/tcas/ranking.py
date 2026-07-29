@@ -66,8 +66,14 @@ def rank(
     my_score: Optional[float],
     target_year: Optional[int] = None,
     faculty: Optional[str] = None,
+    university: Optional[str] = None,
 ) -> List[ProgramChance]:
-    """จัดอันดับคณะจากคะแนนต่ำสุดที่คาด (สูงไปต่ำ) พร้อมประเมินโอกาส."""
+    """จัดอันดับคณะจากคะแนนต่ำสุดที่คาด (สูงไปต่ำ) พร้อมประเมินโอกาส.
+
+    `faculty` และ `university` เป็นตัวกรองคนละแกน — "อยากเข้าทันตะ" กับ
+    "อยากอยู่ ม.ธรรมศาสตร์" เป็นคำถามคนละคำถาม ใส่พร้อมกันได้
+    ทั้งคู่เทียบแบบ substring เพื่อให้พิมพ์ "ธรรมศาสตร์" แทน "ม.ธรรมศาสตร์" ได้
+    """
     meta = programs_doc.get("meta") or {}
     years = meta.get("years") or []
     if target_year is None:
@@ -75,7 +81,9 @@ def rank(
 
     out: List[ProgramChance] = []
     for spec in programs_doc.get("programs") or []:
-        if faculty and spec.get("faculty") != faculty:
+        if faculty and faculty not in str(spec.get("faculty") or ""):
+            continue
+        if university and university not in str(spec.get("university") or ""):
             continue
 
         cutoffs = {int(k): float(v) for k, v in (spec.get("cutoffs") or {}).items()}
@@ -99,6 +107,7 @@ def rank(
                 code=str(spec.get("code", "")),
                 name=str(spec.get("name", "")),
                 faculty=str(spec.get("faculty", "")),
+                university=str(spec.get("university", "")),
                 seats=spec.get("seats"),
                 latest_cutoff=latest,
                 trend=round(trend, 2),

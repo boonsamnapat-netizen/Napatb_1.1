@@ -872,6 +872,69 @@ main { padding-top: 26px; }
   font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
 
 /* ═══════════════════════════════════════════════════════════════
+   โอกาสติด — รายการคณะที่คะแนนชุดนี้ไปถึง
+   ═══════════════════════════════════════════════════════════════ */
+/* ตัวกรอง: คณะเป็นชิปเพราะมีแค่สี่ค่า เห็นครบในบรรทัดเดียว
+   ส่วนมหาวิทยาลัยมี 24 ค่า จึงต้องเป็น select ไม่งั้นล้นจอ */
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip {
+  appearance: none; cursor: pointer; font: inherit;
+  padding: 5px 12px; border-radius: var(--pill);
+  font-size: 12.5px; font-weight: 600; line-height: 1.5;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2);
+  transition: background .15s, color .15s, border-color .15s, transform .1s var(--spring);
+}
+.fchip:active { transform: scale(.95); }
+.fchip[aria-pressed="true"] {
+  background: var(--marigold-f); border-color: var(--marigold-f); color: #2a1d2e;
+}
+
+/* หัวข้อแถบโอกาส — กดพับได้ เพราะ "ยังห่าง" มักยาวที่สุดและอยากดูน้อยที่สุด */
+.bandhd {
+  appearance: none; width: 100%; cursor: pointer; font: inherit; text-align: left;
+  display: flex; align-items: center; gap: 8px;
+  border: 0; border-top: 1px solid var(--line-soft);
+  background: transparent; color: inherit;
+  padding: 11px 0 7px; margin-top: 2px;
+}
+.bandhd:first-of-type { border-top: 0; }
+.bandhd-d { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--bc, var(--line)); }
+.bandhd-t { font-size: 13px; font-weight: 700; color: var(--bc, var(--text)); }
+.bandhd-n { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.bandhd-c { margin-left: auto; font-size: 11px; color: var(--text-3); transition: transform .15s; }
+.bandhd[aria-expanded="false"] .bandhd-c { transform: rotate(-90deg); }
+.bandbody[hidden] { display: none; }
+
+/* หนึ่งแถว = หนึ่งคณะ ขอบซ้ายบอกแถบโอกาสโดยไม่ต้องอ่านตัวอักษร */
+.prow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; margin-bottom: 5px;
+  border-radius: var(--r-sm);
+  border-left: 4px solid var(--bc, var(--line));
+  background: color-mix(in oklab, var(--bc, var(--line)) 8%, var(--surface));
+}
+.prow:last-child { margin-bottom: 0; }
+.prow.is-target { box-shadow: inset 0 0 0 1px var(--marigold-f); }
+.prow-star {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  flex: none; width: 26px; height: 26px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; font-size: 15px; line-height: 1;
+  color: var(--text-3); transition: color .15s, transform .18s var(--spring);
+}
+.prow-star:hover { color: var(--marigold-f); }
+.prow-star:active { transform: scale(.85); }
+.prow-star[aria-pressed="true"] { color: var(--marigold-f); }
+.prow-m { flex: 1; min-width: 0; }
+.prow-n { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.prow-s { font-size: 11.5px; color: var(--text-3); line-height: 1.5; }
+.prow-r { flex: none; text-align: right; line-height: 1.3; }
+.prow-d {
+  font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700;
+  letter-spacing: -.02em; color: var(--bc, var(--text));
+}
+.prow-b { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════
    PROGRESS RING — วาดตัวเองตอนโผล่ ไม่ใช่ขึ้นมาเต็มวงเลย
    ═══════════════════════════════════════════════════════════════ */
 .ring { position: relative; flex: none; display: grid; place-items: center; }
@@ -3077,6 +3140,295 @@ function scorePanel() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   โอกาสติด — คำถามที่เด็กถามจริงคือ "คะแนนเท่านี้ ติดที่ไหนได้บ้าง"
+   ไม่ใช่แค่ "ห่างจากคณะเป้าหมายอยู่เท่าไร"
+
+   ตั้งใจ**ไม่**แสดงเป็น "โอกาสติด 78%" เพราะมีสถิติอยู่ปีเดียว
+   จะคำนวณความน่าจะเป็นจากจุดข้อมูลจุดเดียวไม่ได้ ตัวเลขที่ออกมาจะเป็นของปลอม
+   ที่ดูน่าเชื่อ ซึ่งอันตรายกว่าไม่บอกอะไรเลย สิ่งที่บอกได้จริงมีอย่างเดียวคือ
+   "คะแนนชุดนี้ห่างจากคนสุดท้ายที่ติดเมื่อปีที่แล้วกี่คะแนน"
+   ───────────────────────────────────────────────────────────── */
+
+/* ขอบเขตของแต่ละแถบ = ค่าเดียวกับ src/tcas/ranking.py เป๊ะ ๆ
+   ถ้าที่นี่กับ CLI ตอบไม่ตรงกัน ผู้ใช้จะไม่รู้ว่าอันไหนจริง */
+const BANDS = [
+  { key: "safe",   label: "ค่อนข้างปลอดภัย", min: 3,         color: "var(--ok)" },
+  { key: "likely", label: "ลุ้นได้",          min: 0,         color: "var(--marigold)" },
+  { key: "reach",  label: "ท้าทาย",           min: -3,        color: "var(--warn)" },
+  { key: "far",    label: "ยังห่าง",          min: -Infinity, color: "var(--brick)" },
+];
+const bandOf = m => BANDS.find(b => m >= b.min) || BANDS[BANDS.length - 1];
+
+const STAR = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">' +
+  '<path d="M12 3.7l2.6 5.27 5.82.85-4.21 4.1.99 5.79L12 16.98l-5.2 2.73.99-5.79-4.21-4.1 ' +
+  '5.82-.85z" fill="var(--st-f,none)" stroke="currentColor" stroke-width="1.6" ' +
+  'stroke-linejoin="round"/></svg>';
+
+/* ค่าเฉลี่ย % ของวิชาที่กรอกไปแล้ว — ใช้เป็นค่าตั้งต้นของ "ที่เหลือจะทำได้เท่าไร"
+   เพราะเป็นการเดาที่มีหลักฐานรองรับที่สุดเท่าที่มี ไม่ใช่เลขที่คิดขึ้นเอง */
+function avgFilledPercent() {
+  const scores = myScores();
+  const filled = filledSubjects(scores);
+  if (!filled.length) return null;
+  return filled.reduce((a, c) => a + toPercent(c, scores[c]), 0) / filled.length;
+}
+const assumedPercent = () => {
+  const v = (S.settings || {}).assumePct;
+  return v == null || v === "" ? avgFilledPercent() : Number(v);
+};
+
+/* คะแนนรวมที่เอาไปเทียบกับคณะต่าง ๆ
+   กรอกครบ  -> คะแนนจริง
+   ยังไม่ครบ -> เติมวิชาที่ว่างด้วย % ที่สมมติไว้ แล้วคิดใหม่ทั้งก้อน
+   ต้องเติมกลับเป็น "คะแนนดิบ" ไม่ใช่บวก % เข้าไปตรง ๆ เพราะกลุ่มวิทยาศาสตร์
+   เฉลี่ยจากสามวิชา การเติมทีละวิชาจึงไม่ได้ขยับคะแนนกลุ่มเป็นเส้นตรง */
+function assessedScore() {
+  const scores = myScores();
+  if (!filledSubjects(scores).length) return null;
+  const gaps = missingSubjects(scores);
+  if (!gaps.length) return scoreCard(scores).total;
+  const pct = assumedPercent();
+  if (pct == null) return null;
+  const filledIn = Object.assign({}, scores);
+  gaps.forEach(c => { filledIn[c] = (SUBJ[c].maxScore || 0) * pct / 100; });
+  return scoreCard(filledIn).total;
+}
+
+const watchList = () => ((S.settings || {}).watch || []).slice();
+const isWatched = code => watchList().indexOf(code) >= 0;
+function toggleWatch(code) {
+  const cur = watchList();
+  const i = cur.indexOf(code);
+  if (i >= 0) cur.splice(i, 1); else cur.push(code);
+  S.settings = Object.assign({}, S.settings, { watch: cur });
+  Store.save();
+}
+
+/* คะแนนอยู่ตรงไหนของกลุ่มที่ติดปีที่แล้ว — ใช้ได้เมื่อรู้ทั้งคะแนนต่ำสุดและสูงสุด
+   ประโยคนี้บอกได้มากกว่าตัวเลขห่างเฉย ๆ ว่า "ติดแบบเฉียดฉิว" หรือ "ติดสบาย" */
+function positionNote(score, low, top) {
+  if (top == null || top <= low) return "";
+  if (score < low) return "";
+  const pos = (score - low) / (top - low);
+  if (pos > 1) return "สูงกว่าคะแนนสูงสุดปีที่แล้ว";
+  if (pos >= 0.66) return "อยู่ต้นกลุ่มที่ติดปีที่แล้ว";
+  if (pos >= 0.33) return "อยู่กลางกลุ่มที่ติดปีที่แล้ว";
+  return "อยู่ท้ายกลุ่มที่ติดปีที่แล้ว";
+}
+
+function progRow(p, score, target) {
+  const m = p.projected == null ? null : score - p.projected;
+  const b = m == null ? null : bandOf(m);
+  const on = isWatched(p.code);
+  const row = el('<div class="prow' +
+    (target && p.code === target.code ? " is-target" : "") +
+    '" style="--bc:' + (b ? b.color : "var(--line)") + '"></div>');
+
+  const star = el('<button class="prow-star" aria-pressed="' + (on ? "true" : "false") +
+    '" style="' + (on ? "--st-f:currentColor" : "") + '" aria-label="' +
+    (on ? "เอาออกจากคณะที่สนใจ" : "เพิ่มเข้าคณะที่สนใจ") + '">' + STAR + "</button>");
+  star.addEventListener("click", () => { toggleWatch(p.code); render(); });
+  row.appendChild(star);
+
+  /* บรรทัดรองมีที่ไม่ถึงสองบรรทัด จึงต้องเลือกเฉพาะสิ่งที่บอกอะไรใหม่
+     ชื่อมหาวิทยาลัยไม่ต้องซ้ำ เพราะอยู่ในชื่อคณะอยู่แล้วทุกรายการ
+     และอัตราส่วนคนต่อที่นั่งสั้นกว่าและอ่านง่ายกว่าเลขผู้สมัครดิบ */
+  const bits = [];
+  const pos = m != null ? positionNote(score, p.projected, p.top) : "";
+  if (pos) bits.push(pos);
+  if (p.university && p.name.indexOf(p.university) < 0) bits.push(esc(p.university));
+  if (p.seats) bits.push("รับ " + p.seats + " ที่นั่ง");
+  if (p.seats && p.applicants) bits.push((p.applicants / p.seats).toFixed(1) + " คนต่อที่");
+
+  row.appendChild(el('<div class="prow-m">' +
+    '<div class="prow-n">' + esc(p.name) + "</div>" +
+    '<div class="prow-s">' + bits.join(" · ") + "</div>" +
+    "</div>"));
+
+  row.appendChild(el('<div class="prow-r">' +
+    '<div class="prow-d">' + (m == null ? "—" : (m >= 0 ? "+" : "−") + Math.abs(m).toFixed(2)) + "</div>" +
+    '<div class="prow-b">' + (m == null ? "ไม่มีข้อมูล" : "ต่ำสุด " + p.projected.toFixed(2)) + "</div>" +
+    "</div>"));
+  return row;
+}
+
+function chancePanel() {
+  const all = DATA.programs || [];
+  const withData = all.filter(p => p.projected != null);
+  const target = targetProgram();
+  const card = el('<div class="card card-pad stack"></div>');
+  card.appendChild(el('<div class="section-title"><h2>มีโอกาสติดที่ไหนบ้าง</h2></div>'));
+
+  if (!all.length) return card;
+
+  const scores = myScores();
+  const filled = filledSubjects(scores);
+  if (!filled.length) {
+    card.appendChild(el('<p class="tiny" style="margin:0">กรอกคะแนนที่สอบได้ในการ์ดด้านบนก่อน ' +
+      "แล้วตรงนี้จะไล่ให้ดูทีละคณะว่าคะแนนชุดนั้นไปถึงไหนแล้วบ้าง — " +
+      "ยังไม่ครบทุกวิชาก็ดูได้ ระบบจะเดาที่เหลือให้จากค่าเฉลี่ยที่ทำได้</p>"));
+    return card;
+  }
+
+  const gaps = missingSubjects(scores);
+  const score = assessedScore();
+  const sc = scoreCard(scores);
+
+  /* ---- ประโยคเดียวที่ตอบคำถามหัวข้อ */
+  const passed = withData.filter(p => score >= p.projected).length;
+  card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
+    "ด้วยคะแนน <b class=\"num\">" + score.toFixed(2) + "</b> ผ่านคะแนนต่ำสุดของปีที่แล้ว " +
+    '<b class="num">' + passed + "</b> จาก " + withData.length + " คณะที่มีข้อมูล</p>"));
+
+  /* ---- สมมติฐานของวิชาที่ยังไม่ได้สอบ
+     ถ้าไม่เปิดให้ปรับ ตัวเลขข้างบนจะเป็นคำทำนายที่ผู้ใช้ไม่มีสิทธิ์เถียง
+     ปรับได้เมื่อไร มันจะกลายเป็นเครื่องมือถามว่า "ต้องทำได้เท่าไรถึงจะติดที่นี่" */
+  if (gaps.length) {
+    const pct = assumedPercent();
+    const auto = (S.settings || {}).assumePct == null || S.settings.assumePct === "";
+    const row = el('<div class="field"><span class="field-l">' +
+      "สมมติว่าอีก " + gaps.length + " วิชาที่ยังไม่ได้กรอก ทำได้เฉลี่ย</span></div>");
+    const inp = el('<input class="hours-in" type="number" min="0" max="100" step="1" ' +
+      'style="width:72px" value="' + (pct == null ? "" : pct.toFixed(0)) + '">');
+    inp.addEventListener("change", () => {
+      const v = inp.value.trim();
+      S.settings = Object.assign({}, S.settings, {
+        assumePct: v === "" ? null : Math.max(0, Math.min(100, Number(v) || 0)),
+      });
+      Store.save(); render();
+    });
+    row.appendChild(inp);
+    row.appendChild(el('<span class="tiny">%</span>'));
+    card.appendChild(row);
+    card.appendChild(el('<p class="tiny" style="margin:0">' +
+      (auto
+        ? "ค่านี้ตั้งจากค่าเฉลี่ยของวิชาที่กรอกไปแล้ว — แก้ได้ถ้าคิดว่าจะทำได้ดีกว่านี้"
+        : "ตั้งเอง — ล้างช่องให้ว่างเพื่อกลับไปใช้ค่าเฉลี่ยจากที่กรอกแล้ว (" +
+          (avgFilledPercent() || 0).toFixed(0) + "%)") + "</p>"));
+  }
+
+  /* ---- ตกเกณฑ์ขั้นต่ำ = คัดออกทุกคณะ ต้องขึ้นก่อนรายการเสมอ */
+  if (sc.failures.length) {
+    card.appendChild(el('<div class="note" style="border-color:var(--brick);' +
+      'background:var(--brick-dim)"><b>ตกเกณฑ์ขั้นต่ำ ' + sc.failures.length + " วิชา</b><br>" +
+      "รายการข้างล่างนี้เทียบเฉพาะคะแนนรวม แต่ถ้าตกเกณฑ์ขั้นต่ำจะถูกคัดออก" +
+      "ทุกคณะไม่ว่าคะแนนรวมจะสูงแค่ไหน — แก้ตรงนั้นก่อน</div>"));
+  }
+
+  /* ---- ตัวกรอง: คณะกับมหาวิทยาลัยที่สนใจ */
+  const facs = [];
+  const unis = [];
+  all.forEach(p => {
+    if (p.faculty && facs.indexOf(p.faculty) < 0) facs.push(p.faculty);
+    if (p.university && unis.indexOf(p.university) < 0) unis.push(p.university);
+  });
+  unis.sort((a, b) => a.localeCompare(b, "th"));
+
+  const facSel = ((S.settings || {}).chanceFac || []).filter(f => facs.indexOf(f) >= 0);
+  const uniSel = (S.settings || {}).chanceUni || "";
+
+  const chips = el('<div class="fchips"></div>');
+  const allChip = el('<button class="fchip" aria-pressed="' +
+    (facSel.length ? "false" : "true") + '">ทุกคณะ</button>');
+  allChip.addEventListener("click", () => {
+    S.settings = Object.assign({}, S.settings, { chanceFac: [] });
+    Store.save(); render();
+  });
+  chips.appendChild(allChip);
+  facs.forEach(f => {
+    const on = facSel.indexOf(f) >= 0;
+    const c = el('<button class="fchip" aria-pressed="' + (on ? "true" : "false") + '">' +
+      esc(f) + "</button>");
+    c.addEventListener("click", () => {
+      const next = facSel.slice();
+      const i = next.indexOf(f);
+      if (i >= 0) next.splice(i, 1); else next.push(f);
+      S.settings = Object.assign({}, S.settings, { chanceFac: next });
+      Store.save(); render();
+    });
+    chips.appendChild(c);
+  });
+  card.appendChild(chips);
+
+  const uniRow = el('<div class="field"><span class="field-l">มหาวิทยาลัย</span></div>');
+  const uniSelEl = el('<select class="sel" style="max-width:62%"></select>');
+  uniSelEl.appendChild(el('<option value="">— ทุกมหาวิทยาลัย —</option>'));
+  unis.forEach(u => {
+    const o = el('<option value="' + esc(u) + '">' + esc(u) + "</option>");
+    if (u === uniSel) o.selected = true;
+    uniSelEl.appendChild(o);
+  });
+  uniSelEl.addEventListener("change", () => {
+    S.settings = Object.assign({}, S.settings, { chanceUni: uniSelEl.value });
+    Store.save(); render();
+  });
+  uniRow.appendChild(uniSelEl);
+  card.appendChild(uniRow);
+
+  /* ---- คณะที่ติดดาวไว้ — ไม่ขึ้นกับตัวกรอง เพราะเป็นรายการที่ตั้งใจเก็บไว้ดู */
+  const watched = all.filter(p => isWatched(p.code));
+  if (watched.length) {
+    watched.sort((a, b) => (b.projected || 0) - (a.projected || 0));
+    card.appendChild(el('<div class="section-title" style="margin:6px 0 0">' +
+      "<h2>คณะที่สนใจ</h2></div>"));
+    const box = el("<div></div>");
+    watched.forEach(p => box.appendChild(progRow(p, score, target)));
+    card.appendChild(box);
+  }
+
+  /* ---- รายการทั้งหมด แยกตามแถบโอกาส */
+  let list = withData.slice();
+  if (facSel.length) list = list.filter(p => facSel.indexOf(p.faculty) >= 0);
+  if (uniSel) list = list.filter(p => p.university === uniSel);
+
+  const listTitle = el('<div class="section-title" style="margin:8px 0 0">' +
+    "<h2>เรียงตามโอกาส</h2></div>");
+  card.appendChild(listTitle);
+
+  if (!list.length) {
+    card.appendChild(el('<p class="tiny" style="margin:0">ไม่มีคณะที่ตรงกับตัวกรองนี้' +
+      " — ลองเอาตัวกรองออกสักอัน</p>"));
+  }
+
+  const open = (S.settings || {}).chanceOpen || {};
+  BANDS.forEach(b => {
+    const rows = list.filter(p => bandOf(score - p.projected).key === b.key)
+                     .sort((x, y) => y.projected - x.projected);
+    if (!rows.length) return;
+    // "ยังห่าง" พับไว้เป็นค่าเริ่มต้น — เป็นกลุ่มที่ยาวที่สุดและอยากดูน้อยที่สุด
+    const isOpen = open[b.key] != null ? open[b.key] : b.key !== "far";
+    const hd = el('<button class="bandhd" aria-expanded="' + (isOpen ? "true" : "false") +
+      '" style="--bc:' + b.color + '">' +
+      '<span class="bandhd-d"></span>' +
+      '<span class="bandhd-t">' + b.label + "</span>" +
+      '<span class="bandhd-n">' + rows.length + " คณะ</span>" +
+      '<span class="bandhd-c">▾</span></button>');
+    const body = el("<div class=\"bandbody\"></div>");
+    if (!isOpen) body.hidden = true;
+    rows.forEach(p => body.appendChild(progRow(p, score, target)));
+    hd.addEventListener("click", () => {
+      const next = Object.assign({}, open);
+      next[b.key] = !isOpen;
+      S.settings = Object.assign({}, S.settings, { chanceOpen: next });
+      Store.save();
+      body.hidden = isOpen;
+      hd.setAttribute("aria-expanded", isOpen ? "false" : "true");
+    });
+    card.appendChild(hd);
+    card.appendChild(body);
+  });
+
+  const noData = all.length - withData.length;
+  card.appendChild(el('<p class="tiny" style="margin:6px 0 0">' +
+    "เทียบกับ<b>คะแนนต่ำสุดของปีการศึกษา 2569</b> (รอบ 3 ประมวลผลครั้งที่ 1) " +
+    "ไม่ใช่เส้นตัดของปี 2570 ที่กำลังจะสอบ — คะแนนขยับได้ทุกปีตามความยากข้อสอบ" +
+    "และจำนวนผู้สมัคร ตัวเลขนี้จึงใช้เล็งทิศ ไม่ใช่คำรับประกัน" +
+    (noData ? " · อีก " + noData + " คณะยังไม่มีคะแนนในระบบ" : "") + "</p>"));
+
+  return card;
+}
+
+/* ─────────────────────────────────────────────────────────────
    VIEW: ความคืบหน้า
    ───────────────────────────────────────────────────────────── */
 function viewProgress() {
@@ -3095,6 +3447,11 @@ function viewProgress() {
   /* ---- คะแนนของฉัน: อยู่ตรงไหน ขาดอีกเท่าไร
      วางไว้บนสุดเพราะเป็นคำถามที่เด็กเปิดแอปมาเพื่อถาม ไม่ใช่ % หัวข้อที่อ่านจบ */
   wrap.appendChild(scorePanel());
+
+  /* ---- แล้วคะแนนชุดนั้นไปถึงคณะไหนบ้าง
+     ต่อจากการ์ดคะแนนทันที เพราะเป็นคำถามถัดไปในหัวเสมอ — กรอกคะแนนเสร็จ
+     ไม่มีใครอยากรู้ว่าอ่านหนังสือไปกี่ % ก่อนจะรู้ว่าคะแนนนี้ติดที่ไหน */
+  wrap.appendChild(chancePanel());
 
   /* วงใหญ่ตอบคำถามเดียว: อ่านไปแล้วกี่เปอร์เซ็นต์ของทั้งหมด
      เลขสี่ตัวที่เหลือเป็นรายละเอียด จึงอยู่ในไทล์เล็กด้านล่าง */
@@ -3163,31 +3520,6 @@ function viewProgress() {
   wrap.appendChild(weakSpots());
   wrap.appendChild(effortPanel());
 
-  /* programs */
-  const target = targetProgram();
-  if (DATA.programs && DATA.programs.length) {
-    const pc = el('<div class="card card-pad"></div>');
-    pc.appendChild(el('<div class="section-title"><h2>คะแนนต่ำสุดที่ต้องไปให้ถึง</h2></div>'));
-    pc.appendChild(el('<p class="tiny" style="margin:-6px 0 9px">สถิติจริง TCAS ' +
-      "ปีการศึกษา 2569 รอบ 3 ประมวลผลครั้งที่ 1 — เป็นตัวเลขของ<b>ปีที่แล้ว</b> " +
-      "ไม่ใช่เส้นตัดของปี 2570</p>"));
-    /* เรียงตามคะแนนอยู่แล้ว แสดงเฉพาะคณะในกลุ่มเดียวกับเป้าหมาย
-       เพื่อให้เทียบกันได้จริง — คนอยากเข้าทันตะไม่ได้อยากดูอันดับคณะแพทย์ */
-    const myFac = target ? target.faculty : null;
-    const shown = (myFac ? DATA.programs.filter(p => p.faculty === myFac) : DATA.programs)
-      .filter(p => p.projected !== null);
-    shown.slice(0, 14).forEach(p => pc.appendChild(el(
-      '<div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft)' +
-        (target && p.code === target.code ? ";background:var(--warn-dim);margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px" : "") + '">' +
-        '<span class="num" style="font-size:14px;min-width:52px;color:var(--marigold)">' +
-          p.projected.toFixed(2) + "</span>" +
-        '<span style="font-size:13.5px;flex:1;min-width:0">' + esc(p.name) + "</span>" +
-        '<span class="tiny" style="white-space:nowrap">' +
-          (p.seats ? p.seats + " ที่นั่ง" : "") + "</span>" +
-      "</div>"
-    )));
-    wrap.appendChild(pc);
-  }
 
   /* backup / restore / reset */
   const rc = el('<div class="card card-pad stack"></div>');

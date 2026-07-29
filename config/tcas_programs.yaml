@@ -14,9 +14,11 @@
 #    3. คณะที่ยังไม่มี cutoffs คือแถวที่อยู่ในหน้าที่ยังไม่ได้ส่งภาพมา
 #       ไม่ใช่ว่าไม่ได้เข้าร่วม กสพท — ดูหมายเหตุท้ายไฟล์
 #
-# cutoffs = คะแนนรวม กสพท เต็ม 100 ของ "คนสุดท้ายที่ผ่าน"
-# top     = คะแนนสูงสุดของผู้ผ่านในคณะนั้น (ไว้ดูช่วงคะแนน ไม่ได้ใช้คำนวณ)
-# seats   = จำนวนที่ประกาศรับ · applicants = จำนวนผู้สมัคร
+# cutoffs    = คะแนนรวม กสพท เต็ม 100 ของ "คนสุดท้ายที่ผ่าน"
+# top        = คะแนนสูงสุดของผู้ผ่านในคณะนั้น (ไว้ดูช่วงคะแนน ไม่ได้ใช้คำนวณ)
+# seats      = จำนวนที่ประกาศรับ · applicants = จำนวนผู้สมัคร
+# university = ชื่อสถาบัน แยกจาก faculty เพื่อให้กรองในแอปได้ทั้งสองแกน
+#              ("อยากเข้าทันตะ" กับ "อยากอยู่ ม.ธรรมศาสตร์" เป็นคนละคำถาม)
 
 meta:
   score_scale: 100.0
@@ -30,6 +32,7 @@ programs:
   - code: kku_med
     name: "แพทยศาสตร์ ม.ขอนแก่น"
     faculty: "แพทยศาสตร์"
+    university: "ม.ขอนแก่น"
     seats: 21
     applicants: 509
     cutoffs: {2569: 69.2422}
@@ -39,6 +42,7 @@ programs:
   - code: cu_med
     name: "แพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
     faculty: "แพทยศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 176
     applicants: 536
     cutoffs: {2569: 76.8402}
@@ -48,6 +52,7 @@ programs:
   - code: cu_med_af
     name: "แพทยศาสตร์ จุฬาฯ - กรมแพทย์ทหารอากาศ กองทัพอากาศ"
     faculty: "แพทยศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 30
     applicants: 471
     cutoffs: {2569: 72.8552}
@@ -57,6 +62,7 @@ programs:
   - code: pmk_med_f
     name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า (เพศหญิง)"
     faculty: "แพทยศาสตร์"
+    university: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า"
     seats: 45
     applicants: 560
     cutoffs: {2569: 66.0027}
@@ -66,6 +72,7 @@ programs:
   - code: sut_med
     name: "แพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
     faculty: "แพทยศาสตร์"
+    university: "ม.เทคโนโลยีสุรนารี"
     seats: 12
     applicants: 448
     cutoffs: {2569: 64.9998}
@@ -75,6 +82,7 @@ programs:
   - code: bu_med
     name: "แพทยศาสตร์ ม.บูรพา"
     faculty: "แพทยศาสตร์"
+    university: "ม.บูรพา"
     seats: 64
     applicants: 956
     cutoffs: {2569: 64.3377}
@@ -84,6 +92,7 @@ programs:
   - code: mfu_med
     name: "แพทยศาสตร์ ม.แม่ฟ้าหลวง"
     faculty: "แพทยศาสตร์"
+    university: "ม.แม่ฟ้าหลวง"
     seats: 16
     applicants: 537
     cutoffs: {2569: 64.6251}
@@ -93,6 +102,7 @@ programs:
   - code: siam_med
     name: "แพทยศาสตร์ ม.สยาม (เอกชน)"
     faculty: "แพทยศาสตร์"
+    university: "ม.สยาม"
     seats: 20
     applicants: 101
     cutoffs: {2569: 56.1182}
@@ -102,6 +112,7 @@ programs:
   - code: western_med
     name: "แพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
     faculty: "แพทยศาสตร์"
+    university: "ม.เวสเทิร์น"
     seats: 10
     applicants: 45
     cutoffs: {2569: 53.2711}
@@ -111,6 +122,7 @@ programs:
   - code: cra_med
     name: "แพทยศาสตร์ศรีสวางควัฒน ราชวิทยาลัยจุฬาภรณ์"
     faculty: "แพทยศาสตร์"
+    university: "ราชวิทยาลัยจุฬาภรณ์"
     seats: 14
     applicants: 330
     cutoffs: {2569: 69.1464}
@@ -120,6 +132,7 @@ programs:
   - code: ku_med
     name: "แพทยศาสตร์ ม.เกษตรศาสตร์"
     faculty: "แพทยศาสตร์"
+    university: "ม.เกษตรศาสตร์"
     seats: 28
     applicants: 773
     cutoffs: {2569: 67.6109}
@@ -131,6 +144,7 @@ programs:
   - code: cu_dent
     name: "ทันตแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
     faculty: "ทันตแพทยศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 53
     applicants: 424
     cutoffs: {2569: 73.3253}
@@ -140,6 +154,7 @@ programs:
   - code: mu_dent
     name: "ทันตแพทยศาสตร์ ม.มหิดล"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.มหิดล"
     seats: 80
     applicants: 692
     cutoffs: {2569: 70.6838}
@@ -149,6 +164,7 @@ programs:
   - code: cmu_dent
     name: "ทันตแพทยศาสตร์ ม.เชียงใหม่"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.เชียงใหม่"
     seats: 15
     applicants: 435
     cutoffs: {2569: 67.9539}
@@ -158,6 +174,7 @@ programs:
   - code: psu_dent
     name: "ทันตแพทยศาสตร์ ม.สงขลานครินทร์"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.สงขลานครินทร์"
     seats: 21
     applicants: 543
     cutoffs: {2569: 65.9019}
@@ -167,6 +184,7 @@ programs:
   - code: swu_dent
     name: "ทันตแพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.ศรีนครินทรวิโรฒ"
     seats: 35
     applicants: 550
     cutoffs: {2569: 68.4386}
@@ -176,6 +194,7 @@ programs:
   - code: kku_dent
     name: "ทันตแพทยศาสตร์ ม.ขอนแก่น"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.ขอนแก่น"
     seats: 10
     applicants: 471
     cutoffs: {2569: 67.7069}
@@ -185,6 +204,7 @@ programs:
   - code: tu_dent
     name: "ทันตแพทยศาสตร์ ม.ธรรมศาสตร์"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.ธรรมศาสตร์"
     seats: 30
     applicants: 442
     cutoffs: {2569: 69.3856}
@@ -194,6 +214,7 @@ programs:
   - code: nu_dent
     name: "ทันตแพทยศาสตร์ ม.นเรศวร"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.นเรศวร"
     seats: 53
     applicants: 891
     cutoffs: {2569: 64.5366}
@@ -203,6 +224,7 @@ programs:
   - code: sut_dent
     name: "ทันตแพทยศาสตร์ ม.เทคโนโลยีสุรนารี"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.เทคโนโลยีสุรนารี"
     seats: 26
     applicants: 483
     cutoffs: {2569: 62.8844}
@@ -212,6 +234,7 @@ programs:
   - code: western_dent
     name: "ทันตแพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.เวสเทิร์น"
     seats: 20
     applicants: 15
     cutoffs: {2569: 42.7772}
@@ -221,6 +244,7 @@ programs:
   - code: rsu_dent
     name: "ทันตแพทยศาสตร์ ม.รังสิต (เอกชน)"
     faculty: "ทันตแพทยศาสตร์"
+    university: "ม.รังสิต"
     seats: 60
     applicants: 198
     cutoffs: {2569: 52.8744}
@@ -232,6 +256,7 @@ programs:
   - code: cu_pharm
     name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (บริบาลทางเภสัชกรรม)"
     faculty: "เภสัชศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 81
     applicants: 737
     cutoffs: {2569: 63.5801}
@@ -241,6 +266,7 @@ programs:
   - code: cu_pharm_ind
     name: "เภสัชศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย (เภสัชอุตสาหการ)"
     faculty: "เภสัชศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 76
     applicants: 856
     cutoffs: {2569: 63.3013}
@@ -250,6 +276,7 @@ programs:
   - code: mu_pharm
     name: "เภสัชศาสตร์ ม.มหิดล"
     faculty: "เภสัชศาสตร์"
+    university: "ม.มหิดล"
     seats: 115
     applicants: 1296
     cutoffs: {2569: 62.2806}
@@ -259,6 +286,7 @@ programs:
   - code: cmu_pharm
     name: "เภสัชศาสตร์ ม.เชียงใหม่"
     faculty: "เภสัชศาสตร์"
+    university: "ม.เชียงใหม่"
     seats: 95
     applicants: 1077
     cutoffs: {2569: 60.3171}
@@ -268,6 +296,7 @@ programs:
   - code: msu_pharm
     name: "เภสัชศาสตร์ ม.มหาสารคาม (บริบาลทางเภสัชกรรม)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.มหาสารคาม"
     seats: 50
     applicants: 476
     cutoffs: {2569: 56.6556}
@@ -277,6 +306,7 @@ programs:
   - code: bu_pharm
     name: "เภสัชศาสตร์ ม.บูรพา"
     faculty: "เภสัชศาสตร์"
+    university: "ม.บูรพา"
     seats: 60
     applicants: 834
     cutoffs: {2569: 56.9465}
@@ -286,6 +316,7 @@ programs:
   - code: hcu_pharm
     name: "เภสัชศาสตร์ ม.หัวเฉียวเฉลิมพระเกียรติ (เอกชน)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.หัวเฉียวเฉลิมพระเกียรติ"
     seats: 35
     applicants: 186
     cutoffs: {2569: 52.8924}
@@ -295,6 +326,7 @@ programs:
   - code: payap_pharm
     name: "เภสัชศาสตร์ ม.พายัพ (เอกชน) (บริบาลทางเภสัชกรรม)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.พายัพ"
     seats: 10
     applicants: 80
     cutoffs: {2569: 52.5583}
@@ -304,6 +336,7 @@ programs:
   - code: ubu_pharm
     name: "เภสัชศาสตร์ ม.อุบลราชธานี (บริบาลทางเภสัชกรรม)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.อุบลราชธานี"
     seats: 10
     applicants: 278
     cutoffs: {2569: 58.5484}
@@ -313,6 +346,7 @@ programs:
   - code: ubu_pharm_ind
     name: "เภสัชศาสตร์ ม.อุบลราชธานี (เภสัชอุตสาหการ)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.อุบลราชธานี"
     seats: 10
     applicants: 263
     cutoffs: {2569: 56.8079}
@@ -322,6 +356,7 @@ programs:
   - code: western_pharm
     name: "เภสัชศาสตร์ ม.เวสเทิร์น (เอกชน)"
     faculty: "เภสัชศาสตร์"
+    university: "ม.เวสเทิร์น"
     seats: 20
     applicants: 26
     cutoffs: {2569: 44.8476}
@@ -333,6 +368,7 @@ programs:
   - code: cu_vet
     name: "สัตวแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
     faculty: "สัตวแพทยศาสตร์"
+    university: "จุฬาลงกรณ์มหาวิทยาลัย"
     seats: 110
     applicants: 720
     cutoffs: {2569: 61.5523}
@@ -342,6 +378,7 @@ programs:
   - code: ku_vet
     name: "สัตวแพทยศาสตร์ ม.เกษตรศาสตร์"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.เกษตรศาสตร์"
     seats: 34
     applicants: 491
     cutoffs: {2569: 60.6862}
@@ -351,6 +388,7 @@ programs:
   - code: kku_vet
     name: "สัตวแพทยศาสตร์ ม.ขอนแก่น"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.ขอนแก่น"
     seats: 35
     applicants: 378
     cutoffs: {2569: 58.0535}
@@ -360,6 +398,7 @@ programs:
   - code: cmu_vet
     name: "สัตวแพทยศาสตร์ ม.เชียงใหม่"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.เชียงใหม่"
     seats: 45
     applicants: 341
     cutoffs: {2569: 58.134}
@@ -369,6 +408,7 @@ programs:
   - code: mu_vet
     name: "สัตวแพทยศาสตร์ ม.มหิดล"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.มหิดล"
     seats: 65
     applicants: 691
     cutoffs: {2569: 59.7795}
@@ -378,6 +418,7 @@ programs:
   - code: msu_vet
     name: "สัตวแพทยศาสตร์ ม.มหาสารคาม"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.มหาสารคาม"
     seats: 25
     applicants: 225
     cutoffs: {2569: 56.1749}
@@ -387,6 +428,7 @@ programs:
   - code: rmutto_vet
     name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลตะวันออก"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.เทคโนโลยีราชมงคลตะวันออก"
     seats: 15
     applicants: 181
     cutoffs: {2569: 55.6873}
@@ -396,6 +438,7 @@ programs:
   - code: rmutsv_vet
     name: "สัตวแพทยศาสตร์ ม.เทคโนโลยีราชมงคลศรีวิชัย"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.เทคโนโลยีราชมงคลศรีวิชัย"
     seats: 10
     applicants: 141
     cutoffs: {2569: 54.4568}
@@ -405,6 +448,7 @@ programs:
   - code: psu_vet
     name: "สัตวแพทยศาสตร์ ม.สงขลานครินทร์"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.สงขลานครินทร์"
     seats: 22
     applicants: 247
     cutoffs: {2569: 57.4442}
@@ -414,6 +458,7 @@ programs:
   - code: western_vet
     name: "สัตวแพทยศาสตร์ ม.เวสเทิร์น (เอกชน)"
     faculty: "สัตวแพทยศาสตร์"
+    university: "ม.เวสเทิร์น"
     seats: 10
     applicants: 10
     cutoffs: {2569: 43.5405}
@@ -429,60 +474,70 @@ programs:
   - code: si_med
     name: "แพทยศาสตร์ศิริราชพยาบาล ม.มหิดล"
     faculty: "แพทยศาสตร์"
+    university: "ม.มหิดล"
     cutoffs: {}
     verified: false
 
   - code: rama_med
     name: "แพทยศาสตร์โรงพยาบาลรามาธิบดี ม.มหิดล"
     faculty: "แพทยศาสตร์"
+    university: "ม.มหิดล"
     cutoffs: {}
     verified: false
 
   - code: tu_med
     name: "แพทยศาสตร์ ม.ธรรมศาสตร์"
     faculty: "แพทยศาสตร์"
+    university: "ม.ธรรมศาสตร์"
     cutoffs: {}
     verified: false
 
   - code: cmu_med
     name: "แพทยศาสตร์ ม.เชียงใหม่"
     faculty: "แพทยศาสตร์"
+    university: "ม.เชียงใหม่"
     cutoffs: {}
     verified: false
 
   - code: psu_med
     name: "แพทยศาสตร์ ม.สงขลานครินทร์"
     faculty: "แพทยศาสตร์"
+    university: "ม.สงขลานครินทร์"
     cutoffs: {}
     verified: false
 
   - code: swu_med
     name: "แพทยศาสตร์ ม.ศรีนครินทรวิโรฒ"
     faculty: "แพทยศาสตร์"
+    university: "ม.ศรีนครินทรวิโรฒ"
     cutoffs: {}
     verified: false
 
   - code: nu_med
     name: "แพทยศาสตร์ ม.นเรศวร"
     faculty: "แพทยศาสตร์"
+    university: "ม.นเรศวร"
     cutoffs: {}
     verified: false
 
   - code: pmk_med
     name: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า (เพศชาย)"
     faculty: "แพทยศาสตร์"
+    university: "วิทยาลัยแพทยศาสตร์พระมงกุฎเกล้า"
     cutoffs: {}
     verified: false
 
   - code: nmu_med
     name: "แพทยศาสตร์วชิรพยาบาล ม.นวมินทราธิราช"
     faculty: "แพทยศาสตร์"
+    university: "ม.นวมินทราธิราช"
     cutoffs: {}
     verified: false
 
   - code: rsu_med
     name: "วิทยาลัยแพทยศาสตร์ ม.รังสิต"
     faculty: "แพทยศาสตร์"
+    university: "ม.รังสิต"
     cutoffs: {}
     verified: false
 

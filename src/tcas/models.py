@@ -140,6 +140,7 @@ class ProgramChance:
     code: str
     name: str
     faculty: str
+    university: str
     seats: Optional[int]
     latest_cutoff: Optional[float]
     trend: float          # คะแนนต่ำสุดขยับขึ้น/ลงเฉลี่ยต่อปี
