@@ -4,11 +4,11 @@ questions:
     topic: eng_grammar
     stem: "Choose the correct option: The patient ___ to the emergency room every time his chest pain returns."
     choices:
-      - "go"
       - "goes"
+      - "go"
       - "going"
       - "have gone"
-    answer: 1
+    answer: 0
     explanation: "Present simple with a third-person singular subject ('the patient') takes -s. 'Every time' signals a habitual action."
     difficulty: 1
 
@@ -17,10 +17,10 @@ questions:
     stem: "Choose the correct option: If I ___ you, I would apply to medical school this year."
     choices:
       - "am"
-      - "was"
       - "were"
+      - "was"
       - "will be"
-    answer: 2
+    answer: 1
     explanation: "Second conditional (unreal present) uses the subjunctive 'were' for all persons: If I were you, I would..."
     difficulty: 2
 
@@ -29,10 +29,10 @@ questions:
     stem: "Choose the correct passive form: The nurse administered the vaccine. → The vaccine ___ by the nurse."
     choices:
       - "administered"
-      - "was administered"
       - "was administering"
+      - "was administered"
       - "has administering"
-    answer: 1
+    answer: 2
     explanation: "Past simple passive = was/were + past participle. The vaccine receives the action, so 'was administered'."
     difficulty: 2
 
@@ -41,10 +41,10 @@ questions:
     stem: "In a medical context, a 'chronic' condition is one that ___."
     choices:
       - "appears suddenly and severely"
-      - "persists over a long period of time"
-      - "is caused by bacteria"
       - "can be cured with a single treatment"
-    answer: 1
+      - "is caused by bacteria"
+      - "persists over a long period of time"
+    answer: 3
     explanation: "'Chronic' = long-lasting or recurring. Its opposite is 'acute', which means sudden and short-lived but often severe."
     difficulty: 1
 
@@ -52,11 +52,11 @@ questions:
     topic: eng_vocab
     stem: "A tumour described as 'benign' is ___."
     choices:
-      - "spreading rapidly to other organs"
       - "not cancerous and unlikely to spread"
+      - "spreading rapidly to other organs"
       - "resistant to all treatment"
       - "always fatal without surgery"
-    answer: 1
+    answer: 0
     explanation: "'Benign' = harmless, non-cancerous. The opposite is 'malignant', which describes a cancerous tumour that can invade and metastasise."
     difficulty: 1
 
@@ -88,11 +88,11 @@ questions:
     topic: eng_conversation
     stem: "Doctor: 'How long have you been feeling this way?'  Patient: '___'"
     choices:
-      - "Since about three weeks ago."
+      - "During three weeks ago."
       - "Since three weeks."
       - "For three weeks ago."
-      - "During three weeks ago."
-    answer: 0
+      - "Since about three weeks ago."
+    answer: 3
     explanation: "'Since' needs a point in time ('three weeks ago'), 'for' needs a duration ('for three weeks'). Only option A combines them correctly."
     difficulty: 2
 
@@ -100,11 +100,11 @@ questions:
     topic: eng_reading
     stem: "Read: 'Although the new drug reduced symptoms in most participants, researchers cautioned that the trial was small and lacked a control group.' What is the researchers' main concern?"
     choices:
-      - "The drug failed to reduce symptoms."
       - "The study design limits how much the results can be trusted."
+      - "The drug failed to reduce symptoms."
       - "The drug caused serious side effects."
       - "The participants were too old for the treatment."
-    answer: 1
+    answer: 0
     explanation: "The concern named after 'cautioned that' is methodological — a small sample and no control group — not the drug's effect, which the sentence says was positive."
     difficulty: 2
 
@@ -112,11 +112,11 @@ questions:
     topic: eng_cloze
     stem: "Complete: 'Regular exercise is strongly ___ with a lower risk of cardiovascular disease.'"
     choices:
-      - "associated"
       - "associating"
+      - "associated"
       - "association"
       - "associate"
-    answer: 0
+    answer: 1
     explanation: "The fixed collocation is 'be associated with'. A past participle is needed after 'is' to form the passive."
     difficulty: 2
 
@@ -125,9 +125,9 @@ questions:
     stem: "Arrange into a coherent paragraph: (1) However, the results have not yet been replicated. (2) A recent trial reported a marked drop in relapse rates. (3) Until then, clinicians are advised to keep current protocols."
     choices:
       - "1 - 2 - 3"
-      - "2 - 1 - 3"
       - "3 - 2 - 1"
+      - "2 - 1 - 3"
       - "2 - 3 - 1"
-    answer: 1
+    answer: 2
     explanation: "Sentence 2 introduces the finding, 'However' in 1 qualifies it, and 'Until then' in 3 follows from that qualification. Discourse markers fix the order."
     difficulty: 2

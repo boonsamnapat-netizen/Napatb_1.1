@@ -1,0 +1,592 @@
+# คลังข้อสอบ A-Level คณิตศาสตร์ประยุกต์ 1 ชุดที่ 2
+#
+# ⚠️ ทุกข้อแต่งขึ้นใหม่ตามเนื้อหาหลักสูตร ไม่ได้คัดลอกจากข้อสอบเก่า
+subject: math1
+questions:
+  # ───────────────────────── เซตและตรรกศาสตร์
+  - qid: math_set_logic_002
+    topic: math_set_logic
+    stem: "ให้ n(A) = 20, n(B) = 15, n(A∩B) = 5 แล้ว n(A∪B) เท่ากับเท่าใด"
+    choices: ["30", "35", "40", "25"]
+    answer: 0
+    explanation: "n(A∪B) = n(A) + n(B) − n(A∩B) = 20 + 15 − 5 = 30"
+    difficulty: 1
+
+  - qid: math_set_logic_003
+    topic: math_set_logic
+    stem: "เซต A = {1, 2, 3} มีสับเซตทั้งหมดกี่เซต"
+    choices: ["3", "8", "6", "9"]
+    answer: 1
+    explanation: "เซตที่มีสมาชิก n ตัวมีสับเซต 2ⁿ เซต ดังนั้น 2³ = 8 (รวมเซตว่างและตัวมันเอง)"
+    difficulty: 1
+
+  - qid: math_set_logic_004
+    topic: math_set_logic
+    stem: "นิเสธของประพจน์ 'p และ q' คือข้อใด"
+    choices: ["~p และ ~q", "p หรือ q", "~p หรือ ~q", "~p → q"]
+    answer: 2
+    explanation: "ตามกฎเดอมอร์แกน ~(p ∧ q) ≡ ~p ∨ ~q การปฏิเสธคำว่า 'และ' จะกลายเป็น 'หรือ'"
+    difficulty: 2
+
+  - qid: math_set_logic_005
+    topic: math_set_logic
+    stem: "ประพจน์ p → q สมมูลกับข้อใด"
+    choices: ["q → p", "~p ∧ q", "p ∧ ~q", "~q → ~p"]
+    answer: 3
+    explanation: "รูปแย้งสลับที่ (contrapositive) สมมูลกับประพจน์เดิมเสมอ ส่วน q → p เป็นบทกลับซึ่งไม่สมมูล"
+    difficulty: 2
+
+  # ───────────────────────── จำนวนจริง
+  - qid: math_real_002
+    topic: math_real
+    stem: "คำตอบของสมการ |2x − 6| = 8 คือข้อใด"
+    choices: ["x = 7 หรือ x = −1", "x = 7 เท่านั้น", "x = 1 หรือ x = 7", "x = −1 เท่านั้น"]
+    answer: 0
+    explanation: "แยกเป็น 2x − 6 = 8 ได้ x = 7 และ 2x − 6 = −8 ได้ 2x = −2 คือ x = −1"
+    difficulty: 2
+
+  - qid: math_real_003
+    topic: math_real
+    stem: "เซตคำตอบของอสมการ x² − 5x + 6 < 0 คือข้อใด"
+    choices: ["x < 2 หรือ x > 3", "2 < x < 3", "x ≤ 2", "x > 3"]
+    answer: 1
+    explanation: "แยกตัวประกอบได้ (x − 2)(x − 3) < 0 ผลคูณเป็นลบเมื่อ x อยู่ระหว่างรากทั้งสอง จึงได้ 2 < x < 3"
+    difficulty: 2
+
+  - qid: math_real_004
+    topic: math_real
+    stem: "สมการ x² − 4x + k = 0 มีรากซ้ำเมื่อ k เท่ากับเท่าใด"
+    choices: ["2", "8", "4", "16"]
+    answer: 2
+    explanation: "รากซ้ำเมื่อดิสคริมิแนนต์เป็นศูนย์ b² − 4ac = 16 − 4k = 0 ได้ k = 4"
+    difficulty: 2
+
+  - qid: math_real_005
+    topic: math_real
+    stem: "ถ้า α และ β เป็นรากของ x² − 7x + 12 = 0 แล้ว α + β และ αβ เท่ากับเท่าใด"
+    choices: ["12 และ 7", "−7 และ 12", "7 และ −12", "7 และ 12"]
+    answer: 3
+    explanation: "จากความสัมพันธ์ระหว่างรากกับสัมประสิทธิ์ ผลบวกราก = −b/a = 7 และผลคูณราก = c/a = 12"
+    difficulty: 2
+
+  - qid: math_real_006
+    topic: math_real
+    stem: "ค่าของ ∛64 + √49 เท่ากับเท่าใด"
+    choices: ["11", "13", "15", "56"]
+    answer: 0
+    explanation: "∛64 = 4 และ √49 = 7 รวมได้ 11"
+    difficulty: 1
+
+  # ───────────────────────── ฟังก์ชัน
+  - qid: math_function_002
+    topic: math_function
+    stem: "ให้ f(x) = 2x + 3 และ g(x) = x² แล้ว (f∘g)(2) เท่ากับเท่าใด"
+    choices: ["14", "11", "49", "25"]
+    answer: 1
+    explanation: "(f∘g)(2) = f(g(2)) = f(4) = 2(4) + 3 = 11"
+    difficulty: 2
+
+  - qid: math_function_003
+    topic: math_function
+    stem: "ฟังก์ชันผกผันของ f(x) = 3x − 6 คือข้อใด"
+    choices: ["f⁻¹(x) = (x − 6)/3", "f⁻¹(x) = 3x + 6", "f⁻¹(x) = (x + 6)/3", "f⁻¹(x) = 1/(3x − 6)"]
+    answer: 2
+    explanation: "ให้ y = 3x − 6 แล้วแก้หา x ได้ x = (y + 6)/3 จากนั้นสลับตัวแปรได้ f⁻¹(x) = (x + 6)/3"
+    difficulty: 2
+
+  - qid: math_function_004
+    topic: math_function
+    stem: "โดเมนของฟังก์ชัน f(x) = √(x − 4) คือข้อใด"
+    choices: ["x > 4", "จำนวนจริงทุกจำนวน", "x ≤ 4", "x ≥ 4"]
+    answer: 3
+    explanation: "สิ่งที่อยู่ใต้รากที่สองต้องไม่ติดลบ ดังนั้น x − 4 ≥ 0 ได้ x ≥ 4 (รวม 4 ด้วยเพราะ √0 = 0 นิยามได้)"
+    difficulty: 1
+
+  - qid: math_function_005
+    topic: math_function
+    stem: "กราฟของ y = (x − 2)² + 3 มีจุดยอดที่ใด"
+    choices: ["(2, 3)", "(−2, 3)", "(2, −3)", "(3, 2)"]
+    answer: 0
+    explanation: "รูปมาตรฐาน y = a(x − h)² + k มีจุดยอด (h, k) จึงได้ (2, 3) และกราฟหงายขึ้นเพราะ a = 1 > 0"
+    difficulty: 1
+
+  - qid: math_function_006
+    topic: math_function
+    stem: "ฟังก์ชันใดเป็นฟังก์ชันหนึ่งต่อหนึ่ง"
+    choices: ["f(x) = x²", "f(x) = 2x + 1", "f(x) = |x|", "f(x) = x⁴"]
+    answer: 1
+    explanation: "ฟังก์ชันเชิงเส้นที่ความชันไม่เป็นศูนย์ผ่านการทดสอบเส้นแนวนอน ส่วนฟังก์ชันกำลังคู่และค่าสัมบูรณ์ให้ค่าเดียวกันจากอินพุตสองค่า"
+    difficulty: 2
+
+  - qid: math_function_007
+    topic: math_function
+    stem: "ถ้า f(x) = x² − 4x + 1 ค่าต่ำสุดของ f คือเท่าใด"
+    choices: ["1", "−1", "−3", "4"]
+    answer: 2
+    explanation: "จัดรูปกำลังสองสมบูรณ์ได้ (x − 2)² − 3 ค่าต่ำสุดเกิดเมื่อ x = 2 ได้ค่า −3"
+    difficulty: 2
+
+  - qid: math_function_008
+    topic: math_function
+    stem: "เรนจ์ของฟังก์ชัน f(x) = −x² + 5 คือข้อใด"
+    choices: ["y ≥ 5", "y ≥ 0", "จำนวนจริงทุกจำนวน", "y ≤ 5"]
+    answer: 3
+    explanation: "สัมประสิทธิ์หน้า x² เป็นลบ กราฟจึงคว่ำลงและมีค่าสูงสุดที่ y = 5 เมื่อ x = 0 เรนจ์จึงเป็น y ≤ 5"
+    difficulty: 2
+
+  # ───────────────────────── เอกซ์โพเนนเชียลและลอการิทึม
+  - qid: math_explog_002
+    topic: math_explog
+    stem: "ค่าของ log₂ 32 เท่ากับเท่าใด"
+    choices: ["5", "4", "6", "16"]
+    answer: 0
+    explanation: "2⁵ = 32 ดังนั้น log₂ 32 = 5"
+    difficulty: 1
+
+  - qid: math_explog_003
+    topic: math_explog
+    stem: "log 8 + log 125 มีค่าเท่าใด (ฐาน 10)"
+    choices: ["1", "3", "2", "1000"]
+    answer: 1
+    explanation: "log 8 + log 125 = log(8 × 125) = log 1000 = 3"
+    difficulty: 2
+
+  - qid: math_explog_004
+    topic: math_explog
+    stem: "แก้สมการ 3^(x+1) = 81 ได้ x เท่ากับเท่าใด"
+    choices: ["2", "4", "3", "27"]
+    answer: 2
+    explanation: "81 = 3⁴ ดังนั้น x + 1 = 4 ได้ x = 3"
+    difficulty: 2
+
+  - qid: math_explog_005
+    topic: math_explog
+    stem: "ถ้า log x = 2 แล้ว x เท่ากับเท่าใด (ฐาน 10)"
+    choices: ["20", "0.01", "1000", "100"]
+    answer: 3
+    explanation: "log₁₀ x = 2 หมายถึง x = 10² = 100"
+    difficulty: 1
+
+  - qid: math_explog_006
+    topic: math_explog
+    stem: "log₃ 9 + log₃ 27 มีค่าเท่าใด"
+    choices: ["5", "3", "6", "243"]
+    answer: 0
+    explanation: "log₃ 9 = 2 และ log₃ 27 = 3 รวมได้ 5"
+    difficulty: 2
+
+  - qid: math_explog_007
+    topic: math_explog
+    stem: "สมบัติใดของลอการิทึมที่ถูกต้อง"
+    choices:
+      - "log(a + b) = log a + log b"
+      - "log(a/b) = log a − log b"
+      - "log(aⁿ) = (log a)ⁿ"
+      - "log a × log b = log(ab)"
+    answer: 1
+    explanation: "ลอการิทึมเปลี่ยนการหารเป็นการลบ ส่วน log(a+b) กระจายไม่ได้ และ log(aⁿ) = n·log a ไม่ใช่ยกกำลัง"
+    difficulty: 2
+
+  - qid: math_explog_008
+    topic: math_explog
+    stem: "ปริมาณสารกัมมันตรังสีลดลงตามฟังก์ชัน N = N₀(1/2)^(t/T) ฟังก์ชันนี้จัดเป็นประเภทใด"
+    choices: ["เชิงเส้น", "กำลังสอง", "เอกซ์โพเนนเชียลลดลง", "ลอการิทึม"]
+    answer: 2
+    explanation: "ตัวแปร t อยู่ในเลขชี้กำลังและฐานอยู่ระหว่าง 0 กับ 1 จึงเป็นการลดลงแบบเอกซ์โพเนนเชียล ซึ่งลดเร็วตอนแรกแล้วช้าลงเรื่อย ๆ"
+    difficulty: 2
+
+  # ───────────────────────── ตรีโกณมิติ
+  - qid: math_trig_002
+    topic: math_trig
+    stem: "ค่าของ sin 30° + cos 60° เท่ากับเท่าใด"
+    choices: ["0.5", "√3", "1.5", "1"]
+    answer: 3
+    explanation: "sin 30° = 0.5 และ cos 60° = 0.5 รวมได้ 1"
+    difficulty: 1
+
+  - qid: math_trig_003
+    topic: math_trig
+    stem: "ค่าของ tan 45° เท่ากับเท่าใด"
+    choices: ["1", "1/2", "0", "√3"]
+    answer: 0
+    explanation: "tan 45° = sin45/cos45 = (√2/2)/(√2/2) = 1"
+    difficulty: 1
+
+  - qid: math_trig_004
+    topic: math_trig
+    stem: "เอกลักษณ์ sin²θ + cos²θ เท่ากับเท่าใด"
+    choices: ["0", "1", "2", "tan²θ"]
+    answer: 1
+    explanation: "เป็นเอกลักษณ์พีทาโกรัสที่มาจากวงกลมหนึ่งหน่วย ซึ่งจุดบนวงกลมมีระยะจากจุดกำเนิดเป็น 1 เสมอ"
+    difficulty: 1
+
+  - qid: math_trig_005
+    topic: math_trig
+    stem: "สามเหลี่ยมมุมฉากมีด้านตรงข้ามมุม θ ยาว 3 และด้านตรงข้ามมุมฉากยาว 5 ค่า cos θ เท่ากับเท่าใด"
+    choices: ["3/5", "5/3", "4/5", "3/4"]
+    answer: 2
+    explanation: "ด้านประชิดยาว √(25 − 9) = 4 ดังนั้น cos θ = ประชิด/ตรงข้ามมุมฉาก = 4/5"
+    difficulty: 2
+
+  - qid: math_trig_006
+    topic: math_trig
+    stem: "sin 2θ เขียนในรูปของ sin θ และ cos θ ได้อย่างไร"
+    choices: ["2 sin θ", "sin²θ − cos²θ", "sin θ + cos θ", "2 sin θ cos θ"]
+    answer: 3
+    explanation: "สูตรมุมสองเท่า sin 2θ = 2 sin θ cos θ ส่วน cos 2θ = cos²θ − sin²θ"
+    difficulty: 2
+
+  - qid: math_trig_007
+    topic: math_trig
+    stem: "คาบของฟังก์ชัน y = sin 2x เท่ากับเท่าใด"
+    choices: ["π", "π/2", "2π", "4π"]
+    answer: 0
+    explanation: "คาบของ sin kx คือ 2π/k ดังนั้น 2π/2 = π ฟังก์ชันจึงซ้ำรอบเร็วขึ้นเป็นสองเท่า"
+    difficulty: 2
+
+  - qid: math_trig_008
+    topic: math_trig
+    stem: "สามเหลี่ยมมีด้าน a = 7, b = 5 และมุม C = 60° ด้าน c ยาวเท่าใด"
+    choices: ["√74", "√39", "√109", "12"]
+    answer: 1
+    explanation: "กฎของโคไซน์ c² = a² + b² − 2ab cos C = 49 + 25 − 2(7)(5)(0.5) = 74 − 35 = 39 ดังนั้น c = √39"
+    difficulty: 3
+
+  # ───────────────────────── เมทริกซ์
+  - qid: math_matrix_002
+    topic: math_matrix
+    stem: "ดีเทอร์มิแนนต์ของเมทริกซ์ [[3, 2], [1, 4]] เท่ากับเท่าใด"
+    choices: ["14", "12", "10", "2"]
+    answer: 2
+    explanation: "det = (3)(4) − (2)(1) = 12 − 2 = 10"
+    difficulty: 1
+
+  - qid: math_matrix_003
+    topic: math_matrix
+    stem: "เมทริกซ์จะมีอินเวอร์สได้เมื่อใด"
+    choices: ["เมื่อเป็นเมทริกซ์จัตุรัสเท่านั้น", "เมทริกซ์ทุกตัวมีอินเวอร์ส", "เมื่อทุกสมาชิกไม่เป็นศูนย์", "เมื่อเป็นเมทริกซ์จัตุรัสและดีเทอร์มิแนนต์ไม่เป็นศูนย์"]
+    answer: 3
+    explanation: "การหาอินเวอร์สต้องหารด้วยดีเทอร์มิแนนต์ ถ้าเป็นศูนย์จะหารไม่ได้ เมทริกซ์นั้นเรียกว่าเมทริกซ์เอกฐาน"
+    difficulty: 2
+
+  - qid: math_matrix_004
+    topic: math_matrix
+    stem: "ถ้า A เป็นเมทริกซ์ขนาด 2×3 และ B ขนาด 3×4 แล้ว AB มีขนาดเท่าใด"
+    choices: ["2×4", "3×4", "2×3", "คูณกันไม่ได้"]
+    answer: 0
+    explanation: "การคูณเมทริกซ์ทำได้เมื่อจำนวนหลักของตัวหน้าเท่ากับจำนวนแถวของตัวหลัง ผลลัพธ์มีขนาดแถวของตัวหน้าคูณหลักของตัวหลังคือ 2×4"
+    difficulty: 2
+
+  - qid: math_matrix_005
+    topic: math_matrix
+    stem: "การคูณเมทริกซ์มีสมบัติใดที่ต่างจากการคูณจำนวนจริง"
+    choices: ["ไม่มีสมบัติการเปลี่ยนหมู่", "โดยทั่วไป AB ไม่เท่ากับ BA", "ไม่มีเอกลักษณ์การคูณ", "ผลคูณเป็นศูนย์เสมอ"]
+    answer: 1
+    explanation: "การคูณเมทริกซ์ไม่มีสมบัติการสลับที่ แต่ยังมีสมบัติการเปลี่ยนหมู่และมีเมทริกซ์เอกลักษณ์ I อยู่"
+    difficulty: 2
+
+  - qid: math_matrix_006
+    topic: math_matrix
+    stem: "ระบบสมการเชิงเส้นสองตัวแปรจะมีคำตอบเดียวเมื่อดีเทอร์มิแนนต์ของเมทริกซ์สัมประสิทธิ์เป็นอย่างไร"
+    choices: ["เท่ากับศูนย์", "เป็นบวกเท่านั้น", "ไม่เท่ากับศูนย์", "เป็นลบเท่านั้น"]
+    answer: 2
+    explanation: "ดีเทอร์มิแนนต์ไม่เป็นศูนย์แปลว่าเส้นตรงสองเส้นไม่ขนานกัน จึงตัดกันที่จุดเดียว ถ้าเป็นศูนย์จะไม่มีคำตอบหรือมีคำตอบไม่จำกัด"
+    difficulty: 3
+
+  # ───────────────────────── เวกเตอร์
+  - qid: math_vector_002
+    topic: math_vector
+    stem: "ขนาดของเวกเตอร์ u = (3, 4, 12) เท่ากับเท่าใด"
+    choices: ["169", "17", "19", "13"]
+    answer: 3
+    explanation: "|u| = √(9 + 16 + 144) = √169 = 13"
+    difficulty: 1
+
+  - qid: math_vector_003
+    topic: math_vector
+    stem: "ผลคูณเชิงสเกลาร์ของ (1, 2, 3) กับ (4, 5, 6) เท่ากับเท่าใด"
+    choices: ["32", "12", "70", "90"]
+    answer: 0
+    explanation: "(1)(4) + (2)(5) + (3)(6) = 4 + 10 + 18 = 32"
+    difficulty: 1
+
+  - qid: math_vector_004
+    topic: math_vector
+    stem: "เวกเตอร์สองตัวตั้งฉากกันเมื่อใด"
+    choices: ["ผลคูณเชิงเวกเตอร์เป็นศูนย์", "ผลคูณเชิงสเกลาร์เป็นศูนย์", "ขนาดเท่ากัน", "ทิศทางเดียวกัน"]
+    answer: 1
+    explanation: "u·v = |u||v|cosθ เมื่อ θ = 90° ทำให้ cosθ = 0 ผลคูณเชิงสเกลาร์จึงเป็นศูนย์ ส่วนผลคูณเชิงเวกเตอร์เป็นศูนย์เมื่อขนานกัน"
+    difficulty: 2
+
+  - qid: math_vector_005
+    topic: math_vector
+    stem: "ผลลัพธ์ของผลคูณเชิงเวกเตอร์ u × v มีลักษณะใด"
+    choices:
+      - "เป็นสเกลาร์"
+      - "เป็นเวกเตอร์ที่ขนานกับ u"
+      - "เป็นเวกเตอร์ที่ตั้งฉากกับทั้ง u และ v"
+      - "มีขนาดเท่ากับ u เสมอ"
+    answer: 2
+    explanation: "ผลคูณเชิงเวกเตอร์ให้เวกเตอร์ที่ตั้งฉากกับระนาบที่ u และ v อยู่ ทิศตามกฎมือขวา และขนาดเท่ากับพื้นที่สี่เหลี่ยมด้านขนานที่ทั้งสองรองรับ"
+    difficulty: 2
+
+  - qid: math_vector_006
+    topic: math_vector
+    stem: "ถ้า u = (2, −1, 3) และ v = (1, 0, −2) แล้ว u + 2v เท่ากับเวกเตอร์ใด"
+    choices: ["(2, −1, −1)", "(3, −1, 1)", "(4, −2, 6)", "(4, −1, −1)"]
+    answer: 3
+    explanation: "2v = (2, 0, −4) บวกกับ u ได้ (2+2, −1+0, 3−4) = (4, −1, −1)"
+    difficulty: 2
+
+  # ───────────────────────── จำนวนเชิงซ้อน
+  - qid: math_complex_002
+    topic: math_complex
+    stem: "ค่าของ i² เท่ากับเท่าใด"
+    choices: ["−1", "1", "i", "0"]
+    answer: 0
+    explanation: "ตามนิยาม i = √(−1) ดังนั้น i² = −1"
+    difficulty: 1
+
+  - qid: math_complex_003
+    topic: math_complex
+    stem: "(3 + 2i) + (1 − 5i) เท่ากับเท่าใด"
+    choices: ["4 + 7i", "4 − 3i", "2 + 7i", "3 − 10i"]
+    answer: 1
+    explanation: "บวกส่วนจริงกับส่วนจริง ส่วนจินตภาพกับส่วนจินตภาพ ได้ (3+1) + (2−5)i = 4 − 3i"
+    difficulty: 1
+
+  - qid: math_complex_004
+    topic: math_complex
+    stem: "สังยุคของจำนวนเชิงซ้อน 5 − 3i คือข้อใด"
+    choices: ["−5 + 3i", "−5 − 3i", "5 + 3i", "3 − 5i"]
+    answer: 2
+    explanation: "สังยุคคือการเปลี่ยนเครื่องหมายของส่วนจินตภาพเท่านั้น จึงได้ 5 + 3i และผลคูณกับตัวเดิมจะเป็นจำนวนจริงเสมอ"
+    difficulty: 1
+
+  - qid: math_complex_005
+    topic: math_complex
+    stem: "ค่าสัมบูรณ์ของ 3 + 4i เท่ากับเท่าใด"
+    choices: ["25", "7", "12", "5"]
+    answer: 3
+    explanation: "|a + bi| = √(a² + b²) = √(9 + 16) = 5"
+    difficulty: 1
+
+  - qid: math_complex_006
+    topic: math_complex
+    stem: "(2 + i)(2 − i) เท่ากับเท่าใด"
+    choices: ["5", "4", "3", "4 + i"]
+    answer: 0
+    explanation: "เป็นผลคูณของจำนวนเชิงซ้อนกับสังยุค ได้ a² + b² = 4 + 1 = 5 ซึ่งเป็นจำนวนจริง"
+    difficulty: 2
+
+  # ───────────────────────── ลำดับและอนุกรม
+  - qid: math_sequence_002
+    topic: math_sequence
+    stem: "ลำดับเลขคณิต 3, 7, 11, 15, ... พจน์ที่ 10 เท่ากับเท่าใด"
+    choices: ["37", "39", "41", "43"]
+    answer: 1
+    explanation: "aₙ = a₁ + (n−1)d = 3 + 9(4) = 39"
+    difficulty: 1
+
+  - qid: math_sequence_003
+    topic: math_sequence
+    stem: "ผลบวก 20 พจน์แรกของลำดับเลขคณิต 2, 5, 8, ... เท่ากับเท่าใด"
+    choices: ["590", "620", "610", "650"]
+    answer: 2
+    explanation: "Sₙ = n/2[2a + (n−1)d] = 10[4 + 19(3)] = 10(61) = 610"
+    difficulty: 2
+
+  - qid: math_sequence_004
+    topic: math_sequence
+    stem: "ลำดับเรขาคณิต 2, 6, 18, ... พจน์ที่ 5 เท่ากับเท่าใด"
+    choices: ["54", "108", "486", "162"]
+    answer: 3
+    explanation: "aₙ = a₁rⁿ⁻¹ = 2 × 3⁴ = 2 × 81 = 162"
+    difficulty: 2
+
+  - qid: math_sequence_005
+    topic: math_sequence
+    stem: "อนุกรมเรขาคณิตอนันต์ 8 + 4 + 2 + 1 + ... มีผลบวกเท่าใด"
+    choices: ["16", "15", "18", "หาไม่ได้"]
+    answer: 0
+    explanation: "อัตราส่วน r = 0.5 ซึ่ง |r| < 1 จึงลู่เข้า S = a/(1−r) = 8/0.5 = 16"
+    difficulty: 2
+
+  - qid: math_sequence_006
+    topic: math_sequence
+    stem: "อนุกรมเรขาคณิตอนันต์จะมีผลบวกจำกัดเมื่อใด"
+    choices: ["r > 1", "|r| < 1", "r = 1", "r เป็นจำนวนเต็ม"]
+    answer: 1
+    explanation: "เมื่ออัตราส่วนมีค่าสัมบูรณ์น้อยกว่า 1 พจน์จะเล็กลงเรื่อย ๆ จนผลบวกลู่เข้าค่าจำกัด ถ้า |r| ≥ 1 อนุกรมจะลู่ออก"
+    difficulty: 2
+
+  - qid: math_sequence_007
+    topic: math_sequence
+    stem: "ผลบวก 1 + 2 + 3 + ... + 100 เท่ากับเท่าใด"
+    choices: ["4,950", "5,100", "5,050", "10,000"]
+    answer: 2
+    explanation: "ใช้สูตร n(n+1)/2 = 100 × 101 / 2 = 5,050"
+    difficulty: 1
+
+  - qid: math_sequence_008
+    topic: math_sequence
+    stem: "เงินฝาก 10,000 บาท ดอกเบี้ยทบต้น 5% ต่อปี เมื่อครบ 2 ปีจะมีเงินเท่าใด"
+    choices: ["11,000", "11,500", "11,050", "11,025"]
+    answer: 3
+    explanation: "A = P(1 + r)ⁿ = 10,000 × 1.05² = 10,000 × 1.1025 = 11,025 บาท (มากกว่าดอกเบี้ยคงต้นเพราะปีที่สองคิดจากยอดที่โตแล้ว)"
+    difficulty: 2
+
+  # ───────────────────────── แคลคูลัส
+  - qid: math_calculus_003
+    topic: math_calculus
+    stem: "อนุพันธ์ของ f(x) = 3x⁴ คือข้อใด"
+    choices: ["12x³", "3x³", "12x⁴", "4x³"]
+    answer: 0
+    explanation: "ใช้กฎกำลัง d/dx(axⁿ) = anxⁿ⁻¹ ได้ 3 × 4 × x³ = 12x³"
+    difficulty: 1
+
+  - qid: math_calculus_004
+    topic: math_calculus
+    stem: "ค่าของ lim(x→2) (x² − 4)/(x − 2) เท่ากับเท่าใด"
+    choices: ["0", "4", "2", "หาค่าไม่ได้"]
+    answer: 1
+    explanation: "แยกตัวประกอบได้ (x−2)(x+2)/(x−2) = x + 2 เมื่อ x ≠ 2 แทนค่าลิมิตได้ 4"
+    difficulty: 2
+
+  - qid: math_calculus_005
+    topic: math_calculus
+    stem: "ฟังก์ชัน f(x) = x³ − 3x มีจุดวิกฤตที่ x เท่ากับเท่าใด"
+    choices: ["x = 0 เท่านั้น", "x = 3", "x = 1 และ x = −1", "ไม่มีจุดวิกฤต"]
+    answer: 2
+    explanation: "f'(x) = 3x² − 3 = 0 ได้ x² = 1 ดังนั้น x = 1 และ x = −1"
+    difficulty: 2
+
+  - qid: math_calculus_006
+    topic: math_calculus
+    stem: "∫ 2x dx เท่ากับข้อใด"
+    choices: ["2 + C", "x²/2 + C", "2x² + C", "x² + C"]
+    answer: 3
+    explanation: "อินทิเกรตกฎกำลัง ∫xⁿ dx = xⁿ⁺¹/(n+1) ได้ 2 × x²/2 = x² บวกค่าคงตัว C"
+    difficulty: 1
+
+  - qid: math_calculus_007
+    topic: math_calculus
+    stem: "ค่าของ ∫ จาก 0 ถึง 3 ของ 2x dx เท่ากับเท่าใด"
+    choices: ["9", "6", "3", "18"]
+    answer: 0
+    explanation: "ปฏิยานุพันธ์คือ x² แทนขอบเขตได้ 3² − 0² = 9"
+    difficulty: 2
+
+  - qid: math_calculus_008
+    topic: math_calculus
+    stem: "อนุพันธ์ ณ จุดหนึ่งของกราฟมีความหมายทางเรขาคณิตว่าอย่างไร"
+    choices:
+      - "พื้นที่ใต้กราฟ"
+      - "ความชันของเส้นสัมผัสเส้นโค้ง ณ จุดนั้น"
+      - "ระยะจากแกน x"
+      - "ค่าสูงสุดของฟังก์ชัน"
+    answer: 1
+    explanation: "อนุพันธ์คือลิมิตของความชันเส้นตัดเมื่อสองจุดเข้าใกล้กัน จึงกลายเป็นความชันเส้นสัมผัส ส่วนพื้นที่ใต้กราฟคืออินทิกรัล"
+    difficulty: 2
+
+  # ───────────────────────── ความน่าจะเป็น
+  - qid: math_prob_002
+    topic: math_prob
+    stem: "จัดเรียงตัวอักษร A, B, C, D ได้กี่วิธี"
+    choices: ["4", "12", "24", "256"]
+    answer: 2
+    explanation: "4! = 4 × 3 × 2 × 1 = 24 วิธี"
+    difficulty: 1
+
+  - qid: math_prob_003
+    topic: math_prob
+    stem: "เลือกนักเรียน 3 คนจาก 10 คนโดยไม่สนใจลำดับ ได้กี่วิธี"
+    choices: ["30", "1000", "720", "120"]
+    answer: 3
+    explanation: "C(10,3) = 10!/(3!7!) = (10×9×8)/(3×2×1) = 120 วิธี"
+    difficulty: 2
+
+  - qid: math_prob_004
+    topic: math_prob
+    stem: "ทอยลูกเต๋าหนึ่งลูก ความน่าจะเป็นที่ได้แต้มมากกว่า 4 เท่ากับเท่าใด"
+    choices: ["1/3", "1/6", "1/2", "2/3"]
+    answer: 0
+    explanation: "แต้มที่มากกว่า 4 คือ 5 และ 6 รวม 2 หน้าจาก 6 หน้า ได้ 2/6 = 1/3"
+    difficulty: 1
+
+  - qid: math_prob_005
+    topic: math_prob
+    stem: "โยนเหรียญ 3 ครั้ง ความน่าจะเป็นที่ออกหัวทั้งสามครั้งเท่ากับเท่าใด"
+    choices: ["1/2", "1/8", "1/4", "3/8"]
+    answer: 1
+    explanation: "แต่ละครั้งเป็นอิสระต่อกัน (1/2)³ = 1/8"
+    difficulty: 1
+
+  - qid: math_prob_006
+    topic: math_prob
+    stem: "ในกล่องมีลูกบอลแดง 4 ลูก ขาว 6 ลูก หยิบ 2 ลูกโดยไม่ใส่คืน ความน่าจะเป็นที่ได้แดงทั้งสองลูกเท่ากับเท่าใด"
+    choices: ["1/5", "4/25", "2/15", "6/45"]
+    answer: 2
+    explanation: "(4/10) × (3/9) = 12/90 = 2/15 ตัวส่วนลดลงเพราะไม่ใส่คืน"
+    difficulty: 3
+
+  - qid: math_prob_007
+    topic: math_prob
+    stem: "เหตุการณ์ A และ B เป็นเหตุการณ์ที่ไม่เกิดร่วมกัน P(A) = 0.3, P(B) = 0.5 แล้ว P(A∪B) เท่ากับเท่าใด"
+    choices: ["0.15", "0.5", "1.0", "0.8"]
+    answer: 3
+    explanation: "เมื่อไม่เกิดร่วมกัน P(A∩B) = 0 ดังนั้น P(A∪B) = 0.3 + 0.5 = 0.8"
+    difficulty: 2
+
+  - qid: math_prob_008
+    topic: math_prob
+    stem: "จัดคน 5 คนนั่งรอบโต๊ะกลมได้กี่วิธี"
+    choices: ["24", "60", "120", "720"]
+    answer: 0
+    explanation: "การจัดวงกลมได้ (n−1)! = 4! = 24 วิธี เพราะการหมุนทั้งวงถือเป็นการจัดแบบเดียวกัน"
+    difficulty: 3
+
+  # ───────────────────────── สถิติ
+  - qid: math_stat_002
+    topic: math_stat
+    stem: "ข้อมูล 3, 5, 7, 9, 11 มีค่าเฉลี่ยเลขคณิตเท่าใด"
+    choices: ["5", "7", "9", "35"]
+    answer: 1
+    explanation: "ผลรวม 35 หารด้วยจำนวน 5 ตัว ได้ 7"
+    difficulty: 1
+
+  - qid: math_stat_003
+    topic: math_stat
+    stem: "ข้อมูล 2, 3, 3, 5, 20 ค่ากลางใดที่เหมาะสมที่สุดในการอธิบายข้อมูลชุดนี้"
+    choices: ["ค่าเฉลี่ย", "ผลรวม", "มัธยฐาน", "พิสัย"]
+    answer: 2
+    explanation: "ค่า 20 เป็นค่าผิดปกติที่ดึงค่าเฉลี่ยขึ้นไปมาก มัธยฐาน (3) จึงสะท้อนกลุ่มข้อมูลส่วนใหญ่ได้ดีกว่า"
+    difficulty: 2
+
+  - qid: math_stat_004
+    topic: math_stat
+    stem: "ในการแจกแจงปกติ ข้อมูลประมาณกี่เปอร์เซ็นต์อยู่ในช่วง ±1 ส่วนเบี่ยงเบนมาตรฐานจากค่าเฉลี่ย"
+    choices: ["50%", "99.7%", "95%", "68%"]
+    answer: 3
+    explanation: "กฎ 68-95-99.7 ระบุว่า ±1 SD ครอบคลุมราว 68%, ±2 SD ราว 95% และ ±3 SD ราว 99.7%"
+    difficulty: 2
+
+  - qid: math_stat_005
+    topic: math_stat
+    stem: "นักเรียนสอบได้ 75 คะแนน ค่าเฉลี่ยของห้อง 65 ส่วนเบี่ยงเบนมาตรฐาน 5 คะแนนมาตรฐาน (z-score) เท่ากับเท่าใด"
+    choices: ["2", "1", "5", "10"]
+    answer: 0
+    explanation: "z = (x − μ)/σ = (75 − 65)/5 = 2 หมายถึงสูงกว่าค่าเฉลี่ย 2 ส่วนเบี่ยงเบนมาตรฐาน"
+    difficulty: 2
+
+  - qid: math_stat_006
+    topic: math_stat
+    stem: "ส่วนเบี่ยงเบนมาตรฐานบอกอะไรเกี่ยวกับข้อมูล"
+    choices:
+      - "ค่ากลางของข้อมูล"
+      - "ความกระจายของข้อมูลรอบค่าเฉลี่ย"
+      - "จำนวนข้อมูลทั้งหมด"
+      - "ค่าสูงสุดของข้อมูล"
+    answer: 1
+    explanation: "ค่ายิ่งมากแปลว่าข้อมูลกระจายห่างจากค่าเฉลี่ยมาก สองชุดข้อมูลอาจมีค่าเฉลี่ยเท่ากันแต่กระจายต่างกันสิ้นเชิง"
+    difficulty: 1

@@ -1,0 +1,305 @@
+# คลังข้อสอบ A-Level ภาษาอังกฤษ ชุดที่ 2
+#
+# ⚠️ ทุกข้อแต่งขึ้นใหม่ ไม่ได้คัดลอกจากข้อสอบเก่า
+#    บทอ่านสั้นกว่าข้อสอบจริงเพราะรูปแบบไฟล์เป็นข้อความล้วน
+#    การฝึกอ่านบทความยาวจับเวลาต้องทำจากหนังสือควบคู่ไปด้วย
+subject: eng
+questions:
+  # ───────────────────────── Reading comprehension
+  - qid: eng_reading_002
+    topic: eng_reading
+    stem: "Read: 'Antibiotic resistance develops when bacteria survive exposure to a drug and pass on their resistance genes. Overprescribing accelerates this process.' — What is the main idea?"
+    choices:
+      - "Excessive antibiotic use speeds up the spread of resistant bacteria"
+      - "Antibiotics are always harmful"
+      - "Bacteria cannot be killed by drugs"
+      - "Doctors should never prescribe antibiotics"
+    answer: 0
+    explanation: "ประโยคที่สองระบุว่าการสั่งยาเกินจำเป็นเร่งกระบวนการนี้ ตัวเลือกอื่นสุดโต่งเกินกว่าที่บทอ่านกล่าวไว้ (always, never, cannot)"
+    difficulty: 2
+
+  - qid: eng_reading_003
+    topic: eng_reading
+    stem: "Read: 'Although the vaccine reduced hospitalisation by 80 percent, it did not fully prevent infection.' — What can be inferred?"
+    choices:
+      - "The vaccine was completely ineffective"
+      - "Vaccinated people could still get infected but were less likely to be hospitalised"
+      - "The vaccine prevented all infections"
+      - "Hospitalisation increased after vaccination"
+    answer: 1
+    explanation: "คำว่า although ชี้ความขัดแย้งระหว่างสองข้อเท็จจริง คือลดการนอนโรงพยาบาลได้มาก แต่ยังติดเชื้อได้"
+    difficulty: 2
+
+  - qid: eng_reading_004
+    topic: eng_reading
+    stem: "Read: 'The researchers concluded that sleep deprivation impairs memory consolidation, a finding consistent with earlier animal studies.' — The word 'consistent with' means"
+    choices: ["contradicting", "unrelated to", "in agreement with", "replacing"]
+    answer: 2
+    explanation: "consistent with แปลว่าสอดคล้องกัน ผลการทดลองใหม่ไปในทางเดียวกับงานวิจัยก่อนหน้า"
+    difficulty: 2
+
+  - qid: eng_reading_005
+    topic: eng_reading
+    stem: "Read: 'Telemedicine expanded rapidly during the pandemic. However, patients in rural areas with poor internet access benefited least.' — What is the author's tone toward telemedicine?"
+    choices: ["Entirely negative", "Indifferent", "Enthusiastic without reservation", "Balanced, noting both growth and a limitation"]
+    answer: 3
+    explanation: "ประโยคแรกกล่าวถึงการเติบโต ประโยคที่สองขึ้นต้นด้วย However เพื่อชี้ข้อจำกัด จึงเป็นการนำเสนอสองด้าน"
+    difficulty: 3
+
+  - qid: eng_reading_006
+    topic: eng_reading
+    stem: "Read: 'Unlike bacteria, viruses cannot reproduce on their own; they must hijack a host cell.' — Which statement is true according to the passage?"
+    choices:
+      - "Viruses require a host cell to reproduce"
+      - "Bacteria need host cells to reproduce"
+      - "Both reproduce independently"
+      - "Neither can reproduce"
+    answer: 0
+    explanation: "คำว่า Unlike แสดงความต่าง แบคทีเรียแบ่งตัวเองได้ แต่ไวรัสต้องอาศัยเซลล์เจ้าบ้าน"
+    difficulty: 1
+
+  - qid: eng_reading_007
+    topic: eng_reading
+    stem: "Read: 'The study had a small sample size, so its conclusions should be treated with caution.' — Why should the conclusions be treated carefully?"
+    choices:
+      - "The researchers were inexperienced"
+      - "The number of participants was too small to be broadly representative"
+      - "The study was too expensive"
+      - "The topic was unimportant"
+    answer: 1
+    explanation: "so เชื่อมเหตุกับผล เหตุคือกลุ่มตัวอย่างเล็ก จึงสรุปไปยังประชากรทั้งหมดได้ไม่มั่นใจนัก"
+    difficulty: 2
+
+  - qid: eng_reading_008
+    topic: eng_reading
+    stem: "Read: 'Regular exercise not only strengthens the heart but also improves mood and sleep quality.' — The structure 'not only ... but also' is used to"
+    choices: ["contrast two opposite ideas", "express doubt", "add and emphasise additional benefits", "give an example"]
+    answer: 2
+    explanation: "โครงสร้างนี้ใช้เพิ่มข้อมูลและเน้นว่ามีมากกว่าหนึ่งอย่าง ไม่ใช่การเปรียบเทียบขัดแย้ง"
+    difficulty: 1
+
+  # ───────────────────────── Vocabulary
+  - qid: eng_vocab_004
+    topic: eng_vocab
+    stem: "A 'chronic' condition is one that"
+    choices: ["appears suddenly and severely", "affects only children", "is easily cured", "lasts for a long time"]
+    answer: 3
+    explanation: "chronic หมายถึงเรื้อรัง ยาวนาน ตรงข้ามกับ acute ที่เกิดเฉียบพลันและรุนแรงในช่วงสั้น"
+    difficulty: 1
+
+  - qid: eng_vocab_005
+    topic: eng_vocab
+    stem: "The word 'benign' in a medical context means"
+    choices: ["not harmful or not cancerous", "cancerous and spreading", "highly infectious", "fatal"]
+    answer: 0
+    explanation: "benign tumour คือเนื้องอกที่ไม่ลุกลาม ตรงข้ามกับ malignant ที่เป็นมะเร็งและแพร่กระจาย"
+    difficulty: 2
+
+  - qid: eng_vocab_006
+    topic: eng_vocab
+    stem: "'The symptoms subsided after treatment.' — 'subsided' means"
+    choices: ["became worse", "became less intense", "spread", "returned"]
+    answer: 1
+    explanation: "subside แปลว่าบรรเทาลง ทุเลาลง มักใช้กับอาการ ความเจ็บปวด หรือน้ำท่วมที่ลดระดับ"
+    difficulty: 2
+
+  - qid: eng_vocab_007
+    topic: eng_vocab
+    stem: "A drug's 'adverse effects' are"
+    choices: ["its intended benefits", "its cost", "its unwanted or harmful effects", "its dosage"]
+    answer: 2
+    explanation: "adverse แปลว่าไม่พึงประสงค์ เป็นผลข้างเคียงที่ไม่ต้องการ"
+    difficulty: 1
+
+  - qid: eng_vocab_008
+    topic: eng_vocab
+    stem: "'The prognosis is poor.' — 'prognosis' refers to"
+    choices: ["the identification of the disease", "the cause of the disease", "the treatment plan", "the predicted course and outcome of the disease"]
+    answer: 3
+    explanation: "prognosis คือการพยากรณ์โรคว่าจะดำเนินไปอย่างไร ต่างจาก diagnosis ซึ่งเป็นการวินิจฉัยว่าเป็นโรคอะไร"
+    difficulty: 2
+
+  # ───────────────────────── Cloze
+  - qid: eng_cloze_002
+    topic: eng_cloze
+    stem: "The patient was advised to ______ smoking to reduce the risk of lung cancer."
+    choices: ["give up", "give in", "give away", "give out"]
+    answer: 0
+    explanation: "give up = เลิก ส่วน give in = ยอมแพ้, give away = แจก, give out = แจกจ่ายหรือหมดแรง"
+    difficulty: 2
+
+  - qid: eng_cloze_003
+    topic: eng_cloze
+    stem: "Doctors must ______ the risks and benefits before recommending surgery."
+    choices: ["weight", "weigh", "wait", "way"]
+    answer: 1
+    explanation: "weigh (v.) ในบริบทนี้แปลว่าชั่งน้ำหนักเปรียบเทียบ ส่วน weight เป็นคำนามแปลว่าน้ำหนัก"
+    difficulty: 2
+
+  - qid: eng_cloze_004
+    topic: eng_cloze
+    stem: "The results were ______ with the hypothesis, supporting the researchers' theory."
+    choices: ["consistency", "consisting", "consistent", "consist"]
+    answer: 2
+    explanation: "ต้องการคำคุณศัพท์หลัง verb to be ในวลี be consistent with ที่แปลว่าสอดคล้องกับ"
+    difficulty: 2
+
+  - qid: eng_cloze_005
+    topic: eng_cloze
+    stem: "Hospitals must ______ strict hygiene protocols to prevent infection."
+    choices: ["adhere at", "adhere on", "adhere with", "adhere to"]
+    answer: 3
+    explanation: "adhere to เป็นคำกริยาวลีคงที่ แปลว่าปฏิบัติตามอย่างเคร่งครัด"
+    difficulty: 2
+
+  - qid: eng_cloze_006
+    topic: eng_cloze
+    stem: "Early detection can significantly ______ the survival rate of cancer patients."
+    choices: ["improve", "improvement", "improving", "improved"]
+    answer: 0
+    explanation: "หลัง modal verb 'can' ต้องตามด้วยกริยารูปฐาน (base form) เสมอ"
+    difficulty: 1
+
+  # ───────────────────────── Grammar
+  - qid: eng_grammar_004
+    topic: eng_grammar
+    stem: "Choose the correct sentence."
+    choices:
+      - "If I would have studied harder, I had passed the exam."
+      - "If I had studied harder, I would have passed the exam."
+      - "If I studied harder, I would have passed the exam."
+      - "If I have studied harder, I would pass the exam."
+    answer: 1
+    explanation: "เงื่อนไขแบบที่ 3 พูดถึงอดีตที่ไม่เป็นจริง ใช้ If + past perfect, would have + V3 และห้ามใช้ would ในประโยค if"
+    difficulty: 3
+
+  - qid: eng_grammar_005
+    topic: eng_grammar
+    stem: "The number of patients ______ increasing every year."
+    choices: ["were", "are", "is", "have been"]
+    answer: 2
+    explanation: "the number of + นามพหูพจน์ ถือเป็นเอกพจน์ (จำนวนหนึ่งจำนวน) ต่างจาก a number of ที่แปลว่าหลาย ๆ และใช้กริยาพหูพจน์"
+    difficulty: 3
+
+  - qid: eng_grammar_006
+    topic: eng_grammar
+    stem: "She is the doctor ______ discovered the new treatment."
+    choices: ["which", "whose", "whom", "who"]
+    answer: 3
+    explanation: "ต้องการ relative pronoun ที่แทนคน และทำหน้าที่เป็นประธานของกริยา discovered จึงใช้ who ไม่ใช่ whom"
+    difficulty: 2
+
+  # ───────────────────────── Error identification
+  - qid: eng_error_002
+    topic: eng_error
+    stem: "Find the error: 'Each of the students have submitted their report on time.'"
+    choices: ["have", "Each", "their", "on time"]
+    answer: 0
+    explanation: "Each of + นามพหูพจน์ ยังถือเป็นเอกพจน์ จึงต้องใช้ has ไม่ใช่ have"
+    difficulty: 2
+
+  - qid: eng_error_003
+    topic: eng_error
+    stem: "Find the error: 'The research was conducted by a team of scientist from three countries.'"
+    choices: ["was conducted", "scientist", "by", "three countries"]
+    answer: 1
+    explanation: "a team of ตามด้วยนามพหูพจน์ จึงต้องเป็น scientists"
+    difficulty: 2
+
+  - qid: eng_error_004
+    topic: eng_error
+    stem: "Find the error: 'She has been working at the hospital since five years.'"
+    choices: ["has been working", "at", "since", "five years"]
+    answer: 2
+    explanation: "since ใช้กับจุดเริ่มต้นของเวลา (since 2019) ส่วนช่วงระยะเวลาต้องใช้ for จึงควรเป็น for five years"
+    difficulty: 2
+
+  - qid: eng_error_005
+    topic: eng_error
+    stem: "Find the error: 'Neither the doctor nor the nurses was available at that time.'"
+    choices: ["Neither", "nor", "at that time", "was"]
+    answer: 3
+    explanation: "ในโครงสร้าง neither...nor กริยาต้องสอดคล้องกับประธานตัวที่อยู่ใกล้ที่สุด คือ nurses ซึ่งเป็นพหูพจน์ จึงต้องใช้ were"
+    difficulty: 3
+
+  # ───────────────────────── Conversation
+  - qid: eng_conversation_002
+    topic: eng_conversation
+    stem: "Doctor: 'How long have you had this pain?' Patient: '______'"
+    choices: ["About three days.", "It is very painful.", "In my stomach.", "Yes, I have."]
+    answer: 0
+    explanation: "คำถาม How long ถามระยะเวลา จึงต้องตอบด้วยช่วงเวลา ส่วนตัวเลือกอื่นตอบคำถาม how, where และ yes/no"
+    difficulty: 1
+
+  - qid: eng_conversation_003
+    topic: eng_conversation
+    stem: "A: 'I'm afraid the test results aren't what we hoped for.' B: '______'"
+    choices: ["Congratulations!", "I see. What are our options now?", "That's great news.", "Never mind, it doesn't matter."]
+    answer: 1
+    explanation: "ผู้พูดกำลังแจ้งข่าวไม่ดี การตอบรับที่เหมาะสมคือรับทราบแล้วถามถึงทางเลือกต่อไป"
+    difficulty: 2
+
+  - qid: eng_conversation_004
+    topic: eng_conversation
+    stem: "Receptionist: 'Would you like to reschedule your appointment?' Patient: '______'"
+    choices: ["It costs too much.", "No, I'm a doctor.", "Yes, please. Is next Monday available?", "I live nearby."]
+    answer: 2
+    explanation: "เป็นคำถามเชิงเสนอบริการ คำตอบที่เข้ากันคือตอบรับแล้วเสนอเวลาที่ต้องการ"
+    difficulty: 1
+
+  - qid: eng_conversation_005
+    topic: eng_conversation
+    stem: "A: 'Could you explain that again? I didn't quite follow.' — What does B need to do?"
+    choices: ["Speak more quietly", "Change the topic", "Apologise and leave", "Repeat and clarify the explanation"]
+    answer: 3
+    explanation: "I didn't quite follow แปลว่าไม่ค่อยเข้าใจ จึงเป็นการขอให้อธิบายใหม่ให้ชัดขึ้น"
+    difficulty: 1
+
+  - qid: eng_conversation_006
+    topic: eng_conversation
+    stem: "Nurse: 'You'll need to fast for eight hours before the blood test.' Patient: 'Does that mean ______?'"
+    choices: ["I cannot eat or drink anything except water", "I should run fast", "I should come early", "the test will be quick"]
+    answer: 0
+    explanation: "fast ในบริบททางการแพทย์เป็นกริยาแปลว่างดอาหาร ไม่ใช่คำคุณศัพท์ที่แปลว่าเร็ว"
+    difficulty: 2
+
+  # ───────────────────────── Paragraph organization
+  - qid: eng_organization_002
+    topic: eng_organization
+    stem: "Which sentence best opens a paragraph about the causes of obesity?"
+    choices:
+      - "Therefore, exercise is essential."
+      - "Obesity results from a combination of diet, activity level, and genetic factors."
+      - "For example, sugary drinks contain many calories."
+      - "In addition, sleep matters too."
+    answer: 1
+    explanation: "ประโยคใจความหลักต้องกว้างและครอบคลุมประเด็นของย่อหน้า ส่วนตัวเลือกอื่นขึ้นต้นด้วยคำเชื่อมที่บ่งว่าต้องมีประโยคมาก่อนแล้ว"
+    difficulty: 2
+
+  - qid: eng_organization_003
+    topic: eng_organization
+    stem: "Which transition word best shows contrast?"
+    choices: ["Moreover", "Consequently", "Nevertheless", "Similarly"]
+    answer: 2
+    explanation: "Nevertheless แสดงความขัดแย้ง ส่วน Moreover เพิ่มข้อมูล Consequently แสดงผลลัพธ์ และ Similarly แสดงความเหมือน"
+    difficulty: 1
+
+  - qid: eng_organization_004
+    topic: eng_organization
+    stem: "Order these sentences: (1) As a result, fewer patients developed complications. (2) The hospital introduced a new screening programme. (3) It identified high-risk patients earlier."
+    choices: ["1, 2, 3", "2, 1, 3", "3, 2, 1", "2, 3, 1"]
+    answer: 3
+    explanation: "ต้องเรียงตามเหตุและผล คือมีโครงการก่อน แล้วจึงระบุผู้ป่วยได้เร็วขึ้น และผลลัพธ์สุดท้ายคือภาวะแทรกซ้อนลดลง สังเกตคำว่า As a result ที่บอกว่าต้องอยู่ท้าย"
+    difficulty: 2
+
+  - qid: eng_organization_005
+    topic: eng_organization
+    stem: "In academic writing, a good concluding sentence should"
+    choices:
+      - "restate the main point and its significance"
+      - "introduce a completely new argument"
+      - "list unrelated facts"
+      - "ask an unanswered question about a new topic"
+    answer: 0
+    explanation: "ประโยคสรุปควรย้ำใจความหลักและชี้ความสำคัญ ไม่ใช่เปิดประเด็นใหม่ที่ยังไม่ได้อธิบาย"
+    difficulty: 1
