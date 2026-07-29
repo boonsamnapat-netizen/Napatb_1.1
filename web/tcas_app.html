@@ -807,6 +807,71 @@ main { padding-top: 26px; }
 .dayband .ring-fg { stroke: #fff; }
 
 /* ═══════════════════════════════════════════════════════════════
+   การ์ดคะแนน
+   ═══════════════════════════════════════════════════════════════ */
+/* แถบหัวเปลี่ยนสีตามระยะห่างจากเป้า — ยังไม่กรอกเป็นสีหมึก
+   ใกล้ถึงเป็นเหลือง ถึงแล้วเป็นเขียว ห่างมากเป็นแดง */
+.scoreband {
+  position: relative; overflow: hidden;
+  border-radius: calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;
+  display: flex; align-items: center; gap: 14px;
+  padding: 17px 18px; color: #fff;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,.10) 3.6px, transparent 4.1px)
+      0 0 / 23px 23px,
+    linear-gradient(112deg, var(--ink-2), var(--ink) 70%);
+}
+.scoreband.ok   { background:
+    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #3d9c6f, #256b4c 70%); }
+.scoreband.near { background:
+    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #d99a2b, #a5651a 70%); }
+.scoreband.far  { background:
+    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #c25a45, #8e3524 70%); }
+.scoreband-n {
+  flex: none; text-align: right; line-height: 1;
+  font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 700;
+  letter-spacing: -.03em;
+}
+.scoreband-n small { display: block; font-size: 11.5px; font-weight: 500;
+  opacity: .8; letter-spacing: 0; margin-top: 3px; }
+
+/* ช่องกรอกคะแนน — สองคอลัมน์บนมือถือ สี่บนจอกว้าง */
+.sgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 620px) { .sgrid { grid-template-columns: repeat(4, 1fr); } }
+.scell {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  border-left: 4px solid var(--sc, var(--line));
+  background: var(--surface-2);
+  background: color-mix(in oklab, var(--sc, var(--line)) 10%, var(--surface));
+  cursor: text;
+}
+.scell-l { font-size: 12px; flex: 1; min-width: 0; line-height: 1.35; }
+.scell input {
+  width: 62px; text-align: right; padding: 6px 7px; font-size: 14px;
+  font-variant-numeric: tabular-nums; font-weight: 600;
+  border: 1px solid var(--line); border-radius: var(--r-xs);
+  background: var(--surface); color: var(--text);
+}
+.scell input:focus { border-color: var(--marigold-f); outline: none; }
+.scell-m { font-size: 11px; color: var(--text-3); flex: none; }
+
+/* แถบสัดส่วนคะแนนรายกลุ่ม */
+.wrow { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.wrow-l { font-size: 13px; flex: 1; min-width: 0; }
+.wrow-bar {
+  flex: none; width: 84px; height: 7px; border-radius: var(--pill);
+  background: var(--line); overflow: hidden;
+}
+.wrow-bar i { display: block; height: 100%; border-radius: var(--pill);
+  background: linear-gradient(90deg, var(--marigold-f), #e08434); }
+.wrow-n { font-size: 12.5px; color: var(--text-2); flex: none;
+  font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
+
+/* ═══════════════════════════════════════════════════════════════
    PROGRESS RING — วาดตัวเองตอนโผล่ ไม่ใช่ขึ้นมาเต็มวงเลย
    ═══════════════════════════════════════════════════════════════ */
 .ring { position: relative; flex: none; display: grid; place-items: center; }
@@ -855,6 +920,26 @@ main { padding-top: 26px; }
 #confetti {
   position: fixed; inset: 0; z-index: 90;
   pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   แท่งทำได้จริงเทียบแผน + สไลเดอร์
+   ═══════════════════════════════════════════════════════════════ */
+.ebars { display: flex; align-items: flex-end; gap: 4px; height: 72px; }
+.ebar {
+  flex: 1; height: 100%; border-radius: var(--r-xs);
+  background: var(--surface-2); display: flex; align-items: flex-end;
+  border: 1px solid var(--line-soft);
+}
+.ebar i { display: block; width: 100%; border-radius: var(--r-xs); min-height: 2px; }
+.ebar.good i { background: var(--ok); }
+.ebar.mid  i { background: var(--marigold-f); }
+.ebar.low  i { background: var(--brick); }
+.ebar.off  { background: transparent; border-style: dashed; }
+
+input[type=range] {
+  accent-color: var(--marigold-f);
+  flex: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1896,6 +1981,153 @@ function celebrate(dayISO) {
   if (left === 0) confetti();
 }
 
+/* ─────────────────────────────────────────────────────────────
+   เปิดใช้ครั้งแรก — สามคำถาม ไม่ใช่การ์ดอธิบายใบเดียว
+
+   คำถามถูกเลือกจากสิ่งที่ตารางต้องใช้จริง: เป้าหมายกำหนดว่าต้องได้กี่คะแนน
+   เวลาว่างกำหนดว่าตารางยาวแค่ไหน และจุดที่อ่านถึงแล้วกันไม่ให้แอปสั่งอ่านซ้ำ
+   ทุกข้อข้ามได้ เพราะการบังคับกรอกตั้งแต่วินาทีแรกทำให้คนปิดแอปหนี
+   ───────────────────────────────────────────────────────────── */
+let onbStep = 0;
+const onbDraft = { target: "", hours: null, done: {} };
+
+function onbNext() { onbStep += 1; render(); }
+
+function onbFinish() {
+  if (onbDraft.target)
+    S.settings = Object.assign({}, S.settings, { targetProgram: onbDraft.target });
+  if (onbDraft.hours)
+    S.settings = Object.assign({}, S.settings, { hoursByWeekday: onbDraft.hours });
+
+  // แปลง "อ่านไปแล้วกี่ %" ของแต่ละวิชา เป็นชั่วโมงที่ลงให้หัวข้อต้น ๆ ของวิชานั้น
+  // ไล่จากหัวข้อแรกไปเรื่อย ๆ เพราะหลักสูตรเรียงตามลำดับการสอนอยู่แล้ว
+  for (const [code, pct] of Object.entries(onbDraft.done)) {
+    const subj = SUBJ[code];
+    if (!subj || !pct) continue;
+    let budget = subj.hours * pct / 100;
+    for (const t of subj.topics) {
+      if (budget <= 0) break;
+      const give = Math.min(t.hours, budget);
+      const rec = S.topics[t.code] || {};
+      rec.hoursDone = Number(rec.hoursDone || 0) + give;
+      if (rec.hoursDone >= t.hours - 0.001 && !rec.learnedOn) {
+        rec.learnedOn = TODAY;
+        rec.rep = 0;
+        const nx = d(TODAY); nx.setDate(nx.getDate() + ST.reviewIntervals[0]);
+        rec.next = iso(nx);
+      }
+      S.topics[t.code] = rec;
+      budget -= give;
+    }
+  }
+
+  S.seenIntro = true;
+  Store.save();
+  location.reload();   // ST คำนวณตอนโหลด — โหลดใหม่ให้ตารางคิดจากค่าที่เพิ่งตั้ง
+}
+
+function onbShell(step, title, sub, bodyNode, opts) {
+  const o = opts || {};
+  const card = el('<div class="card"></div>');
+  card.appendChild(el(
+    '<div class="dayband" data-s="' + esc(o.tint || "tpat1") + '">' +
+      '<div class="dayband-t">' +
+        '<div class="dayband-sub">ขั้นที่ ' + (step + 1) + " จาก 3</div>" +
+        "<h2>" + esc(title) + "</h2>" +
+        '<div class="dayband-sub">' + esc(sub) + "</div>" +
+      "</div>" +
+    "</div>"));
+  const body = el('<div class="card-pad stack"></div>');
+  body.appendChild(bodyNode);
+
+  const row = el('<div class="btn-row" style="margin-top:4px"></div>');
+  const next = el('<button class="btn btn-pri">' +
+    (step === 2 ? "เริ่มใช้เลย" : "ถัดไป") + "</button>");
+  next.addEventListener("click", step === 2 ? onbFinish : onbNext);
+  row.appendChild(next);
+  const skip = el('<button class="btn">ข้าม</button>');
+  skip.addEventListener("click", step === 2 ? onbFinish : onbNext);
+  row.appendChild(skip);
+  body.appendChild(row);
+  card.appendChild(body);
+  return card;
+}
+
+function onboarding() {
+  const wrap = el('<div class="stack"></div>');
+
+  if (onbStep === 0) {
+    const b = el('<div class="stack"></div>');
+    b.appendChild(el('<p class="muted" style="margin:0">คะแนนต่ำสุดของคณะที่เลือก ' +
+      "จะกลายเป็นเส้นเป้าหมาย แอปจะบอกตลอดว่ายังห่างอีกเท่าไร " +
+      "(เปลี่ยนทีหลังได้)</p>"));
+    const sel = el('<select class="sel" style="width:100%"></select>');
+    sel.appendChild(el('<option value="">— ยังไม่เลือก —</option>'));
+    (DATA.programs || []).forEach(p => sel.appendChild(el(
+      '<option value="' + esc(p.code) + '">' + esc(p.name) +
+      (p.projected != null ? " · " + p.projected.toFixed(1) : "") + "</option>")));
+    sel.value = onbDraft.target;
+    sel.addEventListener("change", () => { onbDraft.target = sel.value; });
+    b.appendChild(sel);
+    b.appendChild(el('<p class="tiny" style="margin:0">คะแนนต่ำสุดทุกคณะเป็น' +
+      "<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง</p>"));
+    wrap.appendChild(onbShell(0, "อยากเข้าคณะไหน", "เพื่อให้รู้ว่าต้องไปให้ถึงกี่คะแนน", b));
+    return wrap;
+  }
+
+  if (onbStep === 1) {
+    const b = el('<div class="stack" style="gap:0"></div>');
+    b.appendChild(el('<p class="muted" style="margin:0 0 4px">ใส่เท่าที่ทำได้จริง ' +
+      "ไม่ใช่เท่าที่อยากให้เป็น — ตารางที่ทำตามไม่ได้คือตารางที่ไม่มีประโยชน์</p>"));
+    const base = Object.assign({}, ST.hoursByWeekday);
+    onbDraft.hours = onbDraft.hours || base;
+    const total = el('<div class="week-total"></div>');
+    const paint = () => {
+      const sum = Object.values(onbDraft.hours).reduce((a, v) => a + Number(v || 0), 0);
+      total.innerHTML = "รวมสัปดาห์ละ <b>" + sum + "</b> ชม. · เดือนละราว <b>" +
+        Math.round(sum * 4.33) + "</b> ชม.";
+    };
+    ["mon","tue","wed","thu","fri","sat","sun"].forEach(day => {
+      const row = el('<div class="field"><span class="field-l">' + DOW_TH[day] + "</span></div>");
+      const inp = el('<input class="hours-in" type="number" min="0" max="16" step="0.5" value="' +
+        (onbDraft.hours[day] != null ? onbDraft.hours[day] : 0) + '">');
+      inp.addEventListener("input", () => {
+        onbDraft.hours[day] = Math.max(0, Math.min(16, Number(inp.value) || 0));
+        paint();
+      });
+      row.appendChild(inp);
+      row.appendChild(el('<span class="tiny">ชม.</span>'));
+      b.appendChild(row);
+    });
+    paint();
+    b.appendChild(total);
+    wrap.appendChild(onbShell(1, "วันหนึ่งอ่านได้กี่ชั่วโมง", "ตารางทั้งหมดคิดจากตรงนี้", b, { tint: "phys" }));
+    return wrap;
+  }
+
+  const b = el('<div class="stack" style="gap:0"></div>');
+  b.appendChild(el('<p class="muted" style="margin:0 0 6px">ถ้าเคยเรียนมาบ้างแล้ว ' +
+    "บอกคร่าว ๆ ว่าแต่ละวิชาอ่านไปประมาณกี่เปอร์เซ็นต์ แอปจะได้ไม่สั่งให้อ่านซ้ำตั้งแต่ต้น " +
+    "ไม่แน่ใจให้เว้นไว้ที่ 0</p>"));
+  Object.entries(SUBJ).forEach(([code, subj]) => {
+    const row = el('<div class="field" data-s="' + esc(code) + '"></div>');
+    row.appendChild(el('<span class="field-l" style="display:flex;align-items:center;gap:8px">' +
+      '<i style="width:10px;height:10px;border-radius:50%;background:var(--sc);flex:none"></i>' +
+      esc(subj.short || subj.name) + "</span>"));
+    const out = el('<span class="tiny num" style="min-width:38px;text-align:right">0%</span>');
+    const inp = el('<input type="range" min="0" max="100" step="5" value="0" style="width:120px">');
+    inp.addEventListener("input", () => {
+      onbDraft.done[code] = Number(inp.value);
+      out.textContent = inp.value + "%";
+    });
+    row.appendChild(inp);
+    row.appendChild(out);
+    b.appendChild(row);
+  });
+  wrap.appendChild(onbShell(2, "อ่านไปถึงไหนแล้ว", "ข้ามได้ถ้าเริ่มจากศูนย์", b, { tint: "bio" }));
+  return wrap;
+}
+
 function viewToday() {
   const root = $("#v-today");
   root.innerHTML = "";
@@ -1910,23 +2142,12 @@ function viewToday() {
   const allDone = hoursDone > 0 && blocks.length === 0;
   const st = streak();
 
-  /* ---- เปิดครั้งแรก: บอกก่อนว่านี่คืออะไร ใช้ยังไง แล้วเก็บทิ้ง */
+  /* ---- เปิดครั้งแรก: ถามสามอย่างที่ทำให้ตารางเป็นของเขาจริง ๆ
+     เดิมเป็นการ์ดอธิบายใบเดียวแล้วโยนตารางที่คิดจาก "เวลาว่างค่าเริ่มต้น" ให้
+     ซึ่งไม่ใช่เวลาว่างของใครเลย */
   if (!S.seenIntro) {
-    const intro = el(
-      '<div class="intro">' +
-        "<h2>ใช้ยังไง</h2>" +
-        '<p class="tiny" style="margin:0">ตารางคิดจากวันสอบและเวลาว่างของคุณ ' +
-          "ไม่ต้องวางแผนเอง</p>" +
-        "<ol>" +
-          "<li>กด <b>เริ่มอ่าน</b> ด้านล่าง จับเวลาให้ พออ่านจบมันติ๊กให้เอง</li>" +
-          "<li>ทำ <b>ข้อสอบ</b> ท้ายวัน ข้อที่ผิดจะถูกเอากลับมาถามซ้ำเอง</li>" +
-          "<li>ข้ามวันได้ <b>งานไม่หาย</b> — ตารางจัดใหม่ให้ทุกครั้งที่เปิด</li>" +
-        "</ol>" +
-      "</div>");
-    const ok = el('<button class="btn btn-sm" style="margin-top:11px">เข้าใจแล้ว</button>');
-    ok.addEventListener("click", () => { S.seenIntro = true; Store.save(); render(); });
-    intro.appendChild(ok);
-    wrap.appendChild(intro);
+    root.appendChild(onboarding());
+    return;
   }
 
   /* ---- ปุ่มหลัก: เริ่มลงมือ ไม่ใช่รายงานว่าเป็นศูนย์ (วางหลังแถบสถานะ) */
@@ -2538,6 +2759,265 @@ function viewQuiz() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   คะแนน กสพท — คำถามเดียวที่เด็กอยากรู้จริง ๆ
+
+   สูตรเดียวกับ src/tcas/scoring.py เป๊ะ ๆ เพื่อให้ CLI กับแอปตอบตรงกัน
+   น้ำหนักและเกณฑ์ขั้นต่ำมาจาก config ที่ฝังมาตอน build ไม่ได้ฮาร์ดโค้ดที่นี่
+   (ทั้งสองค่ายัง verified: false อยู่ — หน้าจอจึงต้องบอกไว้เสมอ)
+   ───────────────────────────────────────────────────────────── */
+const W = DATA.weights || {};
+const GROUP_LABEL = DATA.groupLabels || {};
+const MINS = DATA.minimums || {};
+
+const myScores = () => S.scores || (S.scores = {});
+
+/* คะแนนดิบ -> % ของคะแนนเต็มวิชานั้น (TPAT1 เต็ม 300, A-Level เต็ม 100) */
+function toPercent(code, raw) {
+  const max = (SUBJ[code] || {}).maxScore || 0;
+  return max ? 100 * Number(raw) / max : 0;
+}
+
+/* รวมเป็น % รายกลุ่ม — กลุ่มวิทย์เฉลี่ยจากสามวิชาเท่า ๆ กัน */
+function groupPercents(scores) {
+  const buckets = {};
+  for (const [code, raw] of Object.entries(scores)) {
+    if (!SUBJ[code] || raw === "" || raw == null) continue;
+    const g = SUBJ[code].group;
+    (buckets[g] = buckets[g] || []).push(toPercent(code, raw));
+  }
+  const out = {};
+  for (const [g, vals] of Object.entries(buckets))
+    if (vals.length) out[g] = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return out;
+}
+
+const filledSubjects = scores =>
+  Object.keys(SUBJ).filter(c => scores[c] !== "" && scores[c] != null);
+const missingSubjects = scores =>
+  Object.keys(SUBJ).filter(c => scores[c] === "" || scores[c] == null);
+
+function scoreCard(scores) {
+  const pcts = groupPercents(scores);
+  let total = 0;
+  const breakdown = [];
+  for (const [g, weight] of Object.entries(W)) {
+    const pct = pcts[g] || 0;
+    const weighted = weight * pct / 100;
+    total += weighted;
+    breakdown.push({ group: g, pct, weight, weighted, filled: g in pcts });
+  }
+
+  // เกณฑ์ขั้นต่ำ: ตกข้อเดียวคือคัดออก ต่อให้คะแนนรวมสูงแค่ไหน
+  const failures = [];
+  const tpatMin = Number(MINS.tpat1_pct != null ? MINS.tpat1_pct : 30);
+  const eachMin = Number(MINS.alevel_each_group_pct != null ? MINS.alevel_each_group_pct : 30);
+  const engMin = Number(MINS.english_pct != null ? MINS.english_pct : eachMin);
+  for (const [g, pct] of Object.entries(pcts)) {
+    const floor = g === "tpat1" ? tpatMin : g === "english" ? engMin : eachMin;
+    if (pct < floor)
+      failures.push((GROUP_LABEL[g] || g) + " ได้ " + pct.toFixed(1) +
+                    "% ต่ำกว่าเกณฑ์ " + floor.toFixed(0) + "%");
+  }
+
+  return { total, breakdown, failures, missing: missingSubjects(scores) };
+}
+
+/* ต้องทำ % เท่าไรในวิชาที่ยังไม่ได้กรอก จึงจะไปถึงเป้า
+   สมมติว่าทุกวิชาที่เหลือทำได้เท่ากันหมด — คืน null ถ้ากรอกครบแล้ว */
+function requiredPercent(scores, targetTotal) {
+  const missing = missingSubjects(scores);
+  if (!missing.length) return null;
+  const pcts = groupPercents(scores);
+  let have = 0;
+  for (const [g, w] of Object.entries(W)) have += w * (pcts[g] || 0) / 100;
+
+  // น้ำหนักที่ยังเปิดอยู่: กลุ่มที่ยังไม่มีคะแนนเลย + ส่วนที่ขาดของกลุ่มวิทย์
+  let openWeight = 0;
+  for (const [g, w] of Object.entries(W)) {
+    const inGroup = Object.keys(SUBJ).filter(c => SUBJ[c].group === g);
+    const done = inGroup.filter(c => scores[c] !== "" && scores[c] != null).length;
+    openWeight += w * (inGroup.length - done) / inGroup.length;
+  }
+  if (openWeight <= 0) return null;
+  return 100 * (targetTotal - have) / openWeight;
+}
+
+const targetProgram = () => {
+  const code = (S.settings || {}).targetProgram ||
+               ((DATA.student || {}).target_program);
+  return (DATA.programs || []).find(p => p.code === code) || null;
+};
+
+/* ─────────────────────────────────────────────────────────────
+   การ์ดคะแนน — กรอกคะแนนสอบแล้วบอกว่าห่างจากคณะเป้าหมายเท่าไร
+   ───────────────────────────────────────────────────────────── */
+function scorePanel() {
+  const scores = myScores();
+  const filled = filledSubjects(scores);
+  const card = el('<div class="card"></div>');
+  const target = targetProgram();
+
+  const sc = filled.length ? scoreCard(scores) : null;
+  const allSubjects = Object.keys(SUBJ).length;
+  const complete = sc && !sc.missing.length;
+  const hasTarget = target && target.projected != null;
+  const gap = sc && hasTarget ? sc.total - target.projected : null;
+
+  /* ที่ยังกรอกไม่ครบ คะแนนรวมย่อมต่ำเพราะวิชาที่ยังไม่สอบนับเป็นศูนย์
+     ถ้าพาดหัวว่า "ยังขาดอีก 32 คะแนน" ทั้งที่เพิ่งสอบไป 4 วิชา
+     มันคือการขู่ให้ตกใจโดยไม่มีข้อมูลรองรับ — จึงเปลี่ยนเป็นบอกว่า
+     วิชาที่เหลือต้องทำได้เฉลี่ยเท่าไร ซึ่งเป็นตัวเลขที่เอาไปใช้ได้จริง */
+  const need = sc && hasTarget && !complete
+    ? requiredPercent(scores, target.projected) : null;
+
+  /* ตกเกณฑ์ขั้นต่ำคือถูกคัดออกทันที ไม่ว่าคะแนนรวมจะสูงแค่ไหน
+     จึงต้องกลบทุกสัญญาณอื่น ไม่งั้นแถบจะขึ้นว่า "เกือบถึงแล้ว" ให้คนที่หมดสิทธิ์ */
+  const failed = sc && sc.failures.length > 0;
+
+  const tone = failed ? "far"
+    : !sc || !hasTarget ? ""
+    : complete ? (gap >= 0 ? "ok" : gap > -5 ? "near" : "far")
+    : need == null ? ""
+    : need <= 65 ? "ok" : need <= 85 ? "near" : "far";
+
+  const sub = failed
+    ? "ตกเกณฑ์ขั้นต่ำ " + sc.failures.length + " วิชา — ดูรายละเอียดด้านล่าง"
+    :
+    !filled.length ? "กรอกคะแนนที่สอบได้ด้านล่าง แล้วจะรู้ว่าห่างเป้าเท่าไร"
+    : !target ? "กรอกแล้ว " + filled.length + " จาก " + allSubjects +
+                " วิชา — เลือกคณะเป้าหมายเพื่อดูว่าต้องไปให้ถึงเท่าไร"
+    : !hasTarget ? "คณะนี้ยังไม่มีคะแนนต่ำสุดย้อนหลังในระบบ"
+    : complete ? (gap >= 0
+        ? "เกินคะแนนต่ำสุดที่คาดไว้ " + gap.toFixed(2) + " คะแนน"
+        : "ยังขาดอีก " + Math.abs(gap).toFixed(2) + " คะแนน")
+    : need == null ? "กรอกแล้ว " + filled.length + " จาก " + allSubjects + " วิชา"
+    : need > 100
+      ? "กรอกแล้ว " + filled.length + "/" + allSubjects +
+        " วิชา · ที่เหลือต้องได้เกิน 100% ซึ่งเป็นไปไม่ได้แล้ว"
+      : need <= 0
+        ? "กรอกแล้ว " + filled.length + "/" + allSubjects +
+          " วิชา · ถึงเป้าแล้วแม้ที่เหลือได้ 0"
+        : "กรอกแล้ว " + filled.length + "/" + allSubjects +
+          " วิชา · ที่เหลือต้องได้เฉลี่ย " + need.toFixed(0) + "%";
+
+  const band = el(
+    '<div class="scoreband ' + tone + '">' +
+      '<div class="dayband-t">' +
+        "<h2>" + (target ? esc(target.name) : "ยังไม่ได้เลือกคณะเป้าหมาย") + "</h2>" +
+        '<div class="dayband-sub">' + esc(sub) + "</div>" +
+      "</div>" +
+      (filled.length
+        ? '<div class="scoreband-n"><span data-key="myTotal" data-count="' +
+            sc.total.toFixed(2) + '" data-dec="2">0.00</span>' +
+          "<small>" + (complete ? "/ 100" : "จาก " + filled.length + " วิชาที่กรอก") +
+          "</small></div>"
+        : "") +
+    "</div>");
+  card.appendChild(band);
+
+  const body = el('<div class="card-pad stack"></div>');
+
+  /* ---- เลือกคณะเป้าหมาย */
+  const progs = DATA.programs || [];
+  if (progs.length) {
+    const row = el('<div class="field"><span class="field-l">คณะเป้าหมาย</span></div>');
+    const sel = el('<select class="sel" style="max-width:60%"></select>');
+    sel.appendChild(el('<option value="">— ยังไม่เลือก —</option>'));
+    progs.forEach(p => {
+      const o = el('<option value="' + esc(p.code) + '">' + esc(p.name) +
+        (p.projected != null ? " · " + p.projected.toFixed(1) : "") + "</option>");
+      if (target && p.code === target.code) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", () => {
+      S.settings = Object.assign({}, S.settings, { targetProgram: sel.value });
+      Store.save(); render();
+    });
+    row.appendChild(sel);
+    body.appendChild(row);
+  }
+
+  /* ---- ช่องกรอกคะแนนรายวิชา */
+  body.appendChild(el('<div class="section-title" style="margin-top:4px">' +
+    "<h2>คะแนนที่สอบได้</h2></div>"));
+  body.appendChild(el('<p class="tiny" style="margin:-8px 0 0">กรอกเท่าที่สอบไปแล้ว ' +
+    "วิชาที่ยังไม่ได้สอบเว้นว่างไว้ ระบบจะคิดให้ว่าที่เหลือต้องทำได้กี่เปอร์เซ็นต์</p>"));
+
+  const grid = el('<div class="sgrid"></div>');
+  Object.entries(SUBJ).forEach(([code, subj]) => {
+    const cell = el('<label class="scell" data-s="' + esc(code) + '"></label>');
+    cell.appendChild(el('<span class="scell-l">' + esc(subj.short || subj.name) + "</span>"));
+    const inp = el('<input type="number" inputmode="decimal" min="0" step="0.01" max="' +
+      subj.maxScore + '" placeholder="—" value="' +
+      (scores[code] != null ? esc(scores[code]) : "") + '">');
+    inp.addEventListener("change", () => {
+      const v = inp.value.trim();
+      if (v === "") delete scores[code];
+      else {
+        const n = Math.max(0, Math.min(subj.maxScore, Number(v) || 0));
+        scores[code] = n;
+        inp.value = n;
+      }
+      Store.save(); render();
+    });
+    cell.appendChild(inp);
+    cell.appendChild(el('<span class="scell-m">/' + subj.maxScore + "</span>"));
+    grid.appendChild(cell);
+  });
+  body.appendChild(grid);
+
+  if (!filled.length) {
+    card.appendChild(body);
+    return card;
+  }
+
+  /* ---- สัดส่วนคะแนนที่ได้จริงเทียบน้ำหนักเต็มของแต่ละกลุ่ม */
+  body.appendChild(el('<div class="section-title" style="margin-top:6px">' +
+    "<h2>ได้มาจากกลุ่มไหนบ้าง</h2></div>"));
+  sc.breakdown.forEach(b => {
+    const pctOfWeight = b.weight ? 100 * b.weighted / b.weight : 0;
+    body.appendChild(el(
+      '<div class="wrow">' +
+        '<span class="wrow-l">' + esc(GROUP_LABEL[b.group] || b.group) + "</span>" +
+        '<span class="wrow-bar"><i style="width:' + Math.max(0, Math.min(100, pctOfWeight)).toFixed(1) + '%"></i></span>' +
+        '<span class="wrow-n num">' + (b.filled ? b.weighted.toFixed(2) : "—") +
+          " / " + b.weight.toFixed(0) + "</span>" +
+      "</div>"));
+  });
+
+  /* ---- ตกเกณฑ์ขั้นต่ำหรือยัง — สำคัญกว่าคะแนนรวม */
+  if (sc.failures.length) {
+    body.appendChild(el('<div class="note" style="border-color:var(--brick);' +
+      'background:var(--brick-dim)"><b>ตกเกณฑ์ขั้นต่ำ</b><br>' +
+      sc.failures.map(esc).join("<br>") +
+      "<br><br>ตกเกณฑ์แม้ข้อเดียวคือคัดออกทันที ไม่ว่าคะแนนรวมจะสูงแค่ไหน</div>"));
+  }
+
+  /* ---- ที่เหลือต้องทำได้เท่าไร */
+  if (sc.missing.length && hasTarget) {
+    if (need != null) {
+      const impossible = need > 100;
+      body.appendChild(el('<div class="note"' +
+        (impossible ? ' style="border-color:var(--brick);background:var(--brick-dim)"' : "") +
+        "><b>อีก " + sc.missing.length + " วิชาที่ยังไม่ได้กรอก</b><br>" +
+        (impossible
+          ? "ต้องได้ " + need.toFixed(1) + "% ในทุกวิชาที่เหลือ ซึ่งเกิน 100% — " +
+            "คณะนี้ไปไม่ถึงแล้วด้วยคะแนนชุดนี้ ลองดูคณะอื่นในรายการ"
+          : need <= 0
+            ? "ถึงเป้าแล้วแม้ไม่ได้คะแนนเพิ่มเลยจากวิชาที่เหลือ"
+            : "ต้องได้เฉลี่ย <b>" + need.toFixed(1) + "%</b> ในทุกวิชาที่เหลือ จึงจะถึง " +
+              target.projected.toFixed(1) + " คะแนน") + "</div>"));
+    }
+  }
+
+  body.appendChild(el('<p class="tiny" style="margin:0">คะแนนต่ำสุดของทุกคณะที่ใช้เทียบ' +
+    "เป็น<b>ค่าประมาณ</b> ยังไม่ได้ยืนยันกับประกาศจริง — ใช้ดูทิศทาง ไม่ใช่เส้นตัดจริง</p>"));
+
+  card.appendChild(body);
+  return card;
+}
+
+/* ─────────────────────────────────────────────────────────────
    VIEW: ความคืบหน้า
    ───────────────────────────────────────────────────────────── */
 function viewProgress() {
@@ -2552,6 +3032,10 @@ function viewProgress() {
   const hoursAll = st.reduce((a, s) => a + s.hoursTotal, 0);
   let seen = 0, ok = 0;
   Object.values(S.q).forEach(r => { seen += r.seen; ok += r.ok; });
+
+  /* ---- คะแนนของฉัน: อยู่ตรงไหน ขาดอีกเท่าไร
+     วางไว้บนสุดเพราะเป็นคำถามที่เด็กเปิดแอปมาเพื่อถาม ไม่ใช่ % หัวข้อที่อ่านจบ */
+  wrap.appendChild(scorePanel());
 
   /* วงใหญ่ตอบคำถามเดียว: อ่านไปแล้วกี่เปอร์เซ็นต์ของทั้งหมด
      เลขสี่ตัวที่เหลือเป็นรายละเอียด จึงอยู่ในไทล์เล็กด้านล่าง */
@@ -2568,6 +3052,12 @@ function viewProgress() {
       "</div>" +
     "</div>"
   ));
+
+  const shareRow = el('<div class="btn-row"></div>');
+  const shareBtn = el('<button class="btn btn-sm">บันทึกการ์ดความคืบหน้า</button>');
+  shareBtn.addEventListener("click", () => shareProgress());
+  shareRow.appendChild(shareBtn);
+  wrap.appendChild(shareRow);
 
   wrap.appendChild(el(
     '<div class="tiles tiles-4">' +
@@ -2610,6 +3100,9 @@ function viewProgress() {
     card.appendChild(row);
   });
   wrap.appendChild(card);
+
+  wrap.appendChild(weakSpots());
+  wrap.appendChild(effortPanel());
 
   /* programs */
   if (DATA.programs && DATA.programs.length) {
@@ -2859,6 +3352,242 @@ function downloadICS(nDays, startHour, opts) {
   document.body.appendChild(a);
   a.click();
   a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   จุดที่พลาดซ้ำ ๆ — "แม่น 62%" บอกไม่ได้ว่าต้องกลับไปอ่านอะไร
+   ต้องชี้เป็นหัวข้อถึงจะเอาไปทำอะไรต่อได้
+   ───────────────────────────────────────────────────────────── */
+function weakSpots() {
+  const card = el('<div class="card card-pad"></div>');
+  card.appendChild(el('<div class="section-title"><h2>จุดที่พลาดซ้ำ</h2></div>'));
+
+  // รวมสถิติรายหัวข้อจากผลตอบรายข้อ
+  const byTopic = {};
+  DATA.questions.forEach(q => {
+    const r = S.q[q.qid];
+    if (!r || !r.seen) return;
+    const t = (byTopic[q.topic] = byTopic[q.topic] || { seen: 0, ok: 0, subject: q.subject });
+    t.seen += r.seen; t.ok += r.ok;
+  });
+
+  // ต้องเคยทำอย่างน้อย 3 ข้อจึงจะพูดถึง — น้อยกว่านั้นเป็นเรื่องของดวง
+  const weak = Object.entries(byTopic)
+    .filter(([, t]) => t.seen >= 3 && t.ok / t.seen < 0.7)
+    .map(([code, t]) => ({ code, ...t, acc: 100 * t.ok / t.seen }))
+    .sort((a, b) => a.acc - b.acc)
+    .slice(0, 8);
+
+  const totalSeen = Object.values(byTopic).reduce((a, t) => a + t.seen, 0);
+  if (!totalSeen) {
+    card.appendChild(el('<p class="tiny" style="margin:-6px 0 0">ยังไม่มีข้อมูล — ' +
+      "ทำข้อสอบสักชุดแล้วหน้านี้จะบอกว่าหัวข้อไหนควรกลับไปอ่านซ้ำ</p>"));
+    return card;
+  }
+  if (!weak.length) {
+    card.appendChild(el('<p class="tiny" style="margin:-6px 0 0">ยังไม่มีหัวข้อไหน' +
+      "ที่พลาดซ้ำถึงเกณฑ์ (ทำแล้วอย่างน้อย 3 ข้อและถูกต่ำกว่า 70%)</p>"));
+    return card;
+  }
+
+  card.appendChild(el('<p class="tiny" style="margin:-6px 0 8px">เรียงจากที่พลาดมากที่สุด ' +
+    "นับเฉพาะหัวข้อที่ทำไปแล้วอย่างน้อย 3 ข้อ กดเพื่อหาที่อ่าน</p>"));
+  weak.forEach(w => {
+    const t = TOPIC_OF.get(w.code);
+    const btn = el('<button class="blk" data-s="' + esc(w.subject || "") + '" ' +
+      'style="margin-bottom:7px">' +
+      '<span class="blk-body">' +
+        '<span class="blk-name">' + esc(t ? t.name : w.code) + "</span>" +
+        '<span class="blk-meta">' +
+          '<span class="blk-sub">' + esc(subjLabel(w.subject)) + "</span>" +
+          '<span class="chip ' + (w.acc < 50 ? "mock" : "review") + '">ถูก ' +
+            Math.round(w.acc) + "% จาก " + w.seen + " ข้อ</span>" +
+        "</span>" +
+      "</span>" +
+    "</button>");
+    btn.addEventListener("click", () => openResources(w.code));
+    card.appendChild(btn);
+  });
+  return card;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ทำได้จริงเทียบกับที่วางแผนไว้ — ตัวเลขที่บอกว่าแผนสมจริงหรือเปล่า
+   ───────────────────────────────────────────────────────────── */
+function effortPanel() {
+  const card = el('<div class="card card-pad"></div>');
+  card.appendChild(el('<div class="section-title"><h2>ทำได้จริงเทียบกับแผน</h2></div>'));
+
+  // ย้อนหลัง 14 วันที่ผ่านมาแล้ว (ไม่นับวันนี้ที่ยังไม่จบ)
+  const days = [];
+  for (let i = 14; i >= 1; i--) {
+    const dt = d(TODAY); dt.setDate(dt.getDate() - i);
+    const key = iso(dt);
+    days.push({ key, planned: hoursFor(key), actual: Number(S.days[key] || 0) });
+  }
+  const planned = days.reduce((a, x) => a + x.planned, 0);
+  const actual = days.reduce((a, x) => a + x.actual, 0);
+  if (planned <= 0) {
+    card.appendChild(el('<p class="tiny" style="margin:-6px 0 0">ยังไม่มีข้อมูลย้อนหลังพอ</p>'));
+    return card;
+  }
+  const ratio = actual / planned;
+
+  card.appendChild(el('<p class="tiny" style="margin:-6px 0 9px">14 วันที่ผ่านมา ' +
+    "ทำไป <b>" + (Math.round(actual * 10) / 10) + " ชม.</b> จากที่วางไว้ <b>" +
+    (Math.round(planned * 10) / 10) + " ชม.</b> คิดเป็น <b>" + Math.round(ratio * 100) +
+    "%</b></p>"));
+
+  // แท่งรายวัน — เห็นว่าหลุดเป็นบางวันหรือหลุดตลอด
+  const bars = el('<div class="ebars"></div>');
+  days.forEach(x => {
+    const h = x.planned > 0 ? Math.min(1.4, x.actual / x.planned) : 0;
+    const cls = x.planned === 0 ? "off" : h >= 0.9 ? "good" : h >= 0.5 ? "mid" : "low";
+    const bar = el('<span class="ebar ' + cls + '" title="' + esc(thaiDate(x.key)) + " · ทำ " +
+      (Math.round(x.actual * 10) / 10) + " จาก " + (Math.round(x.planned * 10) / 10) +
+      ' ชม."><i style="height:' + Math.round(Math.min(100, h * 71)) + '%"></i></span>');
+    bars.appendChild(bar);
+  });
+  card.appendChild(bars);
+
+  card.appendChild(el('<p class="tiny" style="margin:8px 0 0">' +
+    (ratio >= 0.9
+      ? "ทำได้ตามแผนสม่ำเสมอ — แผนนี้สมจริงแล้ว"
+      : ratio >= 0.6
+        ? "ทำได้ราวสองในสามของแผน ถ้าเป็นแบบนี้ต่อเนื่อง ลองลดชั่วโมงต่อวันลงให้ตรงกับ" +
+          "ความจริง ตารางจะได้ไม่สะสมหนี้"
+        : "ทำได้น้อยกว่าครึ่งของแผนมาก — แผนตั้งไว้สูงเกินไป แก้เวลาว่างต่อวันในหน้าตั้งค่า " +
+          "แล้วตารางจะกระจายใหม่ให้เอง") + "</p>"));
+  return card;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   การ์ดแชร์ — วาดด้วย canvas แล้วส่งออกเป็นรูป
+
+   วาดเองแทนที่จะแคปหน้าจอ เพราะแคปหน้าจอจะติดข้อมูลส่วนตัว (ชื่อคณะ
+   คะแนนที่กรอกไว้) การ์ดนี้จึงเลือกโชว์เฉพาะสิ่งที่ตั้งใจให้คนอื่นเห็น
+   ───────────────────────────────────────────────────────────── */
+const SHARE_W = 1080, SHARE_H = 1350;
+
+function drawShareCard(cv) {
+  const g = cv.getContext("2d");
+  const st = streak();
+  const stats = subjectStats();
+  const doneTopics = stats.reduce((a, x) => a + x.done, 0);
+  const allTopics = stats.reduce((a, x) => a + x.total, 0);
+  const pct = allTopics ? doneTopics / allTopics : 0;
+  const e = nextExam(true);
+  const days = e ? daysBetween(TODAY, e.date) : null;
+  let seen = 0, ok = 0;
+  Object.values(S.q).forEach(r => { seen += r.seen; ok += r.ok; });
+
+  // พื้นหลัง: ไล่สีหมึกม่วง + ลายวงฝนคำตอบแบบเดียวกับแถบบนของแอป
+  const bg = g.createLinearGradient(0, 0, SHARE_W, SHARE_H);
+  bg.addColorStop(0, "#2a1d2e");
+  bg.addColorStop(0.55, "#3a2440");
+  bg.addColorStop(1, "#46283f");
+  g.fillStyle = bg;
+  g.fillRect(0, 0, SHARE_W, SHARE_H);
+  g.fillStyle = "rgba(255,255,255,.05)";
+  for (let y = 30; y < SHARE_H; y += 54)
+    for (let x = 30; x < SHARE_W; x += 54) {
+      g.beginPath(); g.arc(x, y, 9, 0, Math.PI * 2); g.fill();
+    }
+
+  const F = '"Plex Thai", system-ui, sans-serif';
+  g.textBaseline = "alphabetic";
+
+  g.fillStyle = "#b49bad";
+  g.font = "500 34px " + F;
+  g.fillText("TCAS70 · เตรียมสอบแพทย์ กสพท", 80, 130);
+
+  // ตัวเลขนับถอยหลัง — พระเอกของการ์ด
+  if (days != null) {
+    g.fillStyle = "#f0ab2c";
+    g.font = "700 260px " + F;
+    const numTxt = String(days);
+    g.fillText(numTxt, 80, 400);
+    const w = g.measureText(numTxt).width;
+    g.fillStyle = "#e2d0dc";
+    g.font = "600 52px " + F;
+    g.fillText("วัน", 80 + w + 26, 400);
+    g.fillStyle = "#b49bad";
+    g.font = "400 34px " + F;
+    g.fillText("ก่อน " + (e.name || "สอบ"), 80, 460);
+  }
+
+  // วงแหวนความคืบหน้า
+  const cx = SHARE_W - 250, cy = 300, r = 130;
+  g.lineWidth = 26; g.lineCap = "round";
+  g.strokeStyle = "rgba(255,255,255,.16)";
+  g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+  if (pct > 0) {
+    g.strokeStyle = "#f7bc4b";
+    g.beginPath();
+    g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+    g.stroke();
+  }
+  g.fillStyle = "#fff"; g.textAlign = "center";
+  g.font = "700 66px " + F;
+  g.fillText(Math.round(pct * 100) + "%", cx, cy + 22);
+  g.font = "400 28px " + F;
+  g.fillStyle = "#b49bad";
+  g.fillText("เนื้อหาที่อ่านจบ", cx, cy + 190);
+  g.textAlign = "left";
+
+  // สามตัวเลขล่าง
+  const cells = [
+    [String(st), "วันติดต่อกัน"],
+    [doneTopics + "/" + allTopics, "หัวข้อที่อ่านจบ"],
+    [seen ? Math.round(100 * ok / seen) + "%" : "—", "ความแม่นข้อสอบ"],
+  ];
+  cells.forEach(([big, small], i) => {
+    const x = 80, y = 700 + i * 175;
+    g.fillStyle = "rgba(255,255,255,.07)";
+    roundRect(g, x, y - 78, SHARE_W - 160, 140, 28); g.fill();
+    g.fillStyle = "#f7bc4b";
+    g.font = "700 76px " + F;
+    g.fillText(big, x + 42, y + 12);
+    g.fillStyle = "#e2d0dc";
+    g.font = "400 34px " + F;
+    g.fillText(small, x + 342, y + 4);   // ป้ายชิดคอลัมน์เดียวกันทั้งสามแถว
+  });
+
+  g.fillStyle = "#8f7d8b";
+  g.font = "400 26px " + F;
+  g.fillText("ตารางอ่านหนังสือที่จัดใหม่ให้เองทุกวัน", 80, SHARE_H - 70);
+}
+
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+async function shareProgress() {
+  const cv = document.createElement("canvas");
+  cv.width = SHARE_W; cv.height = SHARE_H;
+  // ต้องรอฟอนต์โหลดเสร็จก่อน ไม่งั้น canvas จะวาดด้วยฟอนต์สำรอง
+  try { await document.fonts.ready; } catch (e) {}
+  drawShareCard(cv);
+
+  const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+  if (!blob) return;
+  const file = new File([blob], "tcas70-" + TODAY + ".png", { type: "image/png" });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -3130,6 +3859,27 @@ function viewSettings() {
   }
   wrap.appendChild(vault);
 
+  /* ---- ธีม */
+  const th = el('<div class="card card-pad stack"></div>');
+  th.appendChild(el('<div class="section-title"><h2>ธีมสี</h2></div>'));
+  th.appendChild(el('<p class="tiny" style="margin:-8px 0 0">อ่านหนังสือกลางคืนแล้วจอสว่างแสบตา ' +
+    "เลือกมืดค้างไว้ได้ ไม่ต้องรอให้ระบบสลับให้</p>"));
+  const thRow = el('<div class="btn-row"></div>');
+  const cur = (S.settings || {}).theme || "system";
+  [["system", "ตามระบบ"], ["light", "สว่าง"], ["dark", "มืด"]].forEach(([val, label]) => {
+    const btn = el('<button class="btn btn-sm' + (cur === val ? " btn-pri" : "") + '">' +
+      esc(label) + "</button>");
+    btn.addEventListener("click", () => {
+      S.settings = Object.assign({}, S.settings, { theme: val });
+      Store.save();
+      applyTheme();
+      render();
+    });
+    thRow.appendChild(btn);
+  });
+  th.appendChild(thRow);
+  wrap.appendChild(th);
+
   /* ---- คืนค่าเริ่มต้น */
   const rst = el('<div class="card card-pad stack"></div>');
   rst.appendChild(el('<p class="tiny" style="margin:0">ค่าที่ตั้งที่นี่เก็บในเครื่องนี้เท่านั้น ' +
@@ -3188,6 +3938,15 @@ function syncStickyOffset() {
 
 /* ผูกไฟล์สำรองอัตโนมัติเข้ากับทุกครั้งที่ข้อมูลเปลี่ยน
    ทำหลัง Vault ถูกประกาศครบแล้ว จึงอยู่ตรงนี้ไม่ใช่ในตัว Store */
+/* ธีมที่ผู้ใช้เลือกทับค่าของระบบ — data-theme บน <html> ชนะ media query
+   (สคริปต์เล็ก ๆ ใน <head> ตั้งค่านี้ไว้ก่อนวาดหน้าแรกแล้ว กันหน้าขาววาบ) */
+function applyTheme() {
+  const t = (S.settings || {}).theme;
+  if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+}
+applyTheme();
+
 Store.subscribe(() => { Vault.autoBackup(); });
 
 function render() {

@@ -246,6 +246,18 @@ def _document(content: str, title: str) -> str:
 <meta name="apple-mobile-web-app-title" content="{APP_SHORT}">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="ตารางอ่านหนังสือที่จัดใหม่ให้เองทุกวัน คลังข้อสอบ และคำนวณคะแนน กสพท — ใช้ฟรี ไม่ต้องสมัคร">
+<meta property="og:image" content="icon-512.png">
+<meta name="twitter:card" content="summary">
+<!-- ตั้งธีมก่อนวาดหน้าแรก ไม่งั้นจะเห็นหน้าขาววาบก่อนสลับเป็นมืด -->
+<script>
+try {{
+  var t = (JSON.parse(localStorage.getItem("tcas70.v1") || "{{}}").settings || {{}}).theme;
+  if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+}} catch (e) {{}}
+</script>
 </head>
 <body>
 {content}
