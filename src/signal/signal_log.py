@@ -37,16 +37,25 @@ def _tp_prices(sig_dict: dict) -> list[float]:
 
 
 def append_enters(rows, date_str: str, path: str = DEFAULT_PATH) -> int:
-    """Append ENTER signals for `date_str`; skip ones already logged. Returns #added."""
+    """Append ENTER signals for `date_str`; skip ones already logged. Returns #added.
+
+    A setup that stays valid re-fires every day, so we also skip a symbol that
+    already has an OPEN signal in the same direction — as a trader would not
+    re-enter a position they are already holding. Otherwise one trade idea gets
+    logged as several near-identical entries that resolve together, multiplying
+    a single outcome's weight in the track record.
+    """
     data = _load(path)
     seen = {(s["date"], s["symbol"]) for s in data["signals"]}
+    held = {(s["symbol"], s["direction"]) for s in data["signals"]
+            if s.get("status") == "open"}
     added = 0
     for r in rows:
         d = r.to_dict()
         if d.get("decision") != "ENTER":
             continue
         key = (date_str, d["symbol"])
-        if key in seen:
+        if key in seen or (d["symbol"], d["direction"]) in held:
             continue
         # Scanner rows drop `signal` from to_dict(), so the position plan (and
         # therefore the take-profits) only lives on the underlying Signal. Without
@@ -70,6 +79,7 @@ def append_enters(rows, date_str: str, path: str = DEFAULT_PATH) -> int:
             "logged_at": datetime.now(timezone.utc).isoformat(),
         })
         seen.add(key)
+        held.add((d["symbol"], d["direction"]))
         added += 1
     if added:
         _save(path, data)
@@ -138,7 +148,9 @@ def update_outcomes(csv_dir: str, path: str = DEFAULT_PATH) -> int:
 
 def summary(path: str = DEFAULT_PATH) -> dict:
     data = _load(path)
-    sigs = data["signals"]
+    # 'duplicate' = a re-fire of a setup already held; kept for the record but
+    # excluded from the stats so one trade idea counts once.
+    sigs = [s for s in data["signals"] if s.get("status") != "duplicate"]
     closed = [s for s in sigs if s["status"] in ("SL", "TP1") and s["result_r"] is not None]
     wins = [s for s in closed if s["result_r"] > 0]
     total_r = sum(s["result_r"] for s in closed)
