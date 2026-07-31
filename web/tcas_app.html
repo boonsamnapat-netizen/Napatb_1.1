@@ -871,6 +871,17 @@ main { padding-top: 26px; }
 .wrow-n { font-size: 12.5px; color: var(--text-2); flex: none;
   font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
 
+/* แถบเตือนเมื่อบันทึกลงเครื่องไม่สำเร็จ — ต้องขวางสายตาจริง ๆ
+   เพราะอาการของบั๊กนี้คือ "ทุกอย่างดูปกติแต่ไม่มีอะไรถูกบันทึก" */
+.savewarn {
+  position: sticky; top: 0; z-index: 60;
+  padding: 11px 16px; font-size: 13px; line-height: 1.6;
+  background: #8e3524; color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.25);
+}
+.savewarn[hidden] { display: none; }
+.savewarn b { color: #ffd9a8; }
+
 /* ═══════════════════════════════════════════════════════════════
    โอกาสติด — รายการคณะที่คะแนนชุดนี้ไปถึง
    ═══════════════════════════════════════════════════════════════ */
@@ -1133,6 +1144,8 @@ main { view-transition-name: page; }
   </button>
 </nav>
 
+<div class="savewarn" id="saveWarn" hidden role="alert"></div>
+
 <main class="shell">
   <section class="view on" id="v-today"></section>
   <section class="view" id="v-plan"></section>
@@ -1152,8 +1165,8 @@ const DATA = /*__TCAS_DATA__*/null;
    ───────────────────────────────────────────────────────────── */
 const Store = (() => {
   const KEY = "tcas70.v1";
-  let mem = null, usable = true;
-  const listeners = [];
+  let mem = null, usable = true, lastError = null;
+  const listeners = [], failListeners = [];
   try {
     const probe = "__t";
     localStorage.setItem(probe, "1");
@@ -1179,18 +1192,52 @@ const Store = (() => {
     if (!mem.log) mem.log = {};          // "YYYY-MM-DD" -> [{topic,kind,hours,rep}] ที่ทำเสร็จวันนั้น
     return mem;
   }
+  /* เขียนลงเครื่องแล้วบอกว่าสำเร็จหรือไม่
+
+     เดิมจับ error แล้วตั้ง usable = false เงียบ ๆ ตลอดเซสชัน ผลคือเมื่อพื้นที่เต็ม
+     ผู้ใช้ติ๊กงานได้ ตัวเลขขยับ streak เดิน ทุกอย่างดูปกติเพราะหน้าจออ่านจาก mem
+     ในหน่วยความจำ — แต่ไม่มีอะไรลงดิสก์เลย เปิดใหม่แล้วหายหมดโดยไม่เคยมีคำเตือน
+     ตอนนี้: ลองใหม่ทุกครั้ง (พื้นที่ว่างคืนมาได้) และคืนค่าให้ผู้เรียกรู้ว่าพลาด */
   function save() {
-    if (usable) {
-      try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { usable = false; }
+    let ok = true;
+    try {
+      localStorage.setItem(KEY, JSON.stringify(mem));
+      usable = true;
+    } catch (e) {
+      ok = false;
+      // โหมดส่วนตัว/สิทธิ์ถูกปิด = เขียนไม่ได้ถาวร ต่างจากพื้นที่เต็มซึ่งแก้ได้
+      const full = e && (e.name === "QuotaExceededError" ||
+                         e.name === "NS_ERROR_DOM_QUOTA_REACHED" || e.code === 22);
+      usable = false;
+      lastError = full ? "quota" : "blocked";
+      console.warn("บันทึกลงเครื่องไม่สำเร็จ:", e);
+      failListeners.forEach(fn => { try { fn(lastError); } catch (e2) {} });
     }
     // แจ้งผู้ฟัง (ไฟล์สำรองอัตโนมัติ) แม้ localStorage จะเขียนไม่ได้ —
     // โหมดส่วนตัวยังเขียนไฟล์สำรองได้อยู่ ซึ่งดีกว่าไม่เหลืออะไรเลย
     listeners.forEach(fn => { try { fn(mem); } catch (e) {} });
+    return ok;
   }
+
+  /* เขียนสถานะทั้งก้อนทีเดียว ใช้ตอนกู้คืนจากไฟล์
+     ต้องรู้ให้ได้ว่าลงดิสก์จริงไหม ก่อนจะบอกผู้ใช้ว่า "กู้คืนเรียบร้อย"
+     และต้องแก้ในอ็อบเจกต์เดิม ไม่ใช่สลับตัวใหม่ เพราะ `const S` ชี้ค้างไว้แล้ว */
+  function replaceAll(next) {
+    const snapshot = JSON.stringify(mem);
+    Object.keys(mem).forEach(k => delete mem[k]);
+    Object.assign(mem, next);
+    if (save()) return true;
+    Object.keys(mem).forEach(k => delete mem[k]);
+    Object.assign(mem, JSON.parse(snapshot));  // เขียนไม่ลง -> คืนของเดิมทั้งหมด
+    return false;
+  }
+
   return {
-    read, save,
+    read, save, replaceAll,
     get persistent() { return usable; },
+    get lastError() { return lastError; },
     subscribe(fn) { listeners.push(fn); },
+    onFail(fn) { failListeners.push(fn); },
     notify() { listeners.forEach(fn => { try { fn(mem); } catch (e) {} }); },
   };
 })();
@@ -1295,25 +1342,44 @@ const Vault = (() => {
 })();
 
 /* ย้ายข้อมูลจากรูปแบบเดิม (v1) ที่เก็บเป็น "วันที่|หัวข้อ" มาเป็นชั่วโมงต่อหัวข้อ
-   ทำครั้งเดียวแล้วทิ้งของเดิม — ผู้ใช้เดิมจึงไม่เสียความคืบหน้าที่เคยติ๊กไว้ */
+
+   ⚠️ กับดักที่เคยกินข้อมูลผู้ใช้: ชั่วโมงถูกหาจาก DATA.plan ของ build ปัจจุบัน
+   ซึ่งเริ่มนับที่ "วันที่ export" เสมอ คีย์เก่าจึงมักหาไม่เจอสักอัน แล้วโค้ดเดิม
+   `delete S.done` ทิ้งต้นฉบับทันทีโดยไม่เช็คว่าแปลงได้กี่รายการ — ผู้ใช้เปิดแอป
+   เฉย ๆ ก็เสียความคืบหน้าทั้งหมด กู้ไม่ได้
+   ตอนนี้: เก็บต้นฉบับไว้เสมอ และถ้าจับคู่ไม่ได้เลย ให้ถือว่ายังไม่ได้ย้าย
+   เผื่อ build หน้าที่ครอบคลุมวันเหล่านั้นแล้วค่อยแปลงสำเร็จ */
 (function migrateFromDateKeyedProgress() {
   if (!S.done || S.migrated) return;
   const hoursOf = new Map();
   for (const day of DATA.plan)
     for (const b of day.blocks)
-      if (b.kind === "learn") hoursOf.set(day.date + "|" + b.topic, b.hours);
+      if (b.kind === "learn")
+        hoursOf.set(day.date + "|" + b.topic,
+                    (hoursOf.get(day.date + "|" + b.topic) || 0) + b.hours);
 
-  for (const key of Object.keys(S.done)) {
+  const keys = Object.keys(S.done);
+  let moved = 0;
+  for (const key of keys) {
     const [, topic] = key.split("|");
     const h = hoursOf.get(key) || 0;
     if (!topic || !h) continue;
     const rec = S.topics[topic] || { hoursDone: 0 };
     rec.hoursDone = (rec.hoursDone || 0) + h;
     S.topics[topic] = rec;
+    moved++;
   }
-  delete S.done;
-  S.migrated = true;
-  Store.save();
+
+  // แปลงได้บ้าง = ถือว่าจบ · แปลงไม่ได้เลย = อย่าเพิ่งปิดประตู
+  if (moved) {
+    S.migrated = true;
+    S.doneLegacy = S.done;   // เก็บต้นฉบับไว้ ไม่ลบทิ้ง
+    delete S.done;
+    Store.save();
+  } else if (keys.length) {
+    console.warn("ย้ายข้อมูลรุ่นเก่าไม่สำเร็จ —", keys.length,
+                 "รายการหาชั่วโมงในแผนปัจจุบันไม่เจอ เก็บต้นฉบับไว้เหมือนเดิม");
+  }
 })();
 
 /* ─────────────────────────────────────────────────────────────
@@ -1342,9 +1408,17 @@ function fmtHours(h) {
 }
 
 /* วันนี้จริง ๆ — แต่ข้อมูลถูกสร้างไว้ล่วงหน้า ถ้าเปิดหน้านี้ก่อนวันเริ่มแผน
-   ให้ยึดวันเริ่มแผนแทน จะได้ไม่เจอหน้าว่าง */
-const REAL_TODAY = iso(new Date());
-const TODAY = REAL_TODAY < DATA.startDate ? DATA.startDate : REAL_TODAY;
+   ให้ยึดวันเริ่มแผนแทน จะได้ไม่เจอหน้าว่าง
+
+   ⚠️ ต้องคำนวณใหม่ได้ ห้ามเป็น const: PWA บนมือถือถูก resume จากหน่วยความจำ
+   ไม่ได้โหลดหน้าใหม่ ถ้าแช่ค่าไว้ตั้งแต่ตอนเปิด คนที่เปิดแอปค้างไว้ข้ามคืน
+   จะเห็นตารางของเมื่อวาน และงานที่ติ๊กวันนี้จะถูกบันทึกลงวันเมื่อวาน
+   ทำให้ streak ขาดและกราฟ "ทำได้จริงเทียบแผน" ผิด */
+const computeToday = () => {
+  const real = iso(new Date());
+  return real < DATA.startDate ? DATA.startDate : real;
+};
+let TODAY = computeToday();
 
 /* รูปแบบไฟล์สำรองมีที่เดียว — ปุ่มสำรองข้อมูล ไฟล์สำรองอัตโนมัติ
    และการย้ายเครื่อง ใช้ตัวนี้ร่วมกัน จะได้ไม่มีวันหลุดจากกัน */
@@ -1353,6 +1427,80 @@ function backupBlob() {
   return new Blob([JSON.stringify(backupPayload(), null, 2)], { type: "application/json" });
 }
 function todayISO() { return TODAY; }
+
+/* รายชื่อทุกอย่างที่อยู่ใน S พร้อมชนิดที่ต้องเป็น
+
+   ต้องอยู่ที่เดียวกับ backupPayload() เพราะเคยหลุดมาแล้ว: ตัวกู้คืนเดิม copy
+   ทีละคีย์แบบเขียนมือ แล้วลืม `scores` — ย้ายเครื่องตามที่แอปแนะนำ คะแนนสอบ
+   ทั้ง 8 วิชาหายเกลี้ยง โดยที่หน้าจอขึ้นว่า "กู้คืนเรียบร้อย"
+
+   และต้องตรวจ "ชนิด" ไม่ใช่แค่ว่ามีคีย์: ไฟล์ที่ runs เป็น object แทน array
+   ทำให้ S.runs.push พังถาวร ทำข้อสอบจบแล้วบันทึกผลไม่ได้อีกเลย */
+const STATE_SHAPE = {
+  topics: "object", q: "object", tests: "object", days: "object",
+  settings: "object", links: "object", log: "object", scores: "object",
+  doneLegacy: "object",
+  runs: "array",
+  seenIntro: "boolean", migrated: "boolean",
+  lastBackup: "string",
+};
+
+/* ล้างไฟล์สำรองให้ปลอดภัยก่อนเอาไปทับของจริง — คืน null ถ้าไม่ใช่ไฟล์ของแอปนี้ */
+function sanitizeBackup(parsed) {
+  if (!parsed || typeof parsed !== "object") return null;
+  // เดิมไม่เคยดู parsed.app เลย ไฟล์ของแอปอื่นจึงทับความคืบหน้าทั้งปีได้
+  if (parsed.app && parsed.app !== "tcas70") return null;
+  const dd = parsed.data;
+  if (!dd || typeof dd !== "object" || Array.isArray(dd)) return null;
+  if (typeof dd.q !== "object" || (!dd.topics && !dd.done)) return null;
+
+  const out = {};
+  for (const [key, kind] of Object.entries(STATE_SHAPE)) {
+    const v = dd[key];
+    if (v == null) continue;
+    if (kind === "array") { if (Array.isArray(v)) out[key] = v; }
+    else if (kind === "object") { if (typeof v === "object" && !Array.isArray(v)) out[key] = v; }
+    else if (typeof v === kind) out[key] = v;
+  }
+
+  /* ลิงก์ที่ผู้ใช้บันทึกเองถูกเรนเดอร์เป็น <a href> — ไฟล์สำรองที่แก้มาเองใส่
+     javascript: เข้ามาได้ ตอนเพิ่มลิงก์ในแอปมีการตรวจอยู่แล้ว ตอนกู้คืนต้องตรวจด้วย */
+  const links = {};
+  for (const [topic, list] of Object.entries(out.links || {})) {
+    if (!Array.isArray(list)) continue;
+    const safe = list.filter(x => x && typeof x.url === "string" &&
+                                  /^https?:\/\//i.test(x.url));
+    if (safe.length) links[topic] = safe;
+  }
+  out.links = links;
+
+  // ไฟล์สำรองรุ่นเก่าเก็บเป็น "วันที่|หัวข้อ" — แปลงเป็นชั่วโมงต่อหัวข้อ
+  if (!out.topics && dd.done && typeof dd.done === "object") {
+    const hoursOf = new Map();
+    for (const day of DATA.plan)
+      for (const b of day.blocks)
+        if (b.kind === "learn")
+          hoursOf.set(day.date + "|" + b.topic,
+                      (hoursOf.get(day.date + "|" + b.topic) || 0) + b.hours);
+    out.topics = {};
+    for (const key of Object.keys(dd.done)) {
+      const [, topic] = key.split("|");
+      const h = hoursOf.get(key) || 0;
+      if (!topic || !h) continue;
+      const rec = out.topics[topic] || { hoursDone: 0 };
+      rec.hoursDone = (rec.hoursDone || 0) + h;
+      out.topics[topic] = rec;
+    }
+    out.doneLegacy = dd.done;   // เก็บต้นฉบับไว้เผื่อแปลงได้ไม่ครบ
+  }
+  out.migrated = true;
+
+  // replaceAll ข้าม read() จึงต้องรับประกันค่าตั้งต้นเองให้ครบ
+  ["topics", "q", "tests", "days", "settings", "links", "log", "scores"]
+    .forEach(k => { if (!out[k]) out[k] = {}; });
+  if (!out.runs) out.runs = [];
+  return out;
+}
 
 /* จำนวนวันตั้งแต่สำรองข้อมูลครั้งล่าสุด — null = ยังไม่เคยสำรองเลย */
 function daysSinceBackup() {
@@ -1977,15 +2125,24 @@ function openResources(topicCode) {
 let timerState = null;
 
 function startTimer(b) {
+  /* กดปุ่มซ้ำก่อน overlay จะทับปุ่ม (เครื่องหน่วง = เกิดง่ายมาก) เคยทำให้เปิด
+     ซ้อนสองชั้น: setInterval เก่าไม่ถูกล้างจนนาฬิกาเดินเร็วสองเท่า และ $() คืน
+     โหนดแรกเสมอ ปุ่มบนชั้นที่ผู้ใช้เห็นจึงไม่มี handler → แอปค้างถาวร */
+  if (timerState) return;
   const secs = Math.round(b.hours * 3600);
-  timerState = { block: b, total: secs, left: secs, paused: false, tick: null };
+  /* นับจาก "เวลาสิ้นสุดจริง" ไม่ใช่นับ tick — บนมือถือจอดับแล้ว setInterval หยุด
+     เดิมจอดับสองชั่วโมงกลับมาแล้วนาฬิกายังเหลือเท่าเดิม */
+  timerState = { block: b, total: secs, left: secs, endsAt: Date.now() + secs * 1000,
+                 paused: false, tick: null };
   renderTimer();
-  timerState.tick = setInterval(() => {
-    if (!timerState || timerState.paused) return;
-    timerState.left -= 1;
-    if (timerState.left <= 0) finishTimer(true);
-    else updateTimerFace();
-  }, 1000);
+  timerState.tick = setInterval(tickTimer, 500);
+}
+
+function tickTimer() {
+  if (!timerState || timerState.paused) return;
+  timerState.left = Math.round((timerState.endsAt - Date.now()) / 1000);
+  if (timerState.left <= 0) finishTimer(true);
+  else updateTimerFace();
 }
 
 function finishTimer(complete) {
@@ -2041,13 +2198,32 @@ function renderTimer() {
   document.body.appendChild(node);
   updateTimerFace();
 
-  $("#tPause").addEventListener("click", () => {
+  /* ผูกจากโหนดของ overlay ตัวนี้ ไม่ใช่ $() ทั้งหน้า — ถ้าเผลอมีสองชั้นขึ้นมา
+     ปุ่มของชั้นที่เห็นอยู่ต้องยังทำงาน ไม่ใช่ไปผูกกับชั้นแรกที่ถูกทับอยู่ */
+  const pause = node.querySelector("#tPause");
+  pause.addEventListener("click", () => {
     timerState.paused = !timerState.paused;
-    $("#tPause").textContent = timerState.paused ? "ไปต่อ" : "พัก";
+    if (timerState.paused) timerState.pausedAt = Date.now();
+    else if (timerState.pausedAt) {
+      timerState.endsAt += Date.now() - timerState.pausedAt;   // พักแล้วไม่เสียเวลา
+      timerState.pausedAt = null;
+    }
+    pause.textContent = timerState.paused ? "ไปต่อ" : "พัก";
+    pause.setAttribute("aria-pressed", timerState.paused ? "true" : "false");
   });
-  $("#tDone").addEventListener("click", () => finishTimer(true));
-  $("#tQuit").addEventListener("click", () => finishTimer(false));
+  node.querySelector("#tDone").addEventListener("click", () => finishTimer(true));
+  node.querySelector("#tQuit").addEventListener("click", () => finishTimer(false));
+  node.setAttribute("aria-modal", "true");
+  node.querySelector("#tDone").focus();
 }
+
+/* Escape ต้องปิดกล่องเต็มจอได้เสมอ — ไม่งั้นคนที่ใช้คีย์บอร์ดติดอยู่ข้างใน */
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Escape") return;
+  if (timerState) { finishTimer(false); return; }
+  const back = $(".sheet-back");
+  if (back) back.remove();
+});
 
 /* ฟีดแบ็กตอนทำเสร็จ — เงียบ ๆ ตอนทำได้ทีละบล็อก และชัดขึ้นเมื่อครบทั้งวัน */
 let toastTimer = null;
@@ -3548,13 +3724,16 @@ function chancePanel() {
     const body = el("<div class=\"bandbody\"></div>");
     if (!isOpen) body.hidden = true;
     rows.forEach(p => body.appendChild(progRow(p, score, target)));
+    /* อ่านสถานะจาก DOM ตอนกด ไม่ใช่จาก isOpen ที่ถูกจับไว้ตอน render
+       ไม่งั้นกดครั้งที่สองจะคำนวณค่าเดิมซ้ำ = พับแล้วกางกลับไม่ได้ */
     hd.addEventListener("click", () => {
-      const next = Object.assign({}, open);
-      next[b.key] = !isOpen;
-      S.settings = Object.assign({}, S.settings, { chanceOpen: next });
+      const nowOpen = body.hidden;      // กำลังจะเปิด ถ้าตอนนี้ซ่อนอยู่
+      body.hidden = !nowOpen;
+      hd.setAttribute("aria-expanded", nowOpen ? "true" : "false");
+      S.settings = Object.assign({}, S.settings, {
+        chanceOpen: Object.assign({}, (S.settings || {}).chanceOpen, { [b.key]: nowOpen }),
+      });
       Store.save();
-      body.hidden = isOpen;
-      hd.setAttribute("aria-expanded", isOpen ? "false" : "true");
     });
     card.appendChild(hd);
     card.appendChild(body);
@@ -3813,41 +3992,29 @@ function viewProgress() {
     const file = ev.target.files && ev.target.files[0];
     if (!file) return;
     const reader = new FileReader();
+    reader.onerror = () => alert("อ่านไฟล์ไม่สำเร็จ — ลองเลือกไฟล์ใหม่อีกครั้ง");
     reader.onload = () => {
       let parsed;
       try { parsed = JSON.parse(reader.result); }
       catch (e) { alert("อ่านไฟล์ไม่ได้ — ไฟล์นี้ไม่ใช่ JSON ที่ถูกต้อง"); return; }
-      const dd = parsed && parsed.data;
-      const looksOurs = dd && typeof dd === "object" && dd.q &&
-                        (dd.topics || dd.done);   // dd.done = ไฟล์สำรองรุ่นเก่า
-      if (!looksOurs) {
+
+      const clean = sanitizeBackup(parsed);
+      if (!clean) {
         alert("ไฟล์นี้ไม่ใช่ไฟล์สำรองของ TCAS70 — เลือกไฟล์ที่ได้จากปุ่ม สำรองข้อมูล");
         return;
       }
       if (!confirm("ทับความคืบหน้าปัจจุบันด้วยไฟล์นี้? (ของเดิมจะหาย)")) return;
 
-      S.q = dd.q || {}; S.tests = dd.tests || {}; S.runs = dd.runs || [];
-      S.topics = dd.topics || {}; S.log = dd.log || {}; S.days = dd.days || {};
-      S.links = dd.links || {}; S.settings = dd.settings || {};
-
-      if (!dd.topics && dd.done) {
-        // ไฟล์สำรองรุ่นเก่าเก็บเป็น "วันที่|หัวข้อ" — แปลงเป็นชั่วโมงต่อหัวข้อ
-        const hoursOf = new Map();
-        for (const day of DATA.plan)
-          for (const b of day.blocks)
-            if (b.kind === "learn") hoursOf.set(day.date + "|" + b.topic, b.hours);
-        for (const key of Object.keys(dd.done)) {
-          const [, topic] = key.split("|");
-          const h = hoursOf.get(key) || 0;
-          if (!topic || !h) continue;
-          const rec = S.topics[topic] || { hoursDone: 0 };
-          rec.hoursDone = (rec.hoursDone || 0) + h;
-          S.topics[topic] = rec;
-        }
+      if (Store.replaceAll(clean)) {
+        quiz = null; render();
+        alert("กู้คืนเรียบร้อย");
+      } else {
+        // เขียนไม่ลงเครื่อง — Store คืนของเดิมให้แล้ว ห้ามบอกว่าสำเร็จ
+        render();
+        alert("กู้คืนไม่สำเร็จ เพราะเบราว์เซอร์บันทึกลงเครื่องไม่ได้ " +
+              "(พื้นที่เต็มหรืออยู่ในโหมดส่วนตัว)\n\n" +
+              "ความคืบหน้าเดิมยังอยู่ครบ — ลบข้อมูลเว็บอื่นให้มีที่ว่างแล้วลองใหม่");
       }
-      S.migrated = true;
-      Store.save(); quiz = null; render();
-      alert("กู้คืนเรียบร้อย");
     };
     reader.readAsText(file);
     ev.target.value = "";
@@ -4576,7 +4743,14 @@ function viewSettings() {
   const rb = el('<button class="btn btn-sm">คืนค่าเริ่มต้น</button>');
   rb.addEventListener("click", () => {
     if (!confirm("คืนค่าเวลาว่างและวันหยุดกลับเป็นค่าเริ่มต้น?")) return;
-    S.settings = {}; Store.save(); location.reload();
+    /* เดิมเขียน S.settings = {} ซึ่งลบเกินกว่าที่ข้อความบอกไปมาก —
+       คณะเป้าหมาย คะแนนเป้าหมาย คณะที่ติดดาวไว้ ชื่อ ธีม ตั้งค่าปฏิทิน หายหมด
+       ปุ่มต้องทำเท่าที่ประโยคบนปุ่มสัญญาไว้เท่านั้น */
+    const next = Object.assign({}, S.settings);
+    delete next.hoursByWeekday;
+    delete next.daysOff;
+    S.settings = next;
+    Store.save(); location.reload();
   });
   rst.appendChild(rb);
   wrap.appendChild(rst);
@@ -4658,6 +4832,45 @@ $("#foot").innerHTML =
   '<p class="tiny" style="margin-top:6px;font-size:11px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
   " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
   " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";
+
+/* ─────────────────────────────────────────────────────────────
+   สามอย่างที่ต้องทำตอนบูต — ทั้งหมดเป็นเรื่อง "ข้อมูลไม่หาย"
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. บันทึกไม่ลงเครื่อง = ต้องรู้ทันที ไม่ใช่รู้ตอนเปิดครั้งหน้าแล้วว่างเปล่า */
+Store.onFail(kind => {
+  const bar = $("#saveWarn");
+  if (!bar) return;
+  bar.innerHTML = kind === "quota"
+    ? "<b>บันทึกลงเครื่องไม่ได้ — พื้นที่เต็ม</b><br>" +
+      "งานที่ติ๊กหลังจากนี้จะหายเมื่อปิดแอป กด <b>สำรองข้อมูล</b> " +
+      "ในแท็บความคืบหน้าเดี๋ยวนี้ แล้วลบข้อมูลเว็บอื่นให้มีที่ว่าง"
+    : "<b>เบราว์เซอร์นี้ไม่ยอมให้บันทึกลงเครื่อง</b><br>" +
+      "อาจเปิดอยู่ในโหมดส่วนตัว — ความคืบหน้าจะหายเมื่อปิดแอป";
+  bar.hidden = false;
+});
+
+/* 2. วันเปลี่ยนตอนแอปค้างอยู่เบื้องหลัง — PWA ไม่ได้โหลดหน้าใหม่
+      ถ้าไม่คำนวณใหม่ งานของวันนี้จะถูกบันทึกลงวันเมื่อวาน streak จะขาด */
+function refreshToday() {
+  const now = computeToday();
+  if (now === TODAY) return;
+  TODAY = now;
+  quiz = null;
+  render();
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshToday();
+});
+window.addEventListener("pageshow", refreshToday);
+window.addEventListener("focus", refreshToday);
+// กันเคสเปิดหน้าค้างไว้เฉย ๆ ข้ามเที่ยงคืนโดยไม่มี event อะไรมากระตุ้น
+setInterval(refreshToday, 60000);
+
+/* 3. ขอปักหมุดพื้นที่เก็บข้อมูลตั้งแต่เปิดแอป ไม่ใช่รอให้เข้าหน้าตั้งค่า
+      iOS ลบข้อมูลเว็บที่ไม่ได้ปักหมุดและไม่ได้เปิดเกิน 7 วัน — คนที่ใช้แค่
+      แท็บ "วันนี้" ทุกวันจึงไม่เคยได้ปักหมุดเลยตลอดมา */
+Vault.requestPersist();
 
 render();
 </script>
