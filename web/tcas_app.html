@@ -3086,17 +3086,31 @@ function toPercent(code, raw) {
   return max ? 100 * Number(raw) / max : 0;
 }
 
-/* รวมเป็น % รายกลุ่ม — กลุ่มวิทย์เฉลี่ยจากสามวิชาเท่า ๆ กัน */
+const subjectsIn = g => Object.keys(SUBJ).filter(c => SUBJ[c].group === g);
+
+/* รวมเป็น % รายกลุ่ม — กลุ่มวิทย์เฉลี่ยจากสามวิชาเท่า ๆ กัน
+   **หารด้วยจำนวนวิชาทั้งกลุ่มเสมอ** วิชาที่ยังไม่กรอกจึงนับเป็น 0 ตามที่ทุกหน้าจอ
+   ในแอปเขียนไว้
+
+   เดิมเฉลี่ยเฉพาะวิชาที่กรอกแล้วคูณน้ำหนักเต็มของกลุ่ม = วิชาที่ยังไม่สอบไป
+   "ยืมคะแนน" จากวิชาที่สอบแล้ว ผลคือกรอกคะแนนเพิ่มแล้วคะแนนรวม**ลดลง**:
+       ชีวะ 80                  -> 22.40
+       + ฟิสิกส์ 30             -> 15.40
+       + เคมี 30                -> 13.07   (ค่าที่ถูกคือ 7.47 -> 10.27 -> 13.07)
+   และคะแนนที่พองนั้นถูกส่งต่อไปเทียบกับคะแนนต่ำสุดของทุกคณะ */
 function groupPercents(scores) {
-  const buckets = {};
-  for (const [code, raw] of Object.entries(scores)) {
-    if (!SUBJ[code] || raw === "" || raw == null) continue;
-    const g = SUBJ[code].group;
-    (buckets[g] = buckets[g] || []).push(toPercent(code, raw));
-  }
   const out = {};
-  for (const [g, vals] of Object.entries(buckets))
-    if (vals.length) out[g] = vals.reduce((a, b) => a + b, 0) / vals.length;
+  for (const g of Object.keys(W)) {
+    const inGroup = subjectsIn(g);
+    if (!inGroup.length) continue;
+    let sum = 0, any = false;
+    inGroup.forEach(c => {
+      if (scores[c] === "" || scores[c] == null) return;
+      sum += toPercent(c, scores[c]);
+      any = true;
+    });
+    if (any) out[g] = sum / inGroup.length;
+  }
   return out;
 }
 
@@ -3162,22 +3176,17 @@ function requiredPercent(scores, targetTotal) {
 
   /* ให้วิชาที่เหลือได้ x% เท่ากันหมด แล้วแก้สมการหา x
        คะแนนกลุ่ม = (ผลรวม % ของวิชาที่กรอกแล้ว + m·x) / n     (n = วิชาทั้งหมดในกลุ่ม)
-       คะแนนรวม  = Σ w·S/(100n)  +  x · Σ w·m/(100n)
+       คะแนนรวม  = have  +  x · Σ w·m/(100n)
 
-     จุดที่เคยพลาด: เอา "ค่าเฉลี่ยของเฉพาะวิชาที่กรอก" มาเป็นคะแนนกลุ่ม
-     เท่ากับให้เครดิตน้ำหนักเต็มของกลุ่มไปแล้ว แต่ยังนับว่ากลุ่มนั้นว่างอยู่อีก
-     กรอกชีวะ 80 วิชาเดียวจึงถูกคิดเหมือนได้ 80 ทั้งกลุ่มวิทย์ ตัวเลขที่ตอบ
-     ออกมาเลยต่ำกว่าความจริงมาก (เคสจริง: ตอบ 37% ทั้งที่ต้องได้ 62%) */
+     ตั้งแต่ groupPercents() หารด้วย n เสมอ `have` จึงเท่ากับคะแนนรวมที่โชว์
+     บนหน้าจอพอดี — สองตัวเลขนี้ต้องมาจากที่เดียวกัน ไม่งั้นจะขัดกันเองอีก */
+  const pcts = groupPercents(scores);
   let have = 0, openWeight = 0;
   for (const [g, w] of Object.entries(W)) {
-    const inGroup = Object.keys(SUBJ).filter(c => SUBJ[c].group === g);
+    const inGroup = subjectsIn(g);
     if (!inGroup.length) continue;
-    let sum = 0, miss = 0;
-    inGroup.forEach(c => {
-      if (scores[c] === "" || scores[c] == null) miss++;
-      else sum += toPercent(c, scores[c]);
-    });
-    have += w * sum / (100 * inGroup.length);
+    have += w * (pcts[g] || 0) / 100;
+    const miss = inGroup.filter(c => scores[c] === "" || scores[c] == null).length;
     openWeight += w * miss / inGroup.length;
   }
   if (openWeight <= 0) return null;
@@ -3231,11 +3240,14 @@ function scorePanel() {
      จึงต้องกลบทุกสัญญาณอื่น ไม่งั้นแถบจะขึ้นว่า "เกือบถึงแล้ว" ให้คนที่หมดสิทธิ์ */
   const failed = sc && sc.failures.length > 0;
 
+  /* สีของแถบต้องมาจากแถบโอกาสชุดเดียวกับรายการคณะข้างล่าง ไม่ใช่เกณฑ์ของใครของมัน
+     เดิมการ์ดนี้ใช้ 0/−5 ส่วนรายการใช้ +3/0/−3 — คณะเดียวกันจึงขึ้นเขียวข้างบน
+     กับเหลืองข้างล่างพร้อมกันบนจอเดียว และตอนกรอกไม่ครบยังใช้เกณฑ์ 65/85
+     ซึ่งไม่ได้ผูกกับคะแนนต่ำสุดของคณะไหนเลย */
+  const A = assessment();
   const tone = failed ? "far"
-    : !sc || !hasTarget ? ""
-    : complete ? (gap >= 0 ? "ok" : gap > -5 ? "near" : "far")
-    : need == null ? ""
-    : need <= 65 ? "ok" : need <= 85 ? "near" : "far";
+    : !A || !hasTarget ? ""
+    : bandOf(A.score - goal).tone;
 
   const sub = failed
     ? "ตกเกณฑ์ขั้นต่ำ " + sc.failures.length + " วิชา — ดูรายละเอียดด้านล่าง"
@@ -3451,10 +3463,10 @@ function scorePanel() {
 /* ขอบเขตของแต่ละแถบ = ค่าเดียวกับ src/tcas/ranking.py เป๊ะ ๆ
    ถ้าที่นี่กับ CLI ตอบไม่ตรงกัน ผู้ใช้จะไม่รู้ว่าอันไหนจริง */
 const BANDS = [
-  { key: "safe",   label: "ค่อนข้างปลอดภัย", min: 3,         color: "var(--ok)" },
-  { key: "likely", label: "ลุ้นได้",          min: 0,         color: "var(--marigold)" },
-  { key: "reach",  label: "ท้าทาย",           min: -3,        color: "var(--warn)" },
-  { key: "far",    label: "ยังห่าง",          min: -Infinity, color: "var(--brick)" },
+  { key: "safe",   label: "ค่อนข้างปลอดภัย", min: 3,         color: "var(--ok)",       tone: "ok" },
+  { key: "likely", label: "ลุ้นได้",          min: 0,         color: "var(--marigold)", tone: "near" },
+  { key: "reach",  label: "ท้าทาย",           min: -3,        color: "var(--warn)",     tone: "near" },
+  { key: "far",    label: "ยังห่าง",          min: -Infinity, color: "var(--brick)",    tone: "far" },
 ];
 const bandOf = m => BANDS.find(b => m >= b.min) || BANDS[BANDS.length - 1];
 
@@ -3784,22 +3796,35 @@ function targetLinePanel() {
      แต่ถ้ากรอกบางวิชาไปแล้ว เส้นของวิชาที่เหลือต้องขยับตามของที่ทำได้จริง */
   const need = gaps.length && gaps.length < Object.keys(SUBJ).length
     ? requiredPercent(scores, goal) : null;
-  const line = need != null ? need : goal;
+  const raw = need != null ? need : goal;
+  const impossible = raw > 100;
+  /* เส้นที่เอาไปโชว์ต้องอยู่ในโลกจริงเสมอ — เดิมโชว์ค่าดิบ จึงเคยขึ้นว่า
+     "ทำได้ -329% ในวิชาที่ยังเหลือ" เมื่อทำวิชาที่กรอกแล้วได้ดีจนเกินเป้า */
+  const line = Math.max(0, Math.min(100, raw));
+  const easy = raw < 0;   // ถึงเป้าแล้วแม้วิชาที่เหลือได้ศูนย์
 
   card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
-    "เป้า <b class=\"num\">" + goal.toFixed(2) + "</b> คะแนน = ทำได้ <b>" +
-    line.toFixed(0) + "%</b> " +
-    (need != null ? "ในวิชาที่ยังเหลือ" : "เท่ากันทุกวิชา") + "</p>"));
-  if (need != null)
+    "เป้า <b class=\"num\">" + goal.toFixed(2) + "</b> คะแนน = " +
+    (easy
+      ? "<b>ถึงแล้ว</b> จากวิชาที่กรอกไปอย่างเดียว"
+      : "ทำได้ <b>" + line.toFixed(0) + "%</b> " +
+        (need != null ? "ในวิชาที่ยังเหลือ" : "เท่ากันทุกวิชา")) + "</p>"));
+  if (need != null && !easy)
     card.appendChild(el('<p class="tiny" style="margin:0">ปรับขึ้นลงตามคะแนน ' +
       (Object.keys(SUBJ).length - gaps.length) + " วิชาที่กรอกไปแล้ว — " +
       "ทำได้ดีกว่าเป้า วิชาที่เหลือก็เบาลง</p>"));
 
-  if (line > 100) {
+  if (impossible) {
     card.appendChild(el('<div class="note" style="border-color:var(--brick);' +
-      'background:var(--brick-dim)">ต้องได้เกิน 100% ในวิชาที่เหลือ ซึ่งเป็นไปไม่ได้ — ' +
-      "เป้านี้ไปไม่ถึงแล้วด้วยคะแนนชุดนี้ ลองตั้งเป้าใหม่หรือดูคณะอื่น</div>"));
+      'background:var(--brick-dim)">ต้องได้ ' + raw.toFixed(0) + '% ในวิชาที่เหลือ ' +
+      "ซึ่งเกิน 100% — เป้านี้ไปไม่ถึงแล้วด้วยคะแนนชุดนี้ ลองตั้งเป้าใหม่หรือดูคณะอื่น</div>"));
   }
+  /* เกณฑ์ขั้นต่ำไม่หายไปไหนแม้คะแนนรวมจะถึงแล้ว — ตกวิชาเดียวคือถูกคัดออก
+     เดิมการ์ดนี้เคยบอกให้ทำ "เคมี 14/100" ซึ่งคือการหมดสิทธิ์ทันที */
+  if (easy || line < 30)
+    card.appendChild(el('<div class="note">ถึงอย่างนั้นทุกวิชายัง<b>ต้องได้ ' +
+      "ไม่น้อยกว่า 30% ของคะแนนเต็ม</b> ตกวิชาเดียวคือถูกคัดออก ไม่ว่าคะแนนรวม" +
+      "จะสูงแค่ไหน — ตัวเลขในตารางข้างล่างจึงไม่ลงต่ำกว่าเส้นนั้น</div>"));
 
   card.appendChild(el('<div class="tline" style="border-bottom-color:var(--line)">' +
     '<span class="tline-n tline-hd" style="gap:0">วิชา</span>' +
@@ -3811,7 +3836,10 @@ function targetLinePanel() {
     const max = subj.maxScore || 100;
     const floor = minimumFloor(code);
     const done = scores[code] !== "" && scores[code] != null;
-    const aim = done ? null : Math.max(0, Math.min(100, line));
+    /* เป้าของวิชาต้องไม่ต่ำกว่าเกณฑ์ขั้นต่ำเด็ดขาด — คะแนนที่ต่ำกว่านั้นไม่ใช่
+       "พอแล้ว" แต่คือถูกคัดออก เดิม clamp แค่ขอบล่างของช่วง ลืมช่อง "เป้า"
+       ซึ่งเป็นตัวเลขหลักที่คนอ่าน จึงเคยแนะนำ "เคมี 14/100" ออกมาจริง */
+    const aim = done ? null : Math.max(floor || 0, line);
 
     /* ช่วง = ขยับได้เท่าไรโดยที่คะแนนรวมกระเพื่อมไม่เกิน 1 คะแนน
        วิชาน้ำหนักมากช่วงจะแคบ (TPAT1 ±10 จาก 300) วิชาน้ำหนักน้อยช่วงกว้าง
@@ -3821,12 +3849,14 @@ function targetLinePanel() {
     let range = "";
     if (aimRaw != null && swing != null) {
       const lo = Math.max(floor != null ? floor * max / 100 : 0, aimRaw - swing);
-      const hi = Math.min(max, aimRaw + swing);
+      // ขอบบนต้องไม่ต่ำกว่าขอบล่าง ไม่งั้นได้ช่วงกลับหัวอย่าง "30–14"
+      const hi = Math.max(lo, Math.min(max, aimRaw + swing));
       range = Math.round(lo) + "–" + Math.round(hi);
     }
 
     const pct = done ? toPercent(code, scores[code]) : null;
-    const state = !done ? "" : pct >= line ? " done" : " under";
+    const bar = Math.max(floor || 0, line);          // เส้นที่ใช้ตัดสินว่าถึงเป้าหรือยัง
+    const state = !done ? "" : pct >= bar ? " done" : " under";
     card.appendChild(el(
       '<div class="tline' + state + '" data-s="' + esc(code) + '">' +
         '<span class="tline-n">' + esc(subj.short || subj.name) +
@@ -3836,7 +3866,7 @@ function targetLinePanel() {
           "<small>/" + max + "</small></span>" +
         '<span class="tline-r">' +
           (done
-            ? (pct >= line ? "ถึงเป้าแล้ว" : "ต่ำกว่าเป้า " + (line - pct).toFixed(0) + "%")
+            ? (pct >= bar ? "ถึงเป้าแล้ว" : "ต่ำกว่าเป้า " + (bar - pct).toFixed(0) + "%")
             : esc(range)) +
         "</span>" +
       "</div>"));
@@ -4052,7 +4082,9 @@ function viewProgress() {
 const ICS_PREFIX = "tcas70-";
 
 function icsEscape(t) {
-  return String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;")
+  // "\;" ใน JS คือ ";" เฉย ๆ — ต้องเขียน "\\;" ถึงจะได้ backslash จริงตาม RFC
+  // ยังไม่เคยระเบิดเพราะชื่อหัวข้อทั้ง 155 อันไม่มี ; สักตัว แต่เป็นระเบิดเวลา
+  return String(t).replace(/\\/g, "\\\\").replace(/;/g, "\\;")
     .replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
@@ -4078,9 +4110,16 @@ const icsDate = isoStr => isoStr.replace(/-/g, "");
 function icsLocal(isoStr, hour, minute) {
   // เวลาแบบ "ลอย" (ไม่มี Z ไม่มี TZID) = เวลาท้องถิ่นของเครื่องที่เปิด
   // ตรงกับความหมายที่ต้องการพอดี และไม่ต้องแนบ VTIMEZONE ให้ยุ่ง
-  const hh = String(Math.floor(hour)).padStart(2, "0");
+  //
+  // ต้องทดวันเมื่อชั่วโมงเกิน 24 — บล็อกอ่านต่อกันไปเรื่อย ๆ ทะลุเที่ยงคืนได้ง่าย
+  // (ค่าเริ่มต้น "เริ่มอ่าน 18 น." + เสาร์อาทิตย์ 6 ชม. ก็เกินแล้ว) เดิมเขียน
+  // ออกไปตรง ๆ เป็น T244500 ซึ่งผิด RFC 5545 ปฏิทินจริงจะทิ้งเหตุการณ์ทิ้ง
+  let dt = d(isoStr);
+  let h = Math.floor(hour);
+  if (h >= 24) { dt.setDate(dt.getDate() + Math.floor(h / 24)); h %= 24; }
+  const hh = String(h).padStart(2, "0");
   const mm = String(minute).padStart(2, "0");
-  return icsDate(isoStr) + "T" + hh + mm + "00";
+  return icsDate(iso(dt)) + "T" + hh + mm + "00";
 }
 
 function icsEvent(o) {

@@ -144,8 +144,15 @@ def build_payload(
         "deadlines": deadlines,
     }
 
+    # ต้องส่ง verified ไปด้วย ไม่งั้นคำเตือน "วันนี้ยังเป็นการคาดการณ์" ในไฟล์
+    # ปฏิทินจะกลายเป็น dead code (undefined === false เป็นเท็จเสมอ) แล้ววันที่
+    # ยังเดาอยู่ก็เข้าปฏิทินมือถือพร้อมเตือนล่วงหน้าโดยไม่มีอะไรกำกับ
     milestones = [
-        {"date": parse_date(m["date"]).isoformat(), "label": str(m.get("label", ""))}
+        {
+            "date": parse_date(m["date"]).isoformat(),
+            "label": str(m.get("label", "")),
+            "verified": bool(m.get("verified", False)),
+        }
         for m in (cfg.get("milestones") or [])
     ]
 

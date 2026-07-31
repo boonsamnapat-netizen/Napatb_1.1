@@ -49,14 +49,25 @@ def to_percent(subject_code: str, raw: float) -> float:
 
 
 def group_percents(raw_scores: Dict[str, float]) -> Dict[str, float]:
-    """รวมคะแนนดิบรายวิชาเป็น % รายกลุ่ม (วิทย์เฉลี่ย 3 วิชา)."""
-    per_group: Dict[str, List[float]] = {}
-    for code, raw in raw_scores.items():
-        if code not in syllabus.SUBJECTS:
+    """รวมคะแนนดิบรายวิชาเป็น % รายกลุ่ม (วิทย์เฉลี่ย 3 วิชา).
+
+    **หารด้วยจำนวนวิชาทั้งกลุ่มเสมอ** วิชาที่ยังไม่กรอกจึงนับเป็น 0 ตามที่
+    docstring ของ `compute()` และรายงานของ `report.py` เขียนไว้มาตลอด
+
+    เดิมเฉลี่ยเฉพาะวิชาที่กรอกแล้วคูณน้ำหนักเต็มของกลุ่ม = วิชาที่ยังไม่สอบไป
+    "ยืมคะแนน" จากวิชาที่สอบแล้ว ผลคือกรอกคะแนนเพิ่มแล้วคะแนนรวม **ลดลง**
+    (ชีวะ 80 -> 22.40 · +ฟิสิกส์ 30 -> 15.40 · +เคมี 30 -> 13.07)
+    และคะแนนที่พองนั้นถูกส่งต่อเข้า `rank` ไปเทียบคะแนนต่ำสุดของทุกคณะ
+    """
+    out: Dict[str, float] = {}
+    for group, codes in syllabus.GROUPS.items():
+        if not codes:
             continue
-        group = syllabus.get_subject(code).group
-        per_group.setdefault(group, []).append(to_percent(code, raw))
-    return {g: sum(vals) / len(vals) for g, vals in per_group.items() if vals}
+        filled = [c for c in codes if c in raw_scores]
+        if not filled:
+            continue
+        out[group] = sum(to_percent(c, raw_scores[c]) for c in filled) / len(codes)
+    return out
 
 
 def missing_subjects(raw_scores: Dict[str, float]) -> List[str]:
@@ -147,10 +158,8 @@ def required_percent(
         คะแนนกลุ่ม = (ผลรวม % ของวิชาที่กรอกแล้ว + m·x) / n   (n = วิชาทั้งหมดในกลุ่ม)
         คะแนนรวม   = Σ w·S/(100n)  +  x · Σ w·m/(100n)
 
-    จุดที่เคยพลาด: เอา `group_percents()` ซึ่งเฉลี่ย *เฉพาะวิชาที่กรอก* มาเป็น
-    คะแนนกลุ่ม เท่ากับให้เครดิตน้ำหนักเต็มของกลุ่มไปแล้ว แต่ยังนับว่ากลุ่มนั้น
-    ว่างอยู่อีก — กรอกชีวะ 80 วิชาเดียวถูกคิดเหมือนได้ 80 ทั้งกลุ่มวิทย์
-    ผลคือตัวเลขที่ตอบต่ำกว่าความจริงมาก (เคสจริง: ตอบ 37% ทั้งที่ต้องได้ 62%)
+    ตั้งแต่ `group_percents()` หารด้วยจำนวนวิชาทั้งกลุ่ม `have` จึงเท่ากับ
+    คะแนนรวมที่ `compute()` คืนพอดี — สองตัวเลขนี้ต้องมาจากที่เดียวกัน
 
     คืน None ถ้ากรอกครบแล้ว, คืน >100 ถ้าเป็นไปไม่ได้แล้ว (ผู้เรียกควรเตือน)
     """
@@ -158,16 +167,16 @@ def required_percent(
     if not missing_subjects(raw_scores):
         return None
 
+    pcts = group_percents(raw_scores)
     have = 0.0
     open_weight = 0.0
     for group, weight in weights.items():
         subject_codes = syllabus.GROUPS.get(group, [])
         if not subject_codes:
             continue
-        filled = [c for c in subject_codes if c in raw_scores]
-        got = sum(to_percent(c, raw_scores[c]) for c in filled)
-        have += weight * got / (100.0 * len(subject_codes))
-        open_weight += weight * (len(subject_codes) - len(filled)) / len(subject_codes)
+        have += weight * pcts.get(group, 0.0) / 100.0
+        n_missing = sum(1 for c in subject_codes if c not in raw_scores)
+        open_weight += weight * n_missing / len(subject_codes)
 
     if open_weight <= 0:
         return None

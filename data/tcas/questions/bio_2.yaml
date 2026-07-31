@@ -294,9 +294,12 @@ questions:
   - qid: bio_molgen_002
     topic: bio_molgen
     stem: "สายดีเอ็นเอมีลำดับ 5'-ATGCGT-3' สายคู่สมมีลำดับใด"
-    choices: ["5'-TACGCA-3'", "5'-ACGCAT-3'", "3'-TACGCA-5'", "3'-ATGCGT-5'"]
+    # เดิมตัวเลือก "5'-ACGCAT-3'" คือโมเลกุลเดียวกับเฉลย ต่างแค่ทิศที่เขียน
+    # (กลับด้าน TACGCA = ACGCAT) คนที่เข้าใจถูกที่สุดจึงมีสิทธิ์ถูกตัดสินว่าผิด
+    # เปลี่ยนเป็นตัวเลือกที่ใช้ U แทน T ซึ่งเป็นความสับสน DNA/RNA ที่พบจริง
+    choices: ["5'-TACGCA-3'", "3'-UACGCA-5'", "3'-TACGCA-5'", "3'-ATGCGT-5'"]
     answer: 2
-    explanation: "สายคู่สมจับกันแบบขนานสวนทาง A จับ T และ G จับ C ดังนั้นตรงข้าม 5'-ATGCGT-3' คือ 3'-TACGCA-5'"
+    explanation: "สายคู่สมจับกันแบบขนานสวนทาง A จับ T และ G จับ C ดังนั้นตรงข้าม 5'-ATGCGT-3' คือ 3'-TACGCA-5' · U ใช้ใน RNA ไม่ใช่ DNA"
     difficulty: 2
 
   - qid: bio_molgen_003
