@@ -1,0 +1,561 @@
+<title>บทที่ 1 — เครื่องจักรเรียนรู้ได้อย่างไร</title>
+
+<style>
+  :root {
+    --ground: #EFF1F4;
+    --surface: #FFFFFF;
+    --surface-2: #F6F8FA;
+    --ink: #131A22;
+    --ink-2: #3A4653;
+    --muted: #5C6773;
+    --line: #D5DBE3;
+    --accent: #1E4B8F;
+    --accent-soft: #DCE5F3;
+    --on-accent: #FFFFFF;
+    --good: #2F6B4F;
+    --good-soft: #DFEDE5;
+    --bad: #A3402C;
+    --bad-soft: #F4E1DC;
+
+    --font-thai: "IBM Plex Sans Thai", "Noto Sans Thai", "Sarabun", -apple-system,
+                 BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0C1219; --surface: #131C26; --surface-2: #18232F;
+      --ink: #E3E9F0; --ink-2: #C0CBD8; --muted: #8494A4; --line: #263443;
+      --accent: #7FA8E8; --accent-soft: #1A2B41; --on-accent: #0C1219;
+      --good: #6DB58C; --good-soft: #16291F; --bad: #DE8A74; --bad-soft: #2E1A15;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0C1219; --surface: #131C26; --surface-2: #18232F;
+    --ink: #E3E9F0; --ink-2: #C0CBD8; --muted: #8494A4; --line: #263443;
+    --accent: #7FA8E8; --accent-soft: #1A2B41; --on-accent: #0C1219;
+    --good: #6DB58C; --good-soft: #16291F; --bad: #DE8A74; --bad-soft: #2E1A15;
+  }
+  :root[data-theme="light"] {
+    --ground: #EFF1F4; --surface: #FFFFFF; --surface-2: #F6F8FA;
+    --ink: #131A22; --ink-2: #3A4653; --muted: #5C6773; --line: #D5DBE3;
+    --accent: #1E4B8F; --accent-soft: #DCE5F3; --on-accent: #FFFFFF;
+    --good: #2F6B4F; --good-soft: #DFEDE5; --bad: #A3402C; --bad-soft: #F4E1DC;
+  }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--font-thai); font-size: 1rem; line-height: 1.78;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.6875rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  h1 {
+    font-size: 1.875rem; line-height: 1.28; font-weight: 700;
+    letter-spacing: -0.01em; text-wrap: balance; margin-top: 0.5rem;
+  }
+  h2 {
+    font-size: 1.375rem; font-weight: 700; line-height: 1.4;
+    margin: 3rem 0 0.25rem; text-wrap: balance;
+    padding-top: 1.5rem; border-top: 1px solid var(--line);
+  }
+  h2 .sec {
+    display: block; font-family: var(--font-serif); font-size: 1.05rem;
+    font-weight: 400; color: var(--accent); margin-bottom: 0.15rem;
+  }
+  h3 { font-size: 1.0625rem; font-weight: 700; margin: 1.75rem 0 0.4rem; }
+  p { margin-top: 0.9rem; color: var(--ink-2); }
+  p strong, li strong { color: var(--ink); font-weight: 600; }
+  .lede { color: var(--ink-2); max-width: 37rem; }
+
+  ul, ol { margin: 0.9rem 0 0 1.25rem; color: var(--ink-2); }
+  li { margin-bottom: 0.35rem; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    padding: 1rem 1.15rem; margin-top: 1.25rem;
+  }
+  .callout p:first-child { margin-top: 0; }
+  .callout .k {
+    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .tbl-scroll { overflow-x: auto; margin-top: 1.25rem; border: 1px solid var(--line); }
+  table {
+    border-collapse: collapse; width: 100%; background: var(--surface);
+    font-size: 0.9375rem; min-width: 30rem;
+  }
+  th, td { padding: 0.55rem 0.8rem; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); font-weight: 400;
+    background: var(--surface-2);
+  }
+  td { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  tr.best td { background: var(--good-soft); color: var(--ink); font-weight: 600; }
+  tr.worst td { background: var(--bad-soft); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .parts { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 1.25rem; }
+  @media (min-width: 40rem) { .parts { grid-template-columns: repeat(3, 1fr); } }
+  .part { background: var(--surface); padding: 1rem; }
+  .part .n {
+    font-family: var(--font-serif); font-size: 1.5rem; color: var(--accent);
+    line-height: 1; display: block; margin-bottom: 0.4rem;
+  }
+  .part b { display: block; font-size: 1rem; margin-bottom: 0.25rem; }
+  .part span { font-size: 0.875rem; color: var(--muted); line-height: 1.6; display: block; }
+
+  code {
+    font-family: var(--font-mono); font-size: 0.875em;
+    background: var(--surface-2); border: 1px solid var(--line);
+    padding: 0.08em 0.35em;
+  }
+  pre {
+    font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.7;
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    padding: 0.9rem 1rem; margin-top: 1.25rem; overflow-x: auto; color: var(--ink-2);
+  }
+  pre b { color: var(--ink); font-weight: 600; }
+
+  .keep { counter-reset: keep; margin-top: 1.25rem; }
+  .keep li {
+    list-style: none; position: relative; padding-left: 2rem;
+    margin-bottom: 0.7rem; color: var(--ink); font-weight: 500;
+  }
+  .keep li::before {
+    counter-increment: keep; content: counter(keep);
+    position: absolute; left: 0; top: 0;
+    font-family: var(--font-serif); color: var(--accent); font-size: 1.05rem;
+  }
+  .keep { margin-left: 0; padding-left: 0; }
+
+  /* self-check */
+  .chk { background: var(--surface); border: 1px solid var(--line); padding: 1.2rem 1.15rem; margin-top: 1rem; }
+  .chk .q { font-weight: 600; color: var(--ink); }
+  .chk .opts { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.9rem; }
+  .chk button {
+    font: inherit; text-align: left; cursor: pointer; line-height: 1.55;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+    padding: 0.55rem 0.75rem; transition: border-color 120ms ease, background 120ms ease;
+  }
+  .chk button:hover:not(:disabled) { border-color: var(--accent); background: var(--surface-2); }
+  .chk button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chk button:disabled { cursor: default; }
+  .chk button.right { border-color: var(--good); background: var(--good-soft); }
+  .chk button.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .chk button.dim { opacity: 0.5; }
+  .chk .exp {
+    margin-top: 0.85rem; padding-top: 0.8rem; border-top: 1px solid var(--line);
+    font-size: 0.9375rem; color: var(--ink-2);
+  }
+  .chk .exp.hide { display: none; }
+  .tally {
+    font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted);
+    margin-top: 1.25rem; font-variant-numeric: tabular-nums;
+  }
+
+  .next { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 1.1rem 1.15rem; margin-top: 1.5rem; }
+  .next p { color: var(--ink-2); }
+  .next p:first-child { margin-top: 0; }
+
+  footer {
+    margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+    font-size: 0.875rem; color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">พื้นฐาน AI · บทที่ 1 จาก 6 · อ่าน 15 นาที</div>
+  <h1>เครื่องจักรเรียนรู้ได้อย่างไร — ด้วยเลข 3 ตัวที่คุณคำนวณตามได้ด้วยมือ</h1>
+  <p class="lede">
+    บทนี้ไม่มีศัพท์ที่ไม่ได้อธิบาย ไม่มีสูตรที่คุณตรวจเองไม่ได้ ทุกตัวเลขในหน้านี้
+    คุณกดเครื่องคิดเลขตามได้หมด และถ้าคุณเข้าใจบทนี้จริง อีก 5 บทที่เหลือจะเป็นแค่การต่อยอด —
+    เพราะ <strong>ทุกอย่างใน AI ตั้งแต่ linear regression จนถึง ChatGPT ใช้โครงเดียวกันนี้ทั้งหมด</strong>
+  </p>
+
+  <div class="callout">
+    <span class="k">ก่อนเริ่ม</span>
+    <p>คะแนนแบบทดสอบของคุณคือ 4/30 — นั่นแปลว่าเริ่มที่ศูนย์ ซึ่งเป็นจุดเริ่มที่ตรงไปตรงมาที่สุด
+    บทนี้จึงไม่ข้ามอะไรเลย ถ้าตรงไหนอ่านแล้วไม่เข้าใจ ให้หยุดตรงนั้นแล้วถามทันที
+    อย่าอ่านผ่าน เพราะบทที่ 2 จะวางทับบทนี้ทั้งหมด</p>
+  </div>
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="sec">§ 1</span>ปัญหาที่การเรียนรู้พยายามแก้</h2>
+
+  <p>สมมติคุณมีข้อมูลคู่กันแบบนี้ — ซ้ายคือสิ่งที่รู้ ขวาคือสิ่งที่อยากทำนาย</p>
+
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>ตัวอย่างที่</th><th>x (สิ่งที่รู้)</th><th>y (สิ่งที่อยากทำนาย)</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>1</td><td>2</td></tr>
+        <tr><td>2</td><td>2</td><td>4</td></tr>
+        <tr><td>3</td><td>3</td><td>6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    คุณมองปุ๊บก็รู้ว่า <code>y = 2x</code> — แต่<strong>คอมพิวเตอร์ไม่ได้ "มอง"</strong>
+    มันไม่รู้ด้วยซ้ำว่ามีเลข 2 อยู่ในโลก คำถามของวิชานี้คือ:
+    จะทำอย่างไรให้เครื่องจักรหาเลข 2 นั้นเจอเอง โดยเราไม่บอก
+  </p>
+
+  <p>
+    และคำถามที่สำคัญกว่า ซึ่งเป็นหัวใจของทั้งวิชา:
+    ทำอย่างไรให้มันหาเจอ <strong>ในกรณีที่เราเองก็ไม่รู้คำตอบ</strong> —
+    เช่นความสัมพันธ์ระหว่างข้อความ 500 คำ กับคำถัดไปที่ควรจะเป็น
+  </p>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="sec">§ 2</span>ทุกระบบเรียนรู้ มีชิ้นส่วนแค่ 3 ชิ้น</h2>
+
+  <p>
+    จำ 3 ชิ้นนี้ให้ขึ้นใจ เพราะ<strong>ทุกโมเดลในโลก ตั้งแต่เส้นตรงจนถึง GPT
+    ประกอบด้วยสามชิ้นนี้เท่านั้น</strong> ต่างกันแค่ขนาดและรายละเอียด
+  </p>
+
+  <div class="parts">
+    <div class="part">
+      <span class="n">1</span>
+      <b>โมเดล</b>
+      <span>สูตรที่มี "ปุ่มหมุน" ให้ปรับ · ปุ่มเหล่านี้เรียกว่า พารามิเตอร์</span>
+    </div>
+    <div class="part">
+      <span class="n">2</span>
+      <b>Loss</b>
+      <span>ตัวเลขตัวเดียวที่บอกว่า ตอนนี้ทายผิดไปแค่ไหน · ยิ่งน้อยยิ่งดี</span>
+    </div>
+    <div class="part">
+      <span class="n">3</span>
+      <b>วิธีหมุนปุ่ม</b>
+      <span>กฎที่บอกว่าจะปรับปุ่มไปทางไหน เพื่อให้ loss ลดลง</span>
+    </div>
+  </div>
+
+  <h3>ชิ้นที่ 1 — โมเดล</h3>
+  <p>
+    เราเลือกโมเดลที่ง่ายที่สุดในจักรวาล: <code>ŷ = w · x</code>
+    (อ่านว่า "y ที่ทำนาย เท่ากับ w คูณ x") มันมีปุ่มเดียวคือ <code>w</code>
+  </p>
+  <p>
+    สำคัญมาก: <strong>เราเป็นคนเลือกรูปแบบของสูตร เครื่องจักรแค่หาค่าปุ่ม</strong>
+    ถ้าเราเลือกสูตรผิดรูป ต่อให้หมุนปุ่มดีแค่ไหนก็ทายไม่ถูก — ประเด็นนี้จะกลับมาหลอกหลอนใน §5
+  </p>
+
+  <h3>ชิ้นที่ 2 — Loss</h3>
+  <p>
+    เราต้องนิยาม "ผิด" ให้เป็นตัวเลข วิธีมาตรฐานคือเอาส่วนต่างมายกกำลังสอง แล้วเฉลี่ย
+    (ยกกำลังสองเพื่อให้ผิดบวกกับผิดลบไม่หักล้างกัน และเพื่อลงโทษความผิดพลาดใหญ่ ๆ หนักกว่า)
+  </p>
+  <pre><b>Loss</b> = ค่าเฉลี่ยของ (ค่าที่ทาย − ค่าจริง)²</pre>
+
+  <h3>ชิ้นที่ 3 — วิธีหมุนปุ่ม</h3>
+  <p>เดี๋ยวเราจะหมุนด้วยมือก่อนใน §3 แล้วค่อยดูวิธีอัตโนมัติใน §4</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="sec">§ 3</span>หมุนปุ่มด้วยมือ — ตรวจตัวเลขตามได้ทุกช่อง</h2>
+
+  <p>เราลองเดาค่า <code>w</code> ไปเรื่อย ๆ แล้วดูว่า loss เป็นเท่าไร</p>
+
+  <p><strong>ลอง w = 1:</strong> ทายได้ 1, 2, 3 · ค่าจริงคือ 2, 4, 6</p>
+  <pre>ส่วนต่าง : (1−2) = −1  ·  (2−4) = −2  ·  (3−6) = −3
+ยกกำลังสอง :    1     ·     4      ·     9
+<b>Loss = (1 + 4 + 9) ÷ 3 = 4.667</b></pre>
+
+  <p><strong>ลอง w = 1.5:</strong> ทายได้ 1.5, 3, 4.5</p>
+  <pre>ส่วนต่าง : (1.5−2) = −0.5 · (3−4) = −1 · (4.5−6) = −1.5
+ยกกำลังสอง :     0.25      ·    1     ·     2.25
+<b>Loss = (0.25 + 1 + 2.25) ÷ 3 = 1.167</b></pre>
+
+  <p>ทำแบบนี้กับหลาย ๆ ค่า จะได้ตารางนี้</p>
+
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>ค่าปุ่ม w</th><th>ทายได้</th><th>Loss</th></tr></thead>
+      <tbody>
+        <tr class="worst"><td>1.0</td><td>1, 2, 3</td><td>4.667</td></tr>
+        <tr><td>1.5</td><td>1.5, 3, 4.5</td><td>1.167</td></tr>
+        <tr class="best"><td>2.0</td><td>2, 4, 6</td><td>0.000</td></tr>
+        <tr><td>2.5</td><td>2.5, 5, 7.5</td><td>1.167</td></tr>
+        <tr class="worst"><td>3.0</td><td>3, 6, 9</td><td>4.667</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    สังเกตรูปทรง: loss ลงมาต่ำสุดที่ <code>w = 2</code> แล้วขึ้นทั้งสองข้างอย่างสมมาตร
+    เหมือนหุบเขา <strong>การเทรนโมเดล = การหาก้นหุบเขานี้</strong> ไม่มีอะไรมากกว่านั้นเลย
+  </p>
+
+  <div class="callout">
+    <span class="k">จุดที่คนพลาด</span>
+    <p>
+      ที่นี่เรามีปุ่มเดียว จึงลองทุกค่าได้ ถ้ามี 2 ปุ่มก็ยังพอไหว
+      แต่ GPT-4 มีปุ่มหลักแสนล้านตัว <strong>การลองทุกค่าเป็นไปไม่ได้อย่างสิ้นเชิง</strong>
+      — ไม่ใช่ช้า แต่ใช้เวลานานกว่าอายุจักรวาล จึงต้องมีวิธีที่ฉลาดกว่านั้น
+    </p>
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="sec">§ 4</span>Gradient descent — วิธีที่เครื่องใช้จริง</h2>
+
+  <p>
+    แทนที่จะลองทุกค่า เราถามคำถามที่ตอบได้ถูกกว่ามาก:
+    <strong>"ยืนอยู่ตรงนี้ พื้นเอียงไปทางไหน"</strong> แล้วก้าวลงเนินไปทีละก้าว
+    ความชันนั้นเรียกว่า <strong>gradient</strong>
+  </p>
+
+  <p>สำหรับ loss ที่เรานิยามไว้ ความชันคำนวณได้ตรง ๆ แบบนี้ (สูตรมาจากแคลคูลัส แต่ไม่ต้องพิสูจน์ตอนนี้)</p>
+  <pre><b>ความชัน</b> = 2/3 × ผลรวมของ [ (ค่าที่ทาย − ค่าจริง) × x ]</pre>
+
+  <p><strong>ยืนที่ w = 1 แล้ววัดความชัน:</strong></p>
+  <pre>(1−2) × 1 = −1
+(2−4) × 2 = −4
+(3−6) × 3 = −9
+ผลรวม = −14   →   ความชัน = 2/3 × (−14) = <b>−9.33</b></pre>
+
+  <p>
+    ความชัน<strong>ติดลบ</strong> แปลว่า "ถ้าเพิ่ม w แล้ว loss จะลด" — เครื่องจักรจึงรู้ทิศทันที
+    โดยไม่ต้องลองค่าอื่นเลยแม้แต่ค่าเดียว จากนั้นก้าวไปตามทิศนั้น
+    ด้วยขนาดก้าวที่เรากำหนด (เรียกว่า <strong>learning rate</strong> ขอใช้ 0.1)
+  </p>
+
+  <pre>w ใหม่ = 1 − 0.1 × (−9.33) = <b>1.933</b></pre>
+
+  <p><strong>ก้าวที่สอง — วัดความชันที่ w = 1.933:</strong></p>
+  <pre>ทายได้ 1.933, 3.867, 5.800
+(1.933−2) × 1 = −0.067
+(3.867−4) × 2 = −0.267
+(5.800−6) × 3 = −0.600
+ผลรวม = −0.933   →   ความชัน = <b>−0.622</b>
+w ใหม่ = 1.933 − 0.1 × (−0.622) = <b>1.995</b></pre>
+
+  <p>
+    สองก้าวจาก 1 → 1.933 → 1.995 กำลังเข้าใกล้ 2 และสังเกตว่า
+    <strong>ยิ่งใกล้ก้นหุบเขา ความชันยิ่งน้อย ก้าวยิ่งสั้นลงเอง</strong>
+    ไม่มีใครสั่ง มันเป็นผลจากคณิตศาสตร์โดยตรง
+  </p>
+
+  <div class="callout">
+    <span class="k">นี่คือทั้งหมดของ deep learning</span>
+    <p>
+      GPT เทรนด้วยกระบวนการนี้เป๊ะ ๆ ต่างกันแค่: ปุ่มมีหลายแสนล้านตัวแทนที่จะตัวเดียว ·
+      loss คือ "ทายคำถัดไปผิดไปแค่ไหน" แทนที่จะเป็นผลต่างยกกำลังสอง ·
+      และทำซ้ำหลายล้านรอบบนข้อความเกือบทั้งอินเทอร์เน็ต
+      <strong>โครงสร้างเหมือนกันทุกประการ</strong>
+    </p>
+  </div>
+
+  <p>
+    ตรงนี้ตอบคำถามที่คุณทำผิดในแบบทดสอบไปด้วย: gradient <em>ไม่ใช่</em> "ค่าที่ถูกต้อง"
+    และ <em>ไม่ใช่</em> "ความผิดพลาด" มันคือ<strong>ความชัน</strong> — คำตอบของคำถาม
+    "ขยับปุ่มนี้นิดนึง แล้ว loss เปลี่ยนเท่าไร" เครื่องจักรไม่เคยรู้คำตอบที่ถูก
+    มันรู้แค่ทิศที่ดีขึ้น แล้วเดินไปเรื่อย ๆ
+  </p>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="sec">§ 5</span>กับดักใหญ่ที่สุด — ฟิตได้เป๊ะ ไม่ได้แปลว่าเก่ง</h2>
+
+  <p>
+    ทีนี้เอาโลกจริงเข้ามา ข้อมูลจริงมี <strong>noise</strong> เสมอ —
+    ความคลาดเคลื่อนสุ่มที่ไม่มีความหมาย สมมติวัดค่าจริงมาได้แบบนี้
+    (ความจริงคือ <code>y = 2x</code> แต่การวัดเพี้ยนไปเล็กน้อย)
+  </p>
+
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>x</th><th>y ที่วัดได้</th><th>y ตามความจริง</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>2.2</td><td>2</td></tr>
+        <tr><td>2</td><td>3.8</td><td>4</td></tr>
+        <tr><td>3</td><td>6.3</td><td>6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>ตอนนี้เอาโมเดลสองแบบมาแข่งกัน</p>
+
+  <h3>ผู้เข้าแข่งขัน A — เส้นตรง (1 ปุ่ม)</h3>
+  <p>
+    ค่า <code>w</code> ที่ดีที่สุดสำหรับข้อมูลชุดนี้คือ <strong>2.05</strong>
+    ทายได้ 2.05, 4.10, 6.15 — <strong>ไม่ผ่านจุดไหนเลยแบบเป๊ะ ๆ</strong>
+  </p>
+  <pre>Loss บนข้อมูลที่ใช้เทรน = <b>0.045</b>  (ไม่ใช่ศูนย์)</pre>
+
+  <h3>ผู้เข้าแข่งขัน B — พาราโบลา (3 ปุ่ม)</h3>
+  <p>
+    สูตร <code>ŷ = a·x² + b·x + c</code> มี 3 ปุ่ม พอดีกับจำนวนข้อมูล 3 จุด
+    จึงลากผ่านทั้งสามจุด<strong>ได้เป๊ะทุกจุด</strong> ที่ค่า
+    <code>a = 0.45</code>, <code>b = 0.25</code>, <code>c = 1.5</code>
+  </p>
+  <pre>Loss บนข้อมูลที่ใช้เทรน = <b>0.000</b>  (สมบูรณ์แบบ)</pre>
+
+  <p>
+    ถ้าตัดสินกันตรงนี้ B ชนะขาด — loss เป็นศูนย์ ชนะ 0.045 แบบไม่ต้องเถียง
+    <strong>แล้วลองเอาข้อมูลใหม่ที่ทั้งคู่ไม่เคยเห็นมาทดสอบ:</strong>
+    ที่ <code>x = 4</code> ความจริงคือ <code>y = 8</code>
+  </p>
+
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>โมเดล</th><th>Loss ตอนเทรน</th><th>ทาย x=4</th><th>ผิดไป</th></tr></thead>
+      <tbody>
+        <tr class="best"><td>A — เส้นตรง</td><td>0.045</td><td>8.20</td><td>0.20</td></tr>
+        <tr class="worst"><td>B — พาราโบลา</td><td>0.000</td><td>9.70</td><td>1.70</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    <strong>โมเดลที่ชนะขาดตอนเทรน แพ้ยับตอนใช้จริง — ผิดมากกว่ากัน 8.5 เท่า</strong>
+    ลองคำนวณเองได้: 0.45 × 16 + 0.25 × 4 + 1.5 = 7.2 + 1 + 1.5 = 9.7
+  </p>
+
+  <p>
+    เกิดอะไรขึ้น? พาราโบลามีปุ่มมากพอที่จะ<strong>จำ noise ได้</strong>
+    มันไม่ได้เรียนกฎ <code>y = 2x</code> มันเรียนว่า "จุดแรกสูงไปนิด จุดสองต่ำไปหน่อย"
+    ซึ่งเป็นความบังเอิญของการวัดครั้งนั้น ที่จะไม่เกิดซ้ำอีก
+    ส่วนเส้นตรงถูกบังคับให้เรียบง่ายเกินกว่าจะจำ noise ได้ จึงจับได้แต่แนวโน้มจริง
+  </p>
+
+  <div class="callout">
+    <span class="k">คำศัพท์ที่ต้องแม่น</span>
+    <p>
+      <strong>Overfitting</strong> = จำข้อมูลที่เห็น (รวมทั้ง noise) แทนที่จะเรียนกฎที่อยู่เบื้องหลัง ·
+      <strong>Generalization</strong> = ความสามารถในการทำงานถูกต้องกับข้อมูลที่ไม่เคยเห็น
+      ซึ่งเป็น<strong>สิ่งเดียวที่เราต้องการจริง ๆ</strong> — loss ตอนเทรนเป็นแค่ทางผ่าน ไม่ใช่เป้าหมาย
+    </p>
+  </div>
+
+  <!-- ================= 6 ================= -->
+  <h2><span class="sec">§ 6</span>กฎเหล็กที่ตามมา</h2>
+
+  <p>
+    ถ้า loss ตอนเทรนโกหกได้ แล้วเราจะรู้ได้ยังไงว่าโมเดลดีจริง
+    คำตอบมีทางเดียว: <strong>วัดผลบนข้อมูลที่โมเดลไม่เคยเห็นตอนเทรน</strong>
+    เราจึงแบ่งข้อมูลออกเป็นสามกอง ก่อนเริ่มทำอะไรทั้งสิ้น
+  </p>
+
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>กอง</th><th>ใช้ทำอะไร</th><th>ดูผลได้บ่อยแค่ไหน</th></tr></thead>
+      <tbody>
+        <tr><td>Train</td><td>หมุนปุ่มของโมเดล</td><td>ตลอดเวลา</td></tr>
+        <tr><td>Validation</td><td>เลือกว่าจะใช้โมเดลแบบไหน / ตั้งค่าอะไร</td><td>บ่อยได้</td></tr>
+        <tr><td>Test</td><td>ประกาศผลจริงครั้งสุดท้าย</td><td>ครั้งเดียวตอนจบ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    เหตุผลที่ Test เปิดได้ครั้งเดียว: ทุกครั้งที่คุณดูผลแล้วเอาไปปรับอะไรสักอย่าง
+    คุณกำลังใช้ Test เป็นเครื่องช่วยเลือก — มันก็กลายเป็น Validation ไปโดยปริยาย
+    และเลขที่ได้จะสวยเกินจริง <strong>ข้อมูลรั่วผ่านสมองคุณได้ ไม่ใช่แค่ผ่านโค้ด</strong>
+  </p>
+
+  <!-- ================= 7 ================= -->
+  <h2><span class="sec">§ 7</span>ห้าประโยคที่ต้องพูดเองได้ ก่อนไปบทถัดไป</h2>
+
+  <ol class="keep">
+    <li>โมเดลคือสูตรที่มีปุ่มปรับ · การเทรนคือการหาค่าปุ่ม · เราเป็นคนเลือกรูปสูตร เครื่องหาแค่ค่าปุ่ม</li>
+    <li>Loss คือตัวเลขตัวเดียวที่นิยามว่า "ผิดแค่ไหน" — เปลี่ยนนิยาม loss คือเปลี่ยนเป้าหมายของทั้งระบบ</li>
+    <li>Gradient คือความชัน ไม่ใช่คำตอบ เครื่องจักรไม่เคยรู้คำตอบที่ถูก มันรู้แค่ทิศที่ดีขึ้น แล้วเดินซ้ำ</li>
+    <li>Loss ตอนเทรนเป็นศูนย์ อาจแปลว่าโมเดลแค่จำ noise ได้ — ยิ่งปุ่มเยอะ ยิ่งจำเก่ง ยิ่งอันตราย</li>
+    <li>เชื่อได้เฉพาะตัวเลขที่วัดจากข้อมูลที่โมเดลไม่เคยเห็น และดูครั้งเดียว</li>
+  </ol>
+
+  <!-- ================= 8 ================= -->
+  <h2><span class="sec">§ 8</span>ตรวจตัวเอง 5 ข้อ</h2>
+  <p class="lede">
+    ข้อสอบชุดนี้ถามเฉพาะสิ่งที่อยู่ในบทนี้เท่านั้น ถ้าได้ต่ำกว่า 4/5 ให้กลับไปอ่านหัวข้อที่พลาดอีกรอบ
+    ก่อนไปบทที่ 2 — อย่าสะสมหนี้ความเข้าใจ
+  </p>
+  <div id="checks"></div>
+  <div class="tally" id="tally">ตอบแล้ว 0/5</div>
+
+  <div class="next">
+    <p><strong>บทที่ 2 จะต่อจากตรงนี้:</strong> เมื่อรู้แล้วว่า "จำ" กับ "เรียนรู้" ต่างกัน
+    คำถามถัดไปคือจะควบคุมมันยังไง — ทำไมโมเดลใหญ่ขึ้นถึงดีขึ้นได้ทั้งที่ควรจะ overfit หนักขึ้น,
+    วิธีอ่านกราฟ loss ให้ออกว่ากำลังพังแบบไหน, และทำไมข้อมูลอนุกรมเวลาถึงมีกับดักที่ข้อมูลทั่วไปไม่มี</p>
+  </div>
+
+  <footer>
+    ทุกตัวเลขในบทนี้คำนวณจากข้อมูล 3–4 จุดที่แสดงไว้ทั้งหมด ตรวจสอบเองได้ด้วยเครื่องคิดเลข
+    ถ้าคำนวณแล้วไม่ตรง ให้ทักมา — อาจเป็นผมผิดเอง
+  </footer>
+</div>
+
+<script>
+const CHECKS = [
+  { q: "โมเดล ŷ = w · x มีปุ่มให้ปรับกี่ตัว",
+    o: ["1 ตัว", "2 ตัว", "3 ตัว", "เท่ากับจำนวนข้อมูล"], a: 0,
+    e: "มีแค่ w ตัวเดียว · ส่วน x คือข้อมูลที่ป้อนเข้าไป ไม่ใช่ปุ่มที่เราปรับ — แยกให้ออกระหว่าง 'ข้อมูล' กับ 'พารามิเตอร์'" },
+
+  { q: "เทรนเสร็จแล้ว loss บนข้อมูลชุดเทรนเป็น 0.000 พอดี ควรสรุปว่าอย่างไร",
+    o: ["โมเดลสมบูรณ์แบบ เอาไปใช้ได้เลย",
+        "ยังสรุปไม่ได้ อาจเป็นเพราะโมเดลมีปุ่มมากพอจะจำข้อมูลชุดนั้นได้ ต้องไปวัดกับข้อมูลที่ไม่เคยเห็น",
+        "แปลว่า learning rate สูงเกินไป",
+        "แปลว่าข้อมูลมี noise น้อย"], a: 1,
+    e: "ตรงกับ §5 — พาราโบลาได้ loss 0.000 แต่แพ้เส้นตรงที่ได้ 0.045 ถึง 8.5 เท่าบนข้อมูลใหม่ · loss ตอนเทรนซื้อได้ด้วยจำนวนปุ่ม จึงไม่ใช่หลักฐานว่าโมเดลดี" },
+
+  { q: "วัดความชัน (gradient) ที่จุดหนึ่งได้ค่าติดลบ ควรทำอย่างไรกับปุ่ม w",
+    o: ["ลดค่า w ลง", "เพิ่มค่า w ขึ้น", "คงค่า w ไว้เพราะถึงจุดต่ำสุดแล้ว", "เปลี่ยนไปใช้โมเดลอื่น"], a: 1,
+    e: "ความชันติดลบ = 'เดินขึ้นทาง w มากขึ้น แล้ว loss ลดลง' · ในบทนี้ที่ w=1 ความชันคือ −9.33 เราจึงขยับไป 1.933 ซึ่งเข้าใกล้คำตอบจริง (2) มากขึ้น" },
+
+  { q: "พาราโบลาลากผ่านข้อมูลเทรนได้ครบทุกจุดเป๊ะ แต่ทาย x=4 พลาดไป 1.70 ขณะที่เส้นตรงพลาดแค่ 0.20 สาเหตุคืออะไร",
+    o: ["พาราโบลาคำนวณผิดพลาดสะสม",
+        "ข้อมูลเทรนน้อยเกินไปสำหรับเส้นตรง",
+        "พาราโบลามีปุ่มมากพอจะฟิต noise ของการวัด ซึ่งเป็นความบังเอิญที่ไม่เกิดซ้ำ",
+        "เพราะ x=4 อยู่นอกช่วงข้อมูล จึงทายไม่ได้ทั้งคู่"], a: 2,
+    e: "3 ปุ่มกับ 3 จุด ทำให้มันลากผ่านได้เป๊ะเสมอ ไม่ว่าข้อมูลจะจริงหรือมั่ว · สิ่งที่มันเรียนคือความคลาดเคลื่อนของการวัดครั้งนั้น ไม่ใช่กฎ y = 2x ที่อยู่เบื้องหลัง" },
+
+  { q: "ทำไมชุด Test ถึงควรเปิดดูผลเพียงครั้งเดียว",
+    o: ["เพื่อประหยัดเวลาในการคำนวณ",
+        "เพราะการดูผลซ้ำแล้วเอาไปปรับอะไรสักอย่าง ทำให้ Test กลายเป็นเครื่องช่วยเลือก ตัวเลขที่ได้จึงสวยเกินจริง",
+        "เพราะข้อมูล Test มีน้อยกว่าชุดอื่น",
+        "เพราะเปิดหลายครั้งจะทำให้โมเดลจำ Test ได้"], a: 1,
+    e: "โมเดลไม่ได้เห็น Test — แต่ 'คุณ' เห็น และคุณคือคนตัดสินใจ · ข้อมูลจึงรั่วผ่านการตัดสินใจของมนุษย์ ไม่ใช่ผ่านโค้ด นี่คือสาเหตุที่ต้องมีกอง Validation แยกไว้ให้ดูซ้ำได้" }
+];
+
+let done = 0;
+document.getElementById("checks").innerHTML = CHECKS.map((c, i) => `
+  <div class="chk">
+    <div class="q">${i + 1}. ${c.q}</div>
+    <div class="opts">
+      ${c.o.map((t, j) => `<button data-c="${i}" data-o="${j}">${t}</button>`).join("")}
+    </div>
+    <div class="exp hide" id="exp-${i}"></div>
+  </div>`).join("");
+
+document.getElementById("checks").addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.disabled) return;
+  const ci = +btn.dataset.c, oi = +btn.dataset.o, c = CHECKS[ci];
+  const group = btn.closest(".chk");
+  group.querySelectorAll("button").forEach((b, j) => {
+    b.disabled = true;
+    if (j === c.a) b.classList.add("right");
+    else if (j === oi) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  const exp = document.getElementById("exp-" + ci);
+  exp.innerHTML = (oi === c.a ? "<strong>ถูกต้อง</strong> — " : "<strong>ยังไม่ใช่</strong> — ") + c.e;
+  exp.classList.remove("hide");
+  done++;
+  document.getElementById("tally").textContent = `ตอบแล้ว ${done}/5`;
+});
+</script>
