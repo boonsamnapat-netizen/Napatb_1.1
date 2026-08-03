@@ -1,0 +1,1029 @@
+<title>AI Fundamentals — แบบวัดระดับ 30 ข้อ</title>
+
+<style>
+  :root {
+    --ground: #EFF1F4;
+    --surface: #FFFFFF;
+    --surface-2: #F6F8FA;
+    --ink: #131A22;
+    --ink-2: #3A4653;
+    --muted: #5C6773;
+    --line: #D5DBE3;
+    --accent: #1E4B8F;
+    --accent-soft: #DCE5F3;
+    --on-accent: #FFFFFF;
+    --good: #2F6B4F;
+    --good-soft: #DFEDE5;
+    --bad: #A3402C;
+    --bad-soft: #F4E1DC;
+
+    --font-thai: "IBM Plex Sans Thai", "Noto Sans Thai", "Sarabun", -apple-system,
+                 BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+    --step-0: 1rem;
+    --step-1: 1.1875rem;
+    --step-2: 1.4375rem;
+    --step-3: 1.875rem;
+    --step-4: 2.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0C1219;
+      --surface: #131C26;
+      --surface-2: #18232F;
+      --ink: #E3E9F0;
+      --ink-2: #C0CBD8;
+      --muted: #8494A4;
+      --line: #263443;
+      --accent: #7FA8E8;
+      --accent-soft: #1A2B41;
+      --good: #6DB68D;
+      --good-soft: #16291F;
+      --bad: #DE8A74;
+      --bad-soft: #2E1A15;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0C1219;
+    --surface: #131C26;
+    --surface-2: #18232F;
+    --ink: #E3E9F0;
+    --ink-2: #C0CBD8;
+    --muted: #8494A4;
+    --line: #263443;
+    --accent: #7FA8E8;
+    --accent-soft: #1A2B41;
+    --on-accent: #0C1219;
+    --good: #6DB68D;
+    --good-soft: #16291F;
+    --bad: #DE8A74;
+    --bad-soft: #2E1A15;
+  }
+
+  :root[data-theme="light"] {
+    --ground: #EFF1F4;
+    --surface: #FFFFFF;
+    --surface-2: #F6F8FA;
+    --ink: #131A22;
+    --ink-2: #3A4653;
+    --muted: #5C6773;
+    --line: #D5DBE3;
+    --accent: #1E4B8F;
+    --accent-soft: #DCE5F3;
+    --on-accent: #FFFFFF;
+    --good: #2F6B4F;
+    --good-soft: #DFEDE5;
+    --bad: #A3402C;
+    --bad-soft: #F4E1DC;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-thai);
+    font-size: var(--step-0);
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .rail {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    gap: 3px;
+    padding: 0;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line);
+  }
+  .rail-seg {
+    flex: 1;
+    height: 4px;
+    background: var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .rail-seg span {
+    position: absolute;
+    inset: 0 100% 0 0;
+    background: var(--accent);
+    transition: right 260ms ease;
+  }
+
+  .wrap {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 5rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-size: var(--step-3);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin-top: 0.5rem;
+  }
+
+  .lede {
+    color: var(--ink-2);
+    max-width: 36rem;
+    margin-top: 1rem;
+  }
+
+  .intro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin: 2rem 0;
+  }
+  .intro-cell {
+    background: var(--surface);
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .intro-cell b {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+  .intro-cell small {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .domain-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    margin: 1.5rem 0 2rem;
+  }
+  .domain-row {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .domain-row .idx {
+    font-family: var(--font-serif);
+    color: var(--accent);
+    font-size: 1.05rem;
+  }
+  .domain-row .cnt {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .domain-row .nm { font-weight: 600; }
+  .domain-row .nm i {
+    display: block;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    padding: 0.7rem 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    padding: 0.55rem 1.1rem;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  /* ---------- question ---------- */
+  .qhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+  }
+  .qnum {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip.hard { border-color: var(--accent); color: var(--accent); }
+
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 1.5rem 1.4rem;
+  }
+  .qtext {
+    font-size: var(--step-1);
+    line-height: 1.6;
+    font-weight: 600;
+    text-wrap: pretty;
+  }
+  pre.qcode {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    padding: 0.85rem 1rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+    color: var(--ink-2);
+  }
+
+  .opts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.35rem;
+  }
+  .opt {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    gap: 0.75rem;
+    text-align: left;
+    padding: 0.7rem 0.85rem;
+    line-height: 1.55;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); background: var(--surface-2); }
+  .opt .key {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--muted);
+    padding-top: 0.12rem;
+  }
+  .opt:disabled { cursor: default; }
+  .opt.is-right {
+    border-color: var(--good);
+    background: var(--good-soft);
+  }
+  .opt.is-right .key { color: var(--good); }
+  .opt.is-wrong {
+    border-color: var(--bad);
+    background: var(--bad-soft);
+  }
+  .opt.is-wrong .key { color: var(--bad); }
+  .opt.dim { opacity: 0.5; }
+
+  .why {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.1rem;
+  }
+  .why .verdict {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .why .verdict.ok { color: var(--good); }
+  .why .verdict.no { color: var(--bad); }
+  .why p { color: var(--ink-2); }
+  .why p + p { margin-top: 0.6rem; }
+  .why .princ {
+    margin-top: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--accent-soft);
+    border-left: 2px solid var(--accent);
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+  .why .princ b { color: var(--ink); }
+
+  .navrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  .navrow .tally {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- results ---------- */
+  .score-hero {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.25rem;
+  }
+  .score-hero .big {
+    font-family: var(--font-serif);
+    font-size: var(--step-4);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-hero .lvl {
+    font-weight: 700;
+    font-size: var(--step-1);
+  }
+
+  .bars { margin: 1.75rem 0 2rem; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 1fr 3.5rem;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-row .lab { font-size: 0.9375rem; }
+  .bar-row .lab small {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .track {
+    grid-column: 1 / -1;
+    height: 6px;
+    background: var(--line);
+    position: relative;
+  }
+  .track i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--accent);
+    display: block;
+  }
+  .track i.weak { background: var(--bad); }
+  .track i.strong { background: var(--good); }
+  .bar-row .val {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h2 {
+    font-size: var(--step-2);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    margin: 2.25rem 0 0.75rem;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+  }
+
+  .plan-step {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: 1rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .plan-step .n {
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+  }
+  .plan-step p { color: var(--ink-2); font-size: 0.9375rem; }
+  .plan-step ul { margin: 0.5rem 0 0 1.1rem; color: var(--ink-2); font-size: 0.9375rem; }
+  .plan-step li { margin-bottom: 0.2rem; }
+  .plan-step .tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-top: 0.45rem;
+  }
+
+  .miss {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .miss .mq { font-weight: 600; font-size: 0.9375rem; }
+  .miss .ma {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    margin-top: 0.35rem;
+  }
+  .miss .ma b { color: var(--good); font-weight: 600; }
+
+  .hide { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  .fade { animation: fade 220ms ease both; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+</style>
+
+<div class="rail" id="rail" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <!-- ============ INTRO ============ -->
+  <section id="intro">
+    <div class="eyebrow">Diagnostic · 30 ข้อ · ตอบแล้วเฉลยทันที</div>
+    <h1>วัดพื้นฐาน AI ของคุณ ตั้งแต่หลักการ</h1>
+    <p class="lede">
+      แบบทดสอบนี้ไม่ได้วัดว่าคุณ “ใช้ AI เป็นไหม” — วัดว่าคุณ<strong>อธิบายได้ไหมว่าทำไมมันทำงาน
+      และทำไมมันพัง</strong> ข้อสอบถูกออกแบบจากงานที่คุณทำจริง (ระบบสัญญาณคริปโต + เรียก LLM API)
+      หลายข้อจึงมีกับดักที่คนเขียนโค้ดเก่งแต่ไม่แม่นหลักการมักตกหลุม
+    </p>
+
+    <div class="intro-grid">
+      <div class="intro-cell"><b>30</b><small>คำถาม</small></div>
+      <div class="intro-cell"><b>6</b><small>หมวดวิชา</small></div>
+      <div class="intro-cell"><b>~20</b><small>นาที</small></div>
+      <div class="intro-cell"><b>1</b><small>แผนเรียนที่ได้</small></div>
+    </div>
+
+    <div class="eyebrow">สิ่งที่วัด</div>
+    <div class="domain-list" id="domainList"></div>
+
+    <p class="lede" style="font-size:0.9375rem">
+      ตอบตามที่<em>คิดจริง</em> อย่าเดาให้สวย — ผลลัพธ์จะบอกว่าหมวดไหนควรเริ่มก่อน
+      ถ้าเดาถูกแต่ไม่เข้าใจ แผนเรียนจะเพี้ยน กดเลข 1–4 บนคีย์บอร์ดตอบได้
+    </p>
+    <p style="margin-top:1.5rem"><button class="btn-primary" id="startBtn">เริ่มทำแบบทดสอบ</button></p>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="hide">
+    <div class="qhead">
+      <span class="qnum" id="qnum">Q01</span>
+      <span class="chip" id="qdomain">หมวด</span>
+    </div>
+    <div class="qcard" id="qcard">
+      <div class="qtext" id="qtext"></div>
+      <div id="qcodeWrap"></div>
+      <div class="opts" id="opts"></div>
+      <div class="why hide" id="why">
+        <div class="verdict" id="verdict"></div>
+        <div id="whyBody"></div>
+      </div>
+    </div>
+    <div class="navrow">
+      <span class="tally" id="tally"></span>
+      <button class="btn-primary hide" id="nextBtn">ข้อต่อไป →</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="results" class="hide">
+    <div class="eyebrow">ผลการวัด</div>
+    <div class="score-hero">
+      <span class="big" id="scoreBig">0/30</span>
+      <span class="lvl" id="scoreLvl"></span>
+    </div>
+    <p class="lede" id="scoreNote"></p>
+
+    <h2>คะแนนรายหมวด</h2>
+    <div class="bars" id="bars"></div>
+
+    <h2>แผนเรียนของคุณ — เรียงจากรูที่ใหญ่ที่สุด</h2>
+    <p class="lede" style="font-size:0.9375rem">
+      ลำดับนี้คำนวณจากคะแนนของคุณเอง ไม่ใช่หลักสูตรสำเร็จรูป
+      หมวดที่คุณแน่นอยู่แล้วจะถูกดันไปท้าย
+    </p>
+    <div id="plan"></div>
+
+    <h2>ข้อที่พลาด</h2>
+    <div id="misses"></div>
+
+    <p style="margin-top:2rem; display:flex; gap:0.75rem; flex-wrap:wrap">
+      <button class="btn-primary" id="againBtn">ทำใหม่อีกรอบ</button>
+    </p>
+  </section>
+
+  <footer>
+    เกณฑ์ให้คะแนนคือความเข้าใจหลักการ ไม่ใช่ความจำ — ข้อไหนที่ “รู้คำตอบแต่ตอบไม่ได้ว่าทำไม”
+    ให้นับว่ายังไม่ผ่านสำหรับตัวเอง
+  </footer>
+</div>
+
+<script>
+const DOMAINS = [
+  { id:"math",  name:"คณิตศาสตร์และความน่าจะเป็น", desc:"เวกเตอร์ · เบย์ส · ค่าคาดหวัง · gradient" },
+  { id:"learn", name:"หลักการเรียนรู้ของโมเดล",    desc:"generalization · overfit · leakage · validation" },
+  { id:"nn",    name:"การเทรนและโครงข่ายประสาท",   desc:"loss · backprop · optimizer · regularization" },
+  { id:"llm",   name:"กลไกภายใน LLM",              desc:"token · attention · autoregressive · RLHF" },
+  { id:"eng",   name:"วิศวกรรม LLM ภาคปฏิบัติ",     desc:"RAG · tool use · structured output · eval" },
+  { id:"stat",  name:"สถิติของการเคลมผลลัพธ์",       desc:"multiple testing · sample size · bias" }
+];
+
+const Q = [
+/* ---------------- 1. MATH ---------------- */
+{d:0,hard:false,
+ q:"โมเดลคัดกรองตัวหนึ่ง: ในประชากร 1% เป็นบวกจริง เครื่องตรวจจับเจอ 99% ของเคสจริง (sensitivity) และตอบถูก 95% ในเคสที่ไม่เป็น (specificity) ถ้าเครื่องบอกว่า “ใช่” ความน่าจะเป็นที่มันจริงคือเท่าไร",
+ o:["ประมาณ 99%","ประมาณ 95%","ประมาณ 17%","ประมาณ 50%"], a:2,
+ w:["จริง = 0.01 × 0.99 = 0.0099 · หลอก = 0.99 × 0.05 = 0.0495 · รวมสัญญาณบวก = 0.0594 → 0.0099 / 0.0594 ≈ 16.7%",
+    "ความแม่นของเครื่องมือไม่ใช่ความน่าจะเป็นของข้อสรุป ตราบใดที่ base rate ต่ำ false positive จะท่วมของจริงเสมอ"],
+ p:"<b>หลักการ:</b> Bayes — posterior ขึ้นกับ prior เสมอ นี่คือเหตุผลเดียวกับที่สัญญาณ “ความแม่น 90%” บนสภาวะตลาดที่เกิดยาก แทบไม่มีค่าในทางปฏิบัติ"},
+
+{d:0,hard:false,
+ q:"cosine similarity ระหว่าง embedding สองตัว วัดอะไร",
+ o:["ระยะทางตรงระหว่างสองจุดในสเปซ","มุมระหว่างเวกเตอร์ โดยไม่สนความยาว","ความน่าจะเป็นร่วมของสองข้อความ","จำนวนคำที่ซ้ำกันระหว่างสองข้อความ"], a:1,
+ w:["cos θ = (a·b)/(‖a‖‖b‖) — ตัวหารตัดขนาดทิ้ง เหลือแค่ทิศทาง",
+    "ข้อความยาวมักได้เวกเตอร์ norm ใหญ่กว่า ถ้าใช้ dot product ดิบ ข้อความยาวจะชนะเสมอโดยไม่เกี่ยวกับความหมาย"],
+ p:"<b>หลักการ:</b> ความหมายถูกเข้ารหัสเป็น<i>ทิศทาง</i>ในสเปซหลายร้อยมิติ ไม่ใช่ตำแหน่ง — เป็นเหตุผลว่าทำไม vector search ถึงใช้ cosine เป็นค่าเริ่มต้น"},
+
+{d:0,hard:false,
+ q:"ระบบเทรดชนะ 45% ของครั้ง ตัวชนะได้ 2R ตัวแพ้เสีย 1R ค่าคาดหวังต่อไม้เท่าไร",
+ o:["+0.35R","+0.90R","−0.10R","+0.45R"], a:0,
+ w:["EV = 0.45(+2) + 0.55(−1) = 0.90 − 0.55 = +0.35R",
+    "win rate เพียงอย่างเดียวไม่บอกอะไร — ระบบชนะ 45% กำไรได้ ระบบชนะ 70% ขาดทุนได้ ถ้า payoff ไม่สมมาตร"],
+ p:"<b>หลักการ:</b> ค่าคาดหวังคือผลรวมถ่วงน้ำหนักของผลลัพธ์ ไม่ใช่ความถี่ของการถูก — เป็นหน่วยเดียวกับที่ใช้ตัดสิน loss function ในการเทรนโมเดล"},
+
+{d:0,hard:true,
+ q:"gradient ของ loss เทียบกับพารามิเตอร์ตัวหนึ่ง คืออะไรในทางความหมาย",
+ o:["ค่าความผิดพลาดของพารามิเตอร์นั้น","อัตราที่ loss จะเปลี่ยน ถ้าขยับพารามิเตอร์นั้นนิดเดียว","ค่าที่ถูกต้องที่พารามิเตอร์ควรจะเป็น","ความน่าจะเป็นที่พารามิเตอร์นั้นถูก"], a:1,
+ w:["อนุพันธ์ย่อย = ความชัน (sensitivity) ตอบว่า “ขยับทางนี้แล้ว loss ขึ้นเท่าไร ต่อหนึ่งหน่วย”",
+    "การเทรนจึงเดินสวนทาง gradient ทีละก้าวเล็ก ๆ — ไม่มีใครรู้ค่าที่ถูกต้อง รู้แค่ทิศที่ดีขึ้น"],
+ p:"<b>หลักการ:</b> การเรียนรู้ทั้งหมดของ deep learning คือ “ไม่รู้คำตอบ แต่รู้ทิศทางที่ดีขึ้น แล้วเดินซ้ำ ๆ” — local search ไม่ใช่การแก้สมการ"},
+
+/* ---------------- 2. LEARNING ---------------- */
+{d:1,hard:false,
+ q:"โมเดลได้ error บนชุดเทรน 2% แต่บนชุดทดสอบ 28% ข้อไหน<strong>ไม่ใช่</strong>ทางแก้ที่สมเหตุสมผล",
+ o:["เพิ่มข้อมูลเทรน","เพิ่มความซับซ้อน/จำนวนพารามิเตอร์ของโมเดล","เพิ่ม regularization","ลดจำนวนฟีเจอร์ที่ป้อนเข้า"], a:1,
+ w:["ช่องว่างระหว่าง train กับ test ที่กว้าง = variance สูง = โมเดลจำ noise ของชุดเทรนไปแล้ว",
+    "การเพิ่ม capacity จะยิ่งจำเก่งขึ้น ช่องว่างยิ่งกว้าง — เป็นการเติมเชื้อไฟ ไม่ใช่ดับไฟ"],
+ p:"<b>หลักการ:</b> bias–variance — error แยกได้เป็น “โมเดลง่ายเกินจนพลาดโครงสร้างจริง” กับ “โมเดลยืดหยุ่นเกินจนจำ noise” ต้องวินิจฉัยให้ถูกก่อนแก้"},
+
+{d:1,hard:true,
+ q:"คุณ normalize ราคาทั้งไฟล์ด้วย mean/std ของข้อมูลทั้งชุด แล้วค่อยแบ่ง train/test ตามเวลา ปัญหาคืออะไร",
+ o:["ไม่มีปัญหา เพราะ normalize ไม่ใช่การเรียนรู้","ชุดเทรนถูกปนเปื้อนด้วยสถิติจากอนาคต ผลทดสอบจะดูดีเกินจริง","ค่าที่ normalize แล้วจะไม่อยู่ในช่วง 0–1","โมเดลจะเทรนช้าลง"], a:1,
+ w:["mean/std ที่คำนวณจากทั้งไฟล์ มีข้อมูลของช่วง test อยู่ในนั้น — โมเดลจึง “รู้” ระดับราคาในอนาคตทางอ้อม",
+    "ที่ถูกคือ fit ตัว scaler บน train เท่านั้น แล้ว transform ทั้ง train และ test ด้วยพารามิเตอร์ชุดเดิม"],
+ p:"<b>หลักการ:</b> data leakage — ทุกอย่างที่แตะข้อมูล ต้องถูกเรียนจาก train เท่านั้น รวมถึงขั้น preprocessing ที่ดูไร้พิษภัย นี่คือสาเหตุอันดับหนึ่งของ backtest ที่สวยแล้วเจ๊งจริง"},
+
+{d:1,hard:false,
+ q:"ทำไม k-fold cross-validation แบบสุ่มสับ ถึงใช้กับข้อมูลอนุกรมเวลาไม่ได้",
+ o:["เพราะข้อมูลเวลามีจำนวนแถวมากเกินไป","เพราะ fold จะมีขนาดไม่เท่ากัน","เพราะการสับทำให้บาง fold ใช้ข้อมูลอนาคตทำนายอดีต","เพราะ k-fold ใช้ได้กับ classification เท่านั้น"], a:2,
+ w:["การสับทำลายลำดับเวลา — โมเดลได้เห็นแท่งเทียนของเดือนหน้าตอนเทรน แล้วถูกวัดผลบนเดือนนี้",
+    "วิธีที่ถูกคือ walk-forward: เทรนช่วง 1–6 ทดสอบ 7 แล้วเลื่อนหน้าต่างไปเรื่อย ๆ"],
+ p:"<b>หลักการ:</b> โครงสร้างการ validate ต้องเลียนแบบวิธีที่โมเดลจะถูกใช้จริง — ในโลกจริงคุณไม่เคยมีข้อมูลอนาคต"},
+
+{d:1,hard:true,
+ q:"คุณใช้ชุด test เดิมวัดผล แล้วปรับพารามิเตอร์ ทำซ้ำ 50 รอบ จนได้เลขสวย ผลที่ได้มีปัญหาอะไร",
+ o:["ไม่มี เพราะไม่ได้เอา test ไปเทรนโมเดล","ชุด test กลายสภาพเป็น validation set ตัวเลขจึงมองโลกสวยและไม่ใช่ค่าคาดหวังจริง","จำนวนรอบมากเกินไปทำให้โมเดล underfit","ต้องเพิ่ม learning rate ชดเชย"], a:1,
+ w:["ทุกครั้งที่คุณตัดสินใจโดยดูเลขจาก test คุณกำลังปล่อยข้อมูลจาก test เข้ามาในโมเดล ผ่านสมองคุณเอง",
+    "หลัง 50 รอบ คุณได้เลือกค่าที่บังเอิญเข้ากับ noise ของ test ชุดนั้น — ต้องมีชุดที่สาม ที่ไม่เคยแตะเลย"],
+ p:"<b>หลักการ:</b> train เอาไว้ปรับน้ำหนัก · validation เอาไว้เลือก · test เปิดได้ครั้งเดียวตอนจบ ทันทีที่ดูซ้ำ มันก็ไม่ใช่ test อีกต่อไป"},
+
+{d:1,hard:true,
+ q:"ทำไมโมเดลถึง generalize ไม่ได้เลย ถ้าไม่มี “สมมติฐานล่วงหน้า” (inductive bias) ใด ๆ",
+ o:["เพราะข้อมูลเทรนมักมี noise","เพราะยังมีฟังก์ชันนับไม่ถ้วนที่ฟิตข้อมูลเทรนได้เป๊ะ แต่ทำนายข้อมูลใหม่ต่างกันสิ้นเชิง","เพราะคอมพิวเตอร์มีความละเอียดทศนิยมจำกัด","เพราะ optimizer ติดอยู่ใน local minimum"], a:1,
+ w:["ข้อมูลจำกัดไม่เคยระบุฟังก์ชันเดียวได้ — การเลือกว่าจะเชื่อฟังก์ชันแบบไหน คือสมมติฐานที่เราใส่เข้าไป",
+    "CNN สมมติว่าภาพมีโครงสร้างเชิงพื้นที่ · transformer สมมติว่าความสัมพันธ์เกิดผ่านการอ้างอิงถึงกัน · การ regularize สมมติว่าคำตอบเรียบง่าย"],
+ p:"<b>หลักการ:</b> No Free Lunch — ไม่มีตัวเรียนรู้ที่ดีที่สุดสำหรับทุกปัญหา ความเก่งของโมเดลมาจากสมมติฐานที่<i>บังเอิญตรง</i>กับโครงสร้างของโลกจริงในโดเมนนั้น"},
+
+{d:1,hard:false,
+ q:"L2 regularization (weight decay) ทำอะไรกับสมดุล bias–variance",
+ o:["ลด variance โดยแลกกับ bias ที่เพิ่มขึ้น","ลดทั้ง bias และ variance พร้อมกัน","ลด bias โดยแลกกับ variance ที่เพิ่มขึ้น","ไม่เกี่ยวกับ bias–variance เป็นแค่การเร่งความเร็ว"], a:0,
+ w:["การลงโทษน้ำหนักที่ใหญ่ = บังคับให้โมเดลตอบแบบเรียบขึ้น จำ noise ได้น้อยลง (variance ลด)",
+    "แต่ก็ทำให้โมเดลฟิตโครงสร้างจริงที่ซับซ้อนได้น้อยลงด้วย (bias เพิ่ม) — จึงมีจุดที่ดีที่สุดตรงกลาง"],
+ p:"<b>หลักการ:</b> regularization ทุกชนิด (L1/L2, dropout, early stopping, ลดฟีเจอร์) คือการซื้อ variance ด้วย bias — ราคาที่คุ้มก็ต่อเมื่อคุณกำลัง overfit อยู่"},
+
+/* ---------------- 3. NN / TRAINING ---------------- */
+{d:2,hard:false,
+ q:"ถ้าเอา activation function ที่ไม่เป็นเชิงเส้นออกจากโครงข่าย 10 ชั้น จะเกิดอะไรขึ้น",
+ o:["โมเดลจะเทรนช้าลงแต่ยังเก่งเหมือนเดิม","ทั้งเครือข่ายยุบเหลือค่าเทียบเท่า linear layer ชั้นเดียว","gradient จะระเบิดทันที","โมเดลจะ overfit หนักขึ้น"], a:1,
+ w:["การประกอบฟังก์ชันเชิงเส้นเข้าด้วยกันยังได้ฟังก์ชันเชิงเส้น: W₃(W₂(W₁x)) = (W₃W₂W₁)x",
+    "ความลึกจะไร้ความหมายทันที — ไม่ว่าจะกี่ชั้นก็แทนได้ด้วยเมทริกซ์เดียว"],
+ p:"<b>หลักการ:</b> ความไม่เป็นเชิงเส้นคือสิ่งเดียวที่ทำให้ “ความลึก” มีค่า มันคือที่มาของความสามารถในการประกอบฟีเจอร์เป็นชั้น ๆ"},
+
+{d:2,hard:false,
+ q:"backpropagation คืออะไร ในนิยามที่แคบและถูกต้อง",
+ o:["อัลกอริทึมที่ปรับน้ำหนักให้ loss ต่ำสุด","วิธีคำนวณ gradient ของ loss เทียบกับทุกพารามิเตอร์ อย่างมีประสิทธิภาพด้วย chain rule","วิธีสุ่มค่าเริ่มต้นของน้ำหนัก","การส่งข้อมูลย้อนกลับจาก output ไป input เพื่อทำนายใหม่"], a:1,
+ w:["backprop คำนวณ “ทิศ” เท่านั้น — ส่วนที่ปรับน้ำหนักจริงคือ optimizer (SGD, Adam) ที่เอา gradient ไปใช้",
+    "ที่มันสำคัญเพราะมันคำนวณอนุพันธ์ของพารามิเตอร์นับพันล้านตัวได้ในเวลาพอ ๆ กับ forward pass เดียว"],
+ p:"<b>หลักการ:</b> แยกให้ออกระหว่าง “คำนวณ gradient” (backprop) กับ “ใช้ gradient เดินก้าว” (optimizer) — คนสับสนสองอย่างนี้แล้วดีบัก learning rate ผิดจุดตลอด"},
+
+{d:2,hard:false,
+ q:"เทรนแล้ว loss กระโดดขึ้นลงรุนแรง บางทีพุ่งเป็น NaN สาเหตุที่น่าจะเป็นที่สุดคือ",
+ o:["learning rate สูงเกินไป","ข้อมูลเทรนน้อยเกินไป","โมเดลเล็กเกินไป","batch size เล็กเกินไปเสมอ"], a:0,
+ w:["ก้าวใหญ่เกินจะกระโดดข้ามหุบเขาของ loss แล้วไต่ขึ้นฝั่งตรงข้ามที่สูงกว่าเดิม วนจนค่าระเบิด",
+    "อาการ underfit จากโมเดลเล็กหรือข้อมูลน้อย จะแสดงเป็น loss ที่นิ่งอยู่ที่ค่าสูง ไม่ใช่แกว่งรุนแรง"],
+ p:"<b>หลักการ:</b> อ่านรูปทรงของเส้น loss ให้เป็น — แกว่ง = ก้าวใหญ่ไป · ค้างสูง = capacity หรือสัญญาณไม่พอ · ลงแล้วแยกจาก validation = overfit"},
+
+{d:2,hard:true,
+ q:"ทำไม classification ถึงใช้ cross-entropy loss แทน mean squared error",
+ o:["เพราะ cross-entropy คำนวณเร็วกว่า","เพราะมันคือ negative log-likelihood ของโมเดลความน่าจะเป็น และให้ gradient แรงเมื่อทายผิดอย่างมั่นใจ","เพราะ MSE ใช้กับตัวเลขไม่ได้","เพราะ cross-entropy ป้องกัน overfit"], a:1,
+ w:["การ minimize cross-entropy = การ maximize ความน่าจะเป็นที่โมเดลให้กับคำตอบที่ถูก (MLE)",
+    "เมื่อจับคู่กับ softmax แล้ว gradient จะกลายเป็น (ค่าที่ทำนาย − ค่าจริง) ตรง ๆ ผิดมั่นใจมาก = สัญญาณแก้แรงมาก ส่วน MSE จะให้ gradient จาง ๆ ตรงจุดนั้นพอดี"],
+ p:"<b>หลักการ:</b> loss ไม่ใช่แค่ “วิธีวัดความผิด” แต่คือการประกาศว่าคุณกำลังโมเดลความน่าจะเป็นแบบไหน — LLM ทั้งตัวเทรนด้วย cross-entropy บน token ถัดไป"},
+
+{d:2,hard:true,
+ q:"ทำไมการเทรนด้วย mini-batch (ไม่ใช่ข้อมูลทั้งชุดต่อหนึ่งก้าว) ถึงเป็นมาตรฐาน",
+ o:["เพราะให้ gradient ที่แม่นกว่าการใช้ข้อมูลทั้งชุด","เพราะประหยัดหน่วยความจำ อัปเดตถี่กว่า และ noise ในการประมาณช่วยหลุดจากจุดที่แคบและไม่ generalize","เพราะข้อมูลทั้งชุดใช้คำนวณ gradient ไม่ได้ทางคณิตศาสตร์","เพราะทำให้ learning rate ไม่ต้องปรับ"], a:1,
+ w:["full-batch ให้ gradient ที่แม่นกว่าจริง แต่ได้อัปเดตแค่ครั้งเดียวต่อการอ่านข้อมูลทั้งชุด — ช้ามากในทางปฏิบัติ",
+    "และ noise จาก mini-batch ทำหน้าที่เหมือน regularizer อ่อน ๆ ช่วยไม่ให้ตกลงไปในหุบแคบที่ฟิตเฉพาะชุดเทรน"],
+ p:"<b>หลักการ:</b> ในการเรียนรู้ ความเร็วของการวนซ้ำมักมีค่ามากกว่าความแม่นของแต่ละก้าว — เป็นหลักการเดียวกับการทดลองกลยุทธ์เทรด"},
+
+/* ---------------- 4. LLM INTERNALS ---------------- */
+{d:3,hard:false,
+ q:"ทำไม LLM ถึงมักนับตัวอักษรในคำอย่าง “strawberry” ผิด ทั้งที่แก้โจทย์ยาก ๆ ได้",
+ o:["เพราะโมเดลถูกจำกัดไม่ให้ตอบคำถามนับ","เพราะโมเดลไม่เห็นตัวอักษร แต่เห็นข้อความเป็นก้อน token ตัวอักษรจึงไม่ใช่หน่วยที่มันเข้าถึงโดยตรง","เพราะ temperature สูงเกินไป","เพราะข้อมูลเทรนมีคำนี้น้อย"], a:1,
+ w:["“strawberry” อาจถูกตัดเป็น 2–3 token ตัวอักษรแต่ละตัวไม่ได้มีตัวตนแยกในอินพุต",
+    "อาการตระกูลเดียวกัน: การเรียงอักษร การนับคำ การทำ wordplay การจัดการตัวเลขยาว ๆ ทีละหลัก"],
+ p:"<b>หลักการ:</b> tokenization คือขอบเขตการรับรู้ของโมเดล ข้อจำกัดหลายอย่างที่ดูเหมือน “โง่” จริง ๆ แล้วเป็นผลจากหน่วยของอินพุต ไม่ใช่ความสามารถในการให้เหตุผล"},
+
+{d:3,hard:true,
+ q:"self-attention ทำอะไรกับ token แต่ละตัว",
+ o:["ส่งต่อ token ทีละตัวไปยังชั้นถัดไปตามลำดับ เหมือน RNN","สร้าง query/key/value แล้วให้ token นั้นดึงข้อมูลจาก token อื่นทั้งหมด แบบถ่วงน้ำหนักตามความเกี่ยวข้อง","บีบอัด token ทั้งหมดเป็นเวกเตอร์เดียวก่อนประมวลผล","กรอง token ที่ไม่สำคัญทิ้งเพื่อประหยัดการคำนวณ"], a:1,
+ w:["แต่ละ token ถาม (query) ว่า “ใครเกี่ยวกับฉันบ้าง” เทียบกับ key ของทุกตัว ได้น้ำหนักผ่าน softmax แล้วผสม value ตามน้ำหนักนั้น",
+    "เพราะทุกตัวต้องเทียบกับทุกตัว ต้นทุนจึงโตแบบ n² ตามความยาว context — นี่คือเหตุผลจริงที่ prompt ยาวแพงและช้า"],
+ p:"<b>หลักการ:</b> transformer แทนที่ “ความจำแบบลำดับ” ด้วย “การเข้าถึงทุกตำแหน่งพร้อมกัน” จึงขนานได้เต็มที่บน GPU — นั่นคือเหตุผลที่มันชนะ RNN ไม่ใช่เพราะฉลาดกว่าโดยธรรมชาติ"},
+
+{d:3,hard:false,
+ q:"ตอน generate ข้อความ โมเดลทำอะไรจริง ๆ ในแต่ละก้าว",
+ o:["วางแผนทั้งคำตอบก่อน แล้วค่อยเขียนออกมา","คำนวณการแจกแจงความน่าจะเป็นของ token ถัดไป แล้วสุ่มหนึ่งตัวจากการแจกแจงนั้น ต่อท้ายอินพุต แล้วทำซ้ำ","ค้นหาคำตอบที่ใกล้เคียงที่สุดจากฐานข้อมูลที่จำไว้","เทียบอินพุตกับ template ที่เรียนมาแล้วเติมช่องว่าง"], a:1,
+ w:["ทุกคำตอบยาว ๆ คือการทำนายทีละ token ที่ป้อนกลับเข้าตัวเอง ไม่มีแผนล่วงหน้าที่เก็บไว้นอกข้อความ",
+    "temperature ปรับความชันของการแจกแจงก่อนสุ่ม — 0 คือเลือกตัวที่น่าจะเป็นที่สุดเสมอ ยิ่งสูงยิ่งกระจาย"],
+ p:"<b>หลักการ:</b> autoregressive generation อธิบายทั้งจุดแข็งและจุดอ่อน — เหตุผลที่ “คิดเป็นขั้นตอนออกมาเป็นข้อความ” ช่วยได้จริง ก็เพราะข้อความที่เขียนไปแล้วคือหน่วยความจำเดียวที่มันมี"},
+
+{d:3,hard:true,
+ q:"RLHF / post-training ทำอะไรกับโมเดลที่ pretrain มาแล้ว",
+ o:["เพิ่มความรู้ใหม่จำนวนมากเข้าไปในน้ำหนัก","ปรับพฤติกรรมและวิธีเลือกคำตอบให้ตรงกับสิ่งที่มนุษย์ชอบ โดยความรู้ส่วนใหญ่มาจาก pretraining อยู่แล้ว","ขยาย context window ให้ยาวขึ้น","บีบอัดโมเดลให้เล็กลงเพื่อ deploy"], a:1,
+ w:["pretraining คือที่ที่ความรู้เกือบทั้งหมดถูกอัดเข้าไป จากการทำนาย token บนข้อความมหาศาล",
+    "post-training เลือกว่าจะ “ดึงความสามารถไหนออกมาใช้และตอบด้วยท่าทีแบบไหน” — เปลี่ยนการกระจายของคำตอบ ไม่ใช่เติมคลังความรู้"],
+ p:"<b>หลักการ:</b> แยก “รู้อะไร” (pretraining) ออกจาก “ทำตัวยังไง” (post-training) ให้ขาด — ปัญหาความรู้ผิดยุค แก้ด้วย prompt ไม่ได้ ต้องให้ข้อมูลเข้าไปใน context"},
+
+{d:3,hard:true,
+ q:"อธิบายด้วยหลักการ ว่าทำไม LLM ถึง “หลอน” (hallucinate) ได้อย่างมั่นใจ",
+ o:["เพราะข้อมูลเทรนมีข้อมูลผิดปนอยู่เท่านั้น","เพราะเป้าหมายของมันคือสร้างข้อความที่น่าจะเป็นต่อจากบริบท ไม่ใช่การตรวจสอบความจริง และมันไม่มีสัญญาณแยก “จำได้” ออกจาก “แต่งได้เนียน”","เพราะ temperature ถูกตั้งไว้สูงเกินค่าเริ่มต้นเสมอ","เพราะ context window เต็ม"], a:1,
+ w:["ข้อความที่ฟังดูสมเหตุสมผลกับข้อความที่จริง มีความน่าจะเป็นสูงพอ ๆ กันในสายตาโมเดล เมื่อความรู้ที่แท้จริงไม่มีในน้ำหนัก",
+    "ข้อมูลผิดในชุดเทรนทำให้เกิดได้ก็จริง แต่โมเดลหลอนบนเรื่องที่ไม่มีใครเคยเขียนผิดได้เช่นกัน — ต้นเหตุอยู่ที่ objective"],
+ p:"<b>หลักการ:</b> ความมั่นใจในภาษา ≠ ความมั่นใจในความรู้ ระบบที่ดีจึงออกแบบให้ตรวจสอบได้ (อ้างอิงแหล่ง เรียกเครื่องมือ ตรวจด้วยโค้ด) แทนที่จะขอให้โมเดล “อย่าหลอน”"},
+
+{d:3,hard:false,
+ q:"prompt caching ลดต้นทุนได้เพราะอะไร และข้อจำกัดสำคัญคือ",
+ o:["มันเก็บคำตอบเดิมไว้ตอบซ้ำ จึงต้องถามคำถามเดิมเป๊ะ","มันเก็บสถานะที่คำนวณแล้วของ prompt ส่วนหน้า จึงได้ผลเมื่อส่วนที่คงที่อยู่ต้นข้อความ และเปลี่ยนแปลงเฉพาะส่วนท้าย","มันบีบอัด prompt ให้สั้นลงโดยอัตโนมัติ","มันใช้ได้เฉพาะกับ prompt ที่ยาวกว่า context window"], a:1,
+ w:["สิ่งที่ถูก cache คือผลการคำนวณของ prefix ไม่ใช่คำตอบ — จึงยังได้คำตอบใหม่ทุกครั้ง",
+    "ผลตามมาในการออกแบบ: วางของที่ไม่เปลี่ยน (system prompt, สเปค, สคีมา, ตัวอย่าง) ไว้บนสุด แล้ววางข้อมูลที่เปลี่ยนทุกครั้งไว้ล่างสุด"],
+ p:"<b>หลักการ:</b> เมื่อรู้ว่าโมเดลประมวลผลจากซ้ายไปขวาและ attention มีต้นทุนกับ prefix การจัดลำดับ prompt จึงเป็นการตัดสินใจเชิงสถาปัตยกรรม ไม่ใช่เรื่องความสวยงาม"},
+
+/* ---------------- 5. LLM ENGINEERING ---------------- */
+{d:4,hard:false,
+ q:"RAG (retrieval-augmented generation) แก้ปัญหาอะไร และ<strong>แก้ไม่ได้</strong>อะไร",
+ o:["แก้ได้ทั้งความรู้ไม่อัปเดตและการให้เหตุผลผิด","แก้เรื่องความรู้เฉพาะทาง/อัปเดตได้ แต่ไม่ได้ทำให้การให้เหตุผลดีขึ้น และถ้าค้นมาผิด คำตอบก็ผิดอย่างมั่นใจเหมือนเดิม","แก้เรื่องความเร็วในการตอบเป็นหลัก","แทนที่การ fine-tune ได้ในทุกกรณี"], a:1,
+ w:["RAG คือการเอาข้อเท็จจริงใส่เข้าไปใน context ก่อนถาม — เป็นการแก้ปัญหา “ไม่รู้” ไม่ใช่ “คิดไม่เป็น”",
+    "คุณภาพของ RAG ถูกจำกัดด้วยคุณภาพของ retrieval เสมอ ระบบที่ค้นมาไม่ตรง จะทำให้คำตอบแย่ลงกว่าไม่ค้นเลยด้วยซ้ำ"],
+ p:"<b>หลักการ:</b> วินิจฉัยก่อนสั่งยา — ไม่รู้ข้อเท็จจริง → ใส่ใน context · ทำตัวไม่ถูกแบบ → prompt/post-training · คำนวณผิด → ให้เรียกเครื่องมือ"},
+
+{d:4,hard:false,
+ q:"ต้องการให้โมเดลคืน JSON ที่ parse ได้ 100% ในโปรดักชัน วิธีที่ทนทานที่สุดคือ",
+ o:["เขียนใน prompt ว่า “ตอบเป็น JSON เท่านั้น” แล้ว strip markdown fence ออก","ใช้ tool/function calling หรือ schema-constrained output แล้วตรวจสอบด้วย schema validator พร้อมมี retry","ตั้ง temperature เป็น 0 ก็เพียงพอ","ขอให้โมเดลตรวจ JSON ของตัวเองอีกครั้งในคำตอบเดียวกัน"], a:1,
+ w:["การขอเฉย ๆ แล้วมาแกะ fence ทีหลัง เป็นวิธีที่ยังพังได้เสมอเมื่อเจออินพุตแปลก ๆ — โค้ดของคุณเองก็ใช้วิธีนี้อยู่",
+    "การบังคับที่ชั้น decoding ทำให้ผลลัพธ์อยู่ในรูปที่ถูกต้องโดยโครงสร้าง ไม่ใช่โดยการขอร้อง แล้วค่อยมี validator เป็นตาข่ายชั้นสอง"],
+ p:"<b>หลักการ:</b> อย่าออกแบบระบบที่ความถูกต้องขึ้นกับการที่โมเดลเชื่อฟัง ให้ออกแบบให้ผลลัพธ์ที่ผิดรูป<i>เกิดขึ้นไม่ได้</i> หรืออย่างน้อยถูกจับได้เสมอ"},
+
+{d:4,hard:true,
+ q:"ใน agent loop ที่โมเดลใช้เครื่องมือ ใครเป็นคนรันเครื่องมือ",
+ o:["โมเดลรันเองภายในกระบวนการคิด","โมเดลออกคำขอเรียกเครื่องมือเป็นข้อความมีโครงสร้าง โปรแกรมฝั่งเราเป็นคนรันจริง แล้วส่งผลลัพธ์กลับเข้า context ให้โมเดลอ่านในรอบถัดไป","ผู้ให้บริการ API รันให้ทั้งหมดโดยอัตโนมัติเสมอ","เครื่องมือถูกรันตอนเทรนโมเดล"], a:1,
+ w:["โมเดลผลิตได้แค่ token — “การเรียกเครื่องมือ” คือเอาต์พุตที่มีโครงสร้างซึ่ง harness ตีความและไปรันจริง",
+    "ผลลัพธ์ถูกต่อกลับเข้าบทสนทนาเป็นข้อความ โมเดลจึงไม่ได้ “เห็น” ระบบไฟล์ มันเห็นแต่ข้อความที่เราป้อนกลับเข้าไป"],
+ p:"<b>หลักการ:</b> agent = ลูปของ (โมเดลเสนอ → ระบบรัน → ผลกลับเข้า context) ความปลอดภัยและความน่าเชื่อถือทั้งหมดอยู่ที่ชั้นระบบ ไม่ใช่ที่ความตั้งใจดีของโมเดล"},
+
+{d:4,hard:true,
+ q:"คุณแก้ prompt แล้วลองด้วยตัวอย่าง 5 เคส รู้สึกว่าดีขึ้น ควรสรุปว่าดีขึ้นจริงไหม",
+ o:["ได้ ถ้าทั้ง 5 เคสดีขึ้นชัดเจน","ยังไม่ได้ ต้องมีชุดประเมินตายตัวที่ใหญ่พอ มีเกณฑ์ให้คะแนนล่วงหน้า และเทียบกับเวอร์ชันเดิมบนชุดเดียวกัน","ได้ ถ้าใช้โมเดลตัวใหญ่ที่สุดในการทดสอบ","ไม่จำเป็นต้องวัด เพราะ prompt ไม่ใช่โค้ด"], a:1,
+ w:["5 เคสที่คุณเลือกเอง คือชุดที่ลำเอียงและเล็กเกินกว่าจะแยกการปรับปรุงจริงออกจากความบังเอิญ",
+    "ที่สำคัญกว่า: ต้องเช็ค regression ด้วย — prompt ใหม่มักแก้เคสที่คุณดูอยู่ แล้วไปทำเคสที่เคยผ่านให้พังเงียบ ๆ"],
+ p:"<b>หลักการ:</b> ปัญหาเดียวกับ backtest ที่คุณทำอยู่ — eval set คือ test set, การไล่ปรับ prompt คือการ optimize, และถ้าไม่มีชุดที่กันไว้ คุณกำลังฟิต noise ของตัวอย่างไม่กี่เคส"},
+
+{d:4,hard:true,
+ q:"ใช้ LLM เป็นผู้ตัดสิน (LLM-as-judge) ให้คะแนนคำตอบ ข้อควรระวังที่ถูกต้องที่สุดคือ",
+ o:["มันแม่นกว่ามนุษย์เสมอ จึงใช้แทนได้เลย","มันมีอคติเชิงระบบ เช่น ชอบคำตอบยาว ชอบตัวเลือกที่วางก่อน และเข้าข้างสไตล์ของตัวเอง จึงต้องสลับตำแหน่ง ใช้เกณฑ์ชัดเจน และสอบเทียบกับป้ายกำกับที่มนุษย์ให้","ใช้ได้เฉพาะกับภาษาอังกฤษ","ต้องใช้โมเดลเดียวกับที่สร้างคำตอบเสมอ"], a:1,
+ w:["อคติเรื่องตำแหน่งและความยาวเป็นสิ่งที่วัดได้และเกิดซ้ำ ๆ — แก้ได้บางส่วนด้วยการสลับลำดับแล้วเฉลี่ย",
+    "ตัวตัดสินก็เป็นโมเดลที่ต้องถูก evaluate เหมือนกัน: วัดความสอดคล้องกับคะแนนมนุษย์บนตัวอย่างชุดหนึ่งก่อน แล้วค่อยไว้ใจ"],
+ p:"<b>หลักการ:</b> เครื่องมือวัดต้องถูกสอบเทียบก่อนใช้วัดของจริง เหมือนที่คุณไม่เชื่อ backtest engine จนกว่าจะทดสอบมันกับเคสที่รู้คำตอบ"},
+
+/* ---------------- 6. CLAIM STATISTICS ---------------- */
+{d:5,hard:true,
+ q:"คุณทดสอบ 200 ชุดพารามิเตอร์ แล้วเลือกชุดที่ผลดีที่สุดมาใช้ ปัญหาเชิงสถิติคืออะไร",
+ o:["ไม่มี เพราะเลือกจากผลจริงที่วัดได้","ยิ่งทดลองมาก ยิ่งมีโอกาสที่ผู้ชนะจะชนะเพราะ noise — ผลของ “ตัวที่ดีที่สุด” จึงเป็นค่าที่มองโลกสวยและมักตกลงในข้อมูลชุดใหม่","ต้องเพิ่มจำนวนชุดพารามิเตอร์เป็น 500 เพื่อความมั่นใจ","ปัญหาอยู่ที่การเลือกช่วงเวลาเทสต์เท่านั้น"], a:1,
+ w:["ถ้าทุกชุดไร้ประโยชน์เท่ากัน ชุดที่ดีที่สุดจาก 200 ครั้งก็ยังดูดีมาก ด้วยความบังเอิญล้วน ๆ",
+    "วิธีคุม: กันข้อมูลออกไปทดสอบครั้งเดียว (OOS), คาดหวังว่าผลจริงจะแย่กว่าที่จูนได้เสมอ, และชอบพารามิเตอร์ที่ดีเป็นบริเวณกว้าง ไม่ใช่ยอดแหลมโดด ๆ"],
+ p:"<b>หลักการ:</b> multiple comparisons — จำนวนสมมติฐานที่คุณลอง คือส่วนหนึ่งของผลลัพธ์ที่ต้องรายงาน ไม่ใช่รายละเอียดที่ตัดทิ้งได้"},
+
+{d:5,hard:false,
+ q:"จาก 40 เทรด ได้อัตราชนะ 45% สรุปได้แค่ไหน",
+ o:["สรุปได้ว่าอัตราชนะจริงใกล้ 45%","ช่วงความเชื่อมั่นกว้างมาก (คร่าว ๆ ราว ±15%) ยังแยกไม่ออกจากระบบที่ชนะ 30% หรือ 60%","สรุปได้ว่าระบบขาดทุน เพราะต่ำกว่า 50%","สรุปได้ถ้าเทรดทั้ง 40 ครั้งใช้เหรียญเดียวกัน"], a:1,
+ w:["ความคลาดเคลื่อนมาตรฐานราว √(0.45×0.55/40) ≈ 7.9% → ช่วง 95% กินพื้นที่ประมาณ 30–60%",
+    "ตัวอย่างจริงต้องหลักร้อยขึ้นไป และเทรดที่เกิดในตลาดช่วงเดียวกันยังสัมพันธ์กันอีก จำนวนตัวอย่างที่เป็นอิสระจริงจึงน้อยกว่าที่นับได้"],
+ p:"<b>หลักการ:</b> ทุกตัวเลขประมาณค่ามาพร้อมความไม่แน่นอน ตัวเลขที่ไม่มีช่วงความเชื่อมั่นแนบมา คือความคิดเห็นที่แต่งตัวมาเป็นข้อมูล"},
+
+{d:5,hard:false,
+ q:"คุณเลือกยูนิเวิร์สจากเหรียญ 50 อันดับแรกของ ณ วันนี้ แล้วย้อนทดสอบไป 5 ปี ปัญหาคือ",
+ o:["ไม่มีปัญหา เพราะเป็นเหรียญที่มีสภาพคล่องดี","survivorship bias — เหรียญที่ตายไประหว่างทางไม่ถูกนับ ผลจึงสูงเกินจริงอย่างเป็นระบบ","ข้อมูล 5 ปีสั้นเกินไปเสมอ","ต้องใช้ timeframe ที่เล็กกว่านี้"], a:1,
+ w:["การรู้ล่วงหน้าว่า “อันไหนจะยังอยู่ในปี 2026” คือข้อมูลอนาคตที่รั่วเข้ามาในการเลือกยูนิเวิร์ส",
+    "ญาติสนิทของมันคือ look-ahead bias เช่น ใช้ราคาปิดของแท่งเดียวกับที่เพิ่งสั่งเข้าไม้"],
+ p:"<b>หลักการ:</b> การเลือกกลุ่มตัวอย่าง คือการตัดสินใจเชิงสถิติที่สำคัญพอ ๆ กับตัวโมเดล — ถามเสมอว่า “ข้อมูลนี้ผมรู้ได้จริงไหม ณ เวลานั้น”"},
+
+{d:5,hard:true,
+ q:"ผลในกลุ่มพัฒนาได้ +0.20R ต่อไม้ แต่ walk-forward นอกกลุ่มได้ +0.087R ควรตีความว่าอย่างไร",
+ o:["โมเดลพัง ควรทิ้งทั้งระบบ","การตกลงแบบนี้เป็นเรื่องปกติและคาดหมายได้ ตัวเลขที่ควรใช้ตัดสินใจและใช้สื่อสารคือ +0.087R (สุทธิค่าธรรมเนียม นอกกลุ่ม)","ควรรายงาน +0.20R เพราะเป็นผลที่วัดจากข้อมูลมากกว่า","ควรเฉลี่ยสองค่าเป็น +0.14R"], a:1,
+ w:["ทุกกระบวนการที่มีการเลือกจะดันตัวเลขในกลุ่มพัฒนาให้สูงเกินจริง ค่านอกกลุ่มคือค่าประมาณที่ไม่ลำเอียงที่สุดที่คุณมี",
+    "การตกลงเป็นสัญญาณสุขภาพด้วยซ้ำ — ถ้า OOS เท่ากับ in-sample เป๊ะ ให้สงสัยว่ามี leakage มากกว่าจะดีใจ"],
+ p:"<b>หลักการ:</b> รายงานตัวเลขที่แย่ที่สุดที่ยังซื่อสัตย์ แล้วตัดสินใจจากตัวเลขนั้น — นี่คือเส้นแบ่งระหว่างระบบตัดสินใจกับเครื่องมือหลอกตัวเอง"}
+];
+
+const LETTERS = ["A","B","C","D"];
+let idx = 0, answers = [], locked = false;
+
+const $ = id => document.getElementById(id);
+
+/* ---- intro domain list ---- */
+$("domainList").innerHTML = DOMAINS.map((d,i)=>{
+  const n = Q.filter(q=>q.d===i).length;
+  return `<div class="domain-row">
+    <span class="idx">${String(i+1).padStart(2,"0")}</span>
+    <span class="nm">${d.name}<i>${d.desc}</i></span>
+    <span class="cnt">${n} ข้อ</span>
+  </div>`;
+}).join("");
+
+/* ---- rail ---- */
+$("rail").innerHTML = DOMAINS.map(()=>`<div class="rail-seg"><span></span></div>`).join("");
+function paintRail(){
+  const segs = $("rail").querySelectorAll(".rail-seg span");
+  DOMAINS.forEach((d,i)=>{
+    const total = Q.filter(q=>q.d===i).length;
+    const done = answers.filter((a,j)=>a!=null && Q[j].d===i).length;
+    segs[i].style.right = (100 - (done/total)*100) + "%";
+  });
+}
+paintRail();
+
+function esc(s){ return s; }
+
+function render(){
+  const q = Q[idx];
+  locked = false;
+  $("qnum").textContent = "Q" + String(idx+1).padStart(2,"0");
+  const chip = $("qdomain");
+  chip.textContent = DOMAINS[q.d].name + (q.hard ? " · ยาก" : "");
+  chip.className = "chip" + (q.hard ? " hard" : "");
+  $("qtext").innerHTML = esc(q.q);
+  $("qcodeWrap").innerHTML = q.code ? `<pre class="qcode">${q.code}</pre>` : "";
+  $("opts").innerHTML = q.o.map((t,i)=>
+    `<button class="opt" data-i="${i}"><span class="key">${LETTERS[i]}</span><span>${t}</span></button>`
+  ).join("");
+  $("opts").querySelectorAll(".opt").forEach(b=>{
+    b.addEventListener("click", ()=> choose(parseInt(b.dataset.i,10)));
+  });
+  $("why").classList.add("hide");
+  $("nextBtn").classList.add("hide");
+  $("nextBtn").textContent = idx === Q.length-1 ? "ดูผลวิเคราะห์ →" : "ข้อต่อไป →";
+  const done = answers.filter(a=>a!=null).length;
+  const right = answers.filter((a,j)=>a!=null && a===Q[j].a).length;
+  $("tally").textContent = `ตอบแล้ว ${done}/${Q.length} · ถูก ${right}`;
+  $("qcard").classList.remove("fade"); void $("qcard").offsetWidth; $("qcard").classList.add("fade");
+}
+
+function choose(pick){
+  if (locked) return;
+  locked = true;
+  const q = Q[idx];
+  answers[idx] = pick;
+  const btns = $("opts").querySelectorAll(".opt");
+  btns.forEach((b,i)=>{
+    b.disabled = true;
+    if (i === q.a) b.classList.add("is-right");
+    else if (i === pick) b.classList.add("is-wrong");
+    else b.classList.add("dim");
+  });
+  const ok = pick === q.a;
+  $("verdict").textContent = ok ? "◆ ถูกต้อง" : "◆ ยังไม่ใช่ — ตัวหลักการอยู่ตรงนี้";
+  $("verdict").className = "verdict " + (ok ? "ok" : "no");
+  $("whyBody").innerHTML = q.w.map(p=>`<p>${p}</p>`).join("") +
+    `<div class="princ">${q.p}</div>`;
+  $("why").classList.remove("hide");
+  $("nextBtn").classList.remove("hide");
+  $("nextBtn").focus({preventScroll:true});
+  paintRail();
+  const done = answers.filter(a=>a!=null).length;
+  const right = answers.filter((a,j)=>a!=null && a===Q[j].a).length;
+  $("tally").textContent = `ตอบแล้ว ${done}/${Q.length} · ถูก ${right}`;
+}
+
+$("nextBtn").addEventListener("click", ()=>{
+  if (idx === Q.length-1) { showResults(); }
+  else { idx++; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+});
+
+$("startBtn").addEventListener("click", ()=>{
+  $("intro").classList.add("hide");
+  $("quiz").classList.remove("hide");
+  render();
+});
+
+$("againBtn").addEventListener("click", ()=>{
+  idx = 0; answers = []; locked = false;
+  $("results").classList.add("hide");
+  $("quiz").classList.remove("hide");
+  paintRail(); render();
+  window.scrollTo({top:0});
+});
+
+document.addEventListener("keydown", e=>{
+  if ($("quiz").classList.contains("hide")) return;
+  if (!locked && ["1","2","3","4"].includes(e.key)) {
+    const i = parseInt(e.key,10)-1;
+    if (i < Q[idx].o.length) choose(i);
+  } else if (locked && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    $("nextBtn").click();
+  }
+});
+
+/* ---------- study plan ---------- */
+const PLAN = {
+  math: { t:"คณิตศาสตร์ที่จำเป็นจริง (ไม่ต้องเรียนทั้งเล่ม)",
+    b:["พีชคณิตเชิงเส้น: เวกเตอร์ · dot product · เมทริกซ์คือการแปลงสเปซ · ทำไม embedding ถึงเป็นทิศทาง",
+       "ความน่าจะเป็น: ตัวแปรสุ่ม · ค่าคาดหวังและความแปรปรวน · Bayes · การแจกแจงเงื่อนไข",
+       "แคลคูลัสเท่าที่ใช้: อนุพันธ์ = ความชัน · chain rule · gradient คือเวกเตอร์ของความชัน"],
+    do:"ลงมือ: เขียน cosine similarity และ softmax ด้วย numpy เปล่า ๆ แล้วเช็คกับไลบรารี" },
+  learn: { t:"ทฤษฎีการเรียนรู้ — หัวใจที่แยกคนทำโมเดลเป็นกับคนกดปุ่ม",
+    b:["generalization: ทำไมฟิตข้อมูลเก่าได้ ≠ ทำนายข้อมูลใหม่ได้",
+       "bias–variance และการอ่านเส้น learning curve",
+       "โปรโตคอลข้อมูล: train / validation / test, walk-forward, การป้องกัน leakage ทุกจุดของไปป์ไลน์",
+       "inductive bias: โมเดลแต่ละแบบสมมติอะไรกับโลก"],
+    do:"ลงมือ: จงใจสร้าง leakage ในไปป์ไลน์ของตัวเอง (normalize ก่อน split) แล้ววัดว่าผลพุ่งขึ้นเท่าไร — ตัวเลขนั้นจะติดตัวคุณไปตลอด" },
+  nn: { t:"การเทรนโมเดล จากศูนย์",
+    b:["loss function คือการประกาศสมมติฐานเชิงความน่าจะเป็น (MSE ↔ เกาส์เซียน, cross-entropy ↔ categorical)",
+       "gradient descent · learning rate · mini-batch · momentum และ Adam ต่างกันตรงไหน",
+       "backprop = chain rule ไม่ใช่ optimizer",
+       "regularization: L2 · dropout · early stopping และแต่ละตัวซื้อ-ขายอะไร"],
+    do:"ลงมือ: เขียน neural net 2 ชั้นด้วย numpy ล้วน ทำ backprop เอง เทรนกับข้อมูลของเล่น — ทำครั้งเดียวจบ เข้าใจไปอีกสิบปี" },
+  llm: { t:"กลไกภายใน LLM",
+    b:["tokenization และข้อจำกัดที่ตามมา",
+       "embedding + positional information",
+       "self-attention: Q·K → softmax → V และทำไมต้นทุนเป็น n²",
+       "การเทรน: next-token prediction · scaling · pretraining vs post-training/RLHF",
+       "การ generate: temperature · top-p · ทำไม chain-of-thought ถึงช่วย"],
+    do:"ลงมือ: อ่าน 'The Illustrated Transformer' แล้วตามด้วย nanoGPT ของ Karpathy — รันจริง แก้จริง ประมาณ 300 บรรทัด" },
+  eng: { t:"วิศวกรรม LLM — จากของเล่นเป็นระบบที่เชื่อถือได้",
+    b:["structured output แบบบังคับด้วย schema แทนการขอร้องใน prompt",
+       "tool use / agent loop และเส้นแบ่งความรับผิดชอบระหว่างโมเดลกับ harness",
+       "RAG: chunking · embedding · hybrid search · การอ้างอิงแหล่ง",
+       "eval: ชุดประเมินตายตัว · การตรวจ regression · LLM-as-judge และการสอบเทียบมัน",
+       "ต้นทุน/ความหน่วง: prompt caching · การจัดลำดับ prompt · เลือกขนาดโมเดลให้ตรงงาน"],
+    do:"ลงมือ: สร้าง eval set 30 เคสสำหรับ ai_feedback.py ของคุณเอง แล้ววัด prompt เก่า vs ใหม่บนชุดเดียวกัน" },
+  stat: { t:"สถิติของการเคลมผลลัพธ์ — ยาแก้หลอกตัวเอง",
+    b:["ช่วงความเชื่อมั่นและขนาดตัวอย่างที่ต้องใช้จริง",
+       "multiple testing: ยิ่งลองมาก ผู้ชนะยิ่งปลอม",
+       "survivorship / look-ahead / selection bias",
+       "การเสื่อมของผลจาก in-sample สู่ OOS และวิธีรายงานอย่างซื่อสัตย์"],
+    do:"ลงมือ: รัน bootstrap บนผลเทรดของคุณ หาช่วงความเชื่อมั่น 95% ของ expectancy แล้วเอาเลขนั้นไปแทนค่าเฉลี่ยเดี่ยว ๆ ในรายงาน" }
+};
+
+function showResults(){
+  $("quiz").classList.add("hide");
+  $("results").classList.remove("hide");
+  window.scrollTo({top:0});
+
+  const total = Q.length;
+  const right = answers.filter((a,j)=>a===Q[j].a).length;
+  const pct = right/total;
+
+  $("scoreBig").textContent = `${right}/${total}`;
+
+  let lvl, note;
+  if (pct >= 0.87) {
+    lvl = "ระดับ: เข้าใจหลักการแล้ว";
+    note = "คุณไม่ได้แค่ใช้เครื่องมือเป็น — คุณอธิบายได้ว่าทำไมมันทำงานและพังตรงไหน ก้าวต่อไปไม่ใช่การอ่านเพิ่ม แต่คือการสร้างของที่ต้องใช้ความเข้าใจนั้น เช่น เทรนโมเดลเล็ก ๆ เอง หรือวางระบบ eval ที่จริงจัง";
+  } else if (pct >= 0.70) {
+    lvl = "ระดับ: นักสร้างที่พื้นฐานเริ่มแน่น";
+    note = "คุณต่อระบบได้และมองออกว่าอะไรน่าสงสัย แต่ยังมีบางหมวดที่พึ่งสัญชาตญาณมากกว่าหลักการ ปิดรูเฉพาะจุดตามลำดับด้านล่าง จะขึ้นชั้นเร็วมาก";
+  } else if (pct >= 0.50) {
+    lvl = "ระดับ: นักสร้างที่พึ่งเครื่องมือ";
+    note = "คุณทำของออกมาใช้งานได้จริง ซึ่งเป็นจุดเริ่มที่ดีกว่าคนที่อ่านทฤษฎีอย่างเดียว แต่ตอนนี้ยังตัดสินไม่ได้ด้วยตัวเองว่าผลลัพธ์ที่ได้เชื่อได้แค่ไหน — สองหมวดแรกด้านล่างคือสิ่งที่ให้ผลตอบแทนสูงสุด";
+  } else {
+    lvl = "ระดับ: ยังเป็นผู้ใช้";
+    note = "ตอนนี้ AI ยังเป็นกล่องดำที่เรียกผ่าน API ข่าวดีคือคุณมีสนามฝึกที่ดีมากอยู่แล้วในมือ — ระบบสัญญาณของคุณเองใช้หลักการเดียวกันทั้งหมด เริ่มจากหมวดแรกทีละหมวด อย่ากระโดด";
+  }
+  $("scoreLvl").textContent = lvl;
+  $("scoreNote").textContent = note;
+
+  const scored = DOMAINS.map((d,i)=>{
+    const qs = Q.map((q,j)=>({q,j})).filter(x=>x.q.d===i);
+    const r = qs.filter(x=>answers[x.j]===x.q.a).length;
+    return { d, i, r, n:qs.length, pct: r/qs.length };
+  });
+
+  $("bars").innerHTML = scored.map(s=>{
+    const cls = s.pct >= 0.8 ? "strong" : (s.pct < 0.5 ? "weak" : "");
+    return `<div class="bar-row">
+      <span class="lab">${s.d.name}<small>${s.d.desc}</small></span>
+      <span class="val">${s.r}/${s.n}</span>
+      <span class="track"><i class="${cls}" style="width:${(s.pct*100).toFixed(0)}%"></i></span>
+    </div>`;
+  }).join("");
+
+  const order = [...scored].sort((a,b)=> a.pct - b.pct || a.i - b.i);
+  $("plan").innerHTML = order.map((s,k)=>{
+    const p = PLAN[s.d.id];
+    const state = s.pct >= 0.8 ? "แน่นแล้ว — ทบทวนผ่าน ๆ พอ"
+                : s.pct >= 0.5 ? "พอไปได้ — ยังมีรูที่ต้องอุด"
+                : "จุดอ่อนหลัก — เริ่มที่นี่";
+    return `<div class="plan-step">
+      <span class="n">${k+1}</span>
+      <div>
+        <h3>${p.t}</h3>
+        <p>${s.d.name} · ได้ ${s.r}/${s.n} — ${state}</p>
+        <ul>${p.b.map(x=>`<li>${x}</li>`).join("")}</ul>
+        <span class="tag">${p.do}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  const missed = Q.map((q,j)=>({q,j})).filter(x=>answers[x.j]!==x.q.a);
+  $("misses").innerHTML = missed.length
+    ? missed.map(x=>`<div class="miss">
+        <div class="mq">Q${String(x.j+1).padStart(2,"0")} · ${x.q.q}</div>
+        <div class="ma">คำตอบที่ถูก: <b>${x.q.o[x.q.a]}</b><br>${x.q.p.replace(/<b>หลักการ:<\/b>\s*/,"")}</div>
+      </div>`).join("")
+    : `<p class="lede">ไม่พลาดสักข้อ — แบบทดสอบนี้วัดคุณไม่ได้แล้ว ไปเจอของจริงดีกว่า: เทรนโมเดลเอง หรือวางระบบ eval ที่ตัดสินใจแทนคุณได้</p>`;
+}
+</script>
