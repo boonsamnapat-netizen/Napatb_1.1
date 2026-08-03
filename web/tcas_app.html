@@ -27,7 +27,7 @@
 
   --indigo:     #33477e;
   --indigo-dim: #e3e6f2;
-  --marigold:   #96660f;
+  --marigold:   #926207;
   --marigold-f: #f0ab2c;
   --brick:      #a83e2b;
   --brick-dim:  #fae2dc;
@@ -117,7 +117,7 @@
   --text-3:     #6e645c;
   --indigo:     #33477e;
   --indigo-dim: #e3e6f2;
-  --marigold:   #96660f;
+  --marigold:   #926207;
   --marigold-f: #f0ab2c;
   --brick:      #a83e2b;
   --brick-dim:  #fae2dc;
@@ -139,13 +139,18 @@ body {
   background: var(--paper);
   color: var(--text);
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 0.9375rem;
   /* Thai vowel marks sit above and below — tight leading clips them */
   line-height: 1.75;
   -webkit-text-size-adjust: 100%;
+  /* คำยาวที่ตัดไม่ได้ (ชื่อไฟล์ ลิงก์) ดันหน้าให้เลื่อนซ้ายขวาเมื่อผู้ใช้
+     ตั้งขนาดตัวอักษรใหญ่ — ยอมให้ตัดกลางคำดีกว่าให้ทั้งหน้าเบี้ยว */
+  overflow-wrap: break-word;
   overflow-x: hidden;
-  /* clear the fixed bottom tab bar (~62px) plus the home indicator on iOS */
-  padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  /* เว้นที่ให้แถบแท็บที่ลอยอยู่ล่างจอ — วัดความสูงจริงตอนรัน (--tabh)
+     เพราะพอผู้ใช้ตั้งขนาดตัวอักษรใหญ่ ป้ายใต้ไอคอนก็ดันแถบให้สูงตาม
+     ค่าคงที่ 78px ที่ใช้เดิมจึงกินเนื้อหาบรรทัดสุดท้ายหายไป */
+  padding-bottom: calc(var(--tabh, 62px) + 16px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 720px) { body { padding-bottom: 0; } }
@@ -172,7 +177,7 @@ button, a.res { -webkit-tap-highlight-color: transparent; }
 .num { font-variant-numeric: tabular-nums; letter-spacing: -.005em; }
 
 .eyebrow {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: .06em;
   color: var(--text-3);
@@ -211,26 +216,26 @@ button, a.res { -webkit-tap-highlight-color: transparent; }
 .topbar-row { display: flex; align-items: center; gap: 12px; }
 
 .brand { display: flex; flex-direction: column; gap: 0; margin-right: auto; min-width: 0; }
-.brand-name { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
-.brand-sub { font-size: 11.5px; color: #b49bad; }
+.brand-name { font-size: 0.875rem; font-weight: 700; letter-spacing: -.01em; }
+.brand-sub { font-size: 0.71875rem; color: #b49bad; }
 
 .cd { display: flex; align-items: baseline; gap: 8px; margin-right: auto; min-width: 0; }
-.cd-n { font-variant-numeric: tabular-nums; font-size: 34px; font-weight: 600; line-height: 1; color: var(--marigold-f); letter-spacing: -.03em;
+.cd-n { font-variant-numeric: tabular-nums; font-size: 2.125rem; font-weight: 600; line-height: 1; color: var(--marigold-f); letter-spacing: -.03em;
   text-shadow: 0 0 22px rgba(240, 171, 44, .35); }
 .cd-meta { display: flex; flex-direction: column; line-height: 1.3; }
-.cd-unit { font-size: 12px; color: #d6c8d2; }
-.cd-what { font-size: 11.5px; color: #b49bad; }
+.cd-unit { font-size: 0.75rem; color: #d6c8d2; }
+.cd-what { font-size: 0.71875rem; color: #b49bad; }
 
 .streak{display:flex;align-items:baseline;gap:5px;padding:5px 12px;border-radius:var(--pill);
   background:linear-gradient(140deg, rgba(240,171,44,.30), rgba(224,110,60,.22));
   border:1px solid rgba(247,188,75,.45)}
 /* display:flex ชนะ [hidden] ของเบราว์เซอร์ ต้องประกาศทับเอง */
 .streak[hidden]{display:none}
-.streak-n{font-size:17px;font-weight:700;color:#ffd27a;line-height:1;font-variant-numeric:tabular-nums}
-.streak-l{font-size:11px;color:#e2d0dc}
+.streak-n{font-size:1.0625rem;font-weight:700;color:#ffd27a;line-height:1;font-variant-numeric:tabular-nums}
+.streak-l{font-size:0.6875rem;color:#e2d0dc}
 
 .gear{appearance:none;border:0;background:rgba(255,255,255,.10);color:#e0d2dc;cursor:pointer;
-  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;
   transition:background .15s, color .15s, transform .25s var(--spring)}
 .gear:hover{background:rgba(255,255,255,.2);color:#fff;transform:rotate(45deg)}
 .gear svg{width:17px;height:17px}
@@ -238,19 +243,19 @@ button, a.res { -webkit-tap-highlight-color: transparent; }
 /* ── settings ─────────────────────────────────────────────── */
 .field{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
 .field:last-child{border-bottom:0}
-.field-l{font-size:14.5px;flex:1;min-width:0}
+.field-l{font-size:0.90625rem;flex:1;min-width:0}
 /* ครอบทุกช่องกรอกในแอป ไม่ใช่เฉพาะที่อยู่ใน .field —
    ช่องชื่อกับช่องวันที่เคยหลุดออกไปใช้กรอบเริ่มต้นของเบราว์เซอร์ */
-input[type=text],input[type=date]{font-family:inherit;font-size:14px;color:var(--text);
+input[type=text],input[type=date]{font-family:inherit;font-size:0.875rem;color:var(--text);min-height:44px;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px}
 .field input[type=text]{width:100%}
 input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);outline:none}
-.hours-in{font-variant-numeric:tabular-nums;font-size:15.5px;font-weight:600;
-  width:66px;text-align:center;color:var(--text);
+.hours-in{font-variant-numeric:tabular-nums;font-size:0.96875rem;font-weight:600;
+  width:72px;min-height:44px;text-align:center;color:var(--text);
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 4px}
 .hours-in:focus{border-color:var(--marigold-f);outline:none}
-.week-total{display:flex;align-items:baseline;gap:8px;padding-top:11px;font-size:13.5px;color:var(--text-2)}
-.week-total b{font-variant-numeric:tabular-nums;font-size:17px;font-weight:700;color:var(--text)}
+.week-total{display:flex;align-items:baseline;gap:8px;padding-top:11px;font-size:0.84375rem;color:var(--text-2)}
+.week-total b{font-variant-numeric:tabular-nums;font-size:1.0625rem;font-weight:700;color:var(--text)}
 
 /* ── where to read ────────────────────────────────────────── */
 .blk-row{position:relative}
@@ -263,9 +268,14 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
 .blk-res:hover{border-color:var(--sc,var(--indigo));color:var(--sc,var(--indigo))}
 .blk-res:active{transform:scale(.9)}
 .blk-res svg{width:15px;height:15px}
+/* วงกลมยังเล็กเท่าเดิม แต่บริเวณที่นิ้วกดโดนจริงถูกยืดเป็น 44×44
+   (เกณฑ์ขั้นต่ำของ Apple HIG และ WCAG 2.2 Target Size) */
+.blk-res::before{content:"";position:absolute;left:50%;top:50%;
+  width:44px;height:44px;transform:translate(-50%,-50%)}
 
 .sheet-back{position:fixed;inset:0;z-index:85;background:rgba(8,12,20,.55);
   display:flex;align-items:flex-end;justify-content:center}
+body.no-scroll{overflow:hidden}
 @media (min-width:720px){.sheet-back{align-items:center}}
 .sheet{background:var(--surface);width:100%;max-width:560px;max-height:86vh;overflow-y:auto;
   border-radius:22px 22px 0 0;padding:18px 17px calc(20px + env(safe-area-inset-bottom,0px));
@@ -273,29 +283,32 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
 @media (min-width:720px){.sheet{border-radius:var(--r);max-height:80vh}}
 @keyframes sheetIn{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
 .sheet-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}
-.sheet-hd h2{font-size:17px;flex:1;min-width:0}
+.sheet-hd h2{font-size:1.0625rem;flex:1;min-width:0}
 .sheet-x{appearance:none;border:0;background:none;cursor:pointer;color:var(--text-3);
-  font-size:22px;line-height:1;padding:0 2px}
+  font-size:1.375rem;line-height:1;flex:none;
+  width:44px;height:44px;margin:-11px -13px -11px 0;display:grid;place-items:center}
+.sheet-x:hover{color:var(--text)}
 
 .res{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;margin-bottom:7px;
   border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--surface);
   text-decoration:none;color:inherit}
 .res:hover{border-color:var(--indigo)}
 .res-ico{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
-  background:var(--indigo-dim);color:var(--indigo);font-size:13px}
+  background:var(--indigo-dim);color:var(--indigo);font-size:0.8125rem}
 .res-b{flex:1;min-width:0}
-.res-b b{display:block;font-size:14px;font-weight:600}
-.res-b span{display:block;font-size:12.5px;color:var(--text-2);line-height:1.6}
+.res-b b{display:block;font-size:0.875rem;font-weight:600}
+.res-b span{display:block;font-size:0.78125rem;color:var(--text-2);line-height:1.6}
 .res-del{appearance:none;border:0;background:none;cursor:pointer;color:var(--text-3);
-  font-size:17px;line-height:1;padding:2px 4px;flex:none}
+  font-size:1.0625rem;line-height:1;flex:none;
+  width:44px;height:44px;margin:-9px -10px -9px 0;display:grid;place-items:center}
 .res-del:hover{color:var(--brick)}
 
 /* ── first run + focus timer ──────────────────────────────── */
 .intro{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--marigold-f);
   border-radius:var(--r);padding:15px 17px}
-.intro h2{font-size:16px;margin-bottom:6px}
+.intro h2{font-size:1rem;margin-bottom:6px}
 .intro ol{margin:8px 0 0;padding-left:20px}
-.intro li{font-size:14px;color:var(--text-2);margin-bottom:5px;line-height:1.7}
+.intro li{font-size:0.875rem;color:var(--text-2);margin-bottom:5px;line-height:1.7}
 .intro li b{color:var(--text)}
 
 /* ปุ่มหลักของทั้งแอป — ไล่สีส้มทอง เป็นจุดที่ร้อนที่สุดบนหน้าจอ
@@ -311,8 +324,8 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
   background:rgba(51,33,10,.16)}
 .start-ico svg{width:16px;height:16px}
 .start-t{flex:1;min-width:0}
-.start-t b{display:block;font-size:15px}
-.start-t span{font-size:12.5px;opacity:.72;display:block}
+.start-t b{display:block;font-size:0.9375rem}
+.start-t span{font-size:0.78125rem;opacity:.72;display:block}
 
 /* จอจับเวลาใช้สีของวิชานั้นเป็นพื้น — นั่งอ่านเคมีกับนั่งอ่านชีวะ
    ควรรู้สึกต่างกัน ไม่ใช่จอดำเหมือนกันหมด */
@@ -325,11 +338,11 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
   padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));
   animation:timerIn .28s var(--spring)}
 @keyframes timerIn{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
-.timer-topic{font-size:15px;color:#dcc9d6;text-align:center;max-width:32ch}
-.timer-n{font-variant-numeric:tabular-nums;font-size:66px;font-weight:700;
+.timer-topic{font-size:0.9375rem;color:#dcc9d6;text-align:center;max-width:32ch}
+.timer-n{font-variant-numeric:tabular-nums;font-size:4.125rem;font-weight:700;
   letter-spacing:-.04em;line-height:1.1;color:var(--marigold-f);
   text-shadow:0 0 40px rgba(240,171,44,.4)}
-.timer-sub{font-size:13px;color:#b49bad;margin-bottom:16px}
+.timer-sub{font-size:0.8125rem;color:#b49bad;margin-bottom:16px}
 .timer-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
 .timer .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#fdf7fa}
 .timer .btn:hover{background:rgba(255,255,255,.22)}
@@ -348,8 +361,8 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
 .status.ok{border-color:color-mix(in oklab,var(--ok) 45%,transparent);background:var(--ok-dim)}
 .status.tight{border-color:color-mix(in oklab,var(--warn) 45%,transparent);background:var(--warn-dim)}
 .status.over{border-color:color-mix(in oklab,var(--brick) 50%,transparent);background:var(--brick-dim)}
-.status-hd{display:flex;align-items:baseline;gap:8px;font-size:14px}
-.status-hd .spacer{margin-left:auto;font-size:13px;color:var(--text-2)}
+.status-hd{display:flex;align-items:baseline;gap:8px;font-size:0.875rem}
+.status-hd .spacer{margin-left:auto;font-size:0.8125rem;color:var(--text-2)}
 .status-dot{display:none}
 .status.ok .status-hd b{color:var(--ok)}
 .status.tight .status-hd b{color:var(--warn)}
@@ -360,7 +373,7 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
    ═══════════════════════════════════════════════════════════════ */
 .done-hero{display:flex;flex-direction:column;align-items:center;gap:6px;
   padding:28px 16px;text-align:center}
-.done-hero b{font-size:17px}
+.done-hero b{font-size:1.0625rem}
 .done-mark{width:54px;height:54px;border-radius:50%;color:#fff;
   background:linear-gradient(140deg,color-mix(in oklab,var(--ok) 75%,#7fd9a6),var(--ok));
   box-shadow:0 6px 20px color-mix(in oklab,var(--ok) 45%,transparent);
@@ -373,8 +386,8 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
   display:flex;flex-direction:column;align-items:center;gap:1px;
   background:var(--ink);color:#f0f2f6;padding:10px 18px;border-radius:99px;
   box-shadow:0 6px 24px rgba(0,0,0,.28);animation:toastIn .22s ease-out}
-.toast-big-t{font-size:14px;font-weight:600}
-.toast-sub{font-size:11.5px;color:#a9b3c2}
+.toast-big-t{font-size:0.875rem;font-weight:600}
+.toast-sub{font-size:0.71875rem;color:#a9b3c2}
 .toast.toast-big{padding:14px 26px;border-radius:var(--r);color:#fff;
   background:linear-gradient(125deg,#33865c,#2c7750 55%,#256b58);
   box-shadow:0 10px 34px rgba(20,80,50,.42)}
@@ -410,7 +423,7 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
   transition: background .2s var(--spring), transform .2s var(--spring);
 }
 .tab-ico { width: 19px; height: 19px; display: block; }
-.tab-label { font-size: 10.5px; line-height: 1.2; }
+.tab-label { font-size: 0.65625rem; line-height: 1.2; }
 .tab[aria-selected="true"] { color: var(--text); }
 .tab[aria-selected="true"] .tab-ico-wrap {
   background: linear-gradient(130deg, var(--marigold-f), #e08434);
@@ -435,7 +448,7 @@ input[type=text]:focus,input[type=date]:focus{border-color:var(--marigold-f);out
     flex-direction: row; gap: 8px; padding: 9px 7px;
   }
   .tab-ico-wrap { width: 30px; height: 30px; border-radius: 50%; }
-  .tab-label { font-size: 13px; }
+  .tab-label { font-size: 0.8125rem; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -461,11 +474,11 @@ main { padding-top: 26px; }
   background: var(--surface-2);
   border-bottom: 1px solid var(--line-soft);
 }
-.card-hd h2 { font-size: 15px; }
+.card-hd h2 { font-size: 0.9375rem; }
 .card-hd .spacer { margin-left: auto; }
 
 .section-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
-.section-title h2 { font-size: 13px; letter-spacing: .03em; font-weight: 700; color: var(--text-2); }
+.section-title h2 { font-size: 0.8125rem; letter-spacing: .03em; font-weight: 700; color: var(--text-2); }
 
 /* ═══════════════════════════════════════════════════════════════
    OMR BUBBLE — the motif. Every Thai student knows this grid.
@@ -475,7 +488,7 @@ main { padding-top: 26px; }
   width: 26px; height: 26px; border-radius: 50%;
   border: 1.5px solid var(--line);
   display: grid; place-items: center;
-  font-size: 12.5px; font-weight: 600;
+  font-size: 0.78125rem; font-weight: 600;
   color: var(--text-3);
   background: var(--surface);
   transition: background .12s, border-color .12s, color .12s;
@@ -503,7 +516,7 @@ main { padding-top: 26px; }
 .mix-key { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 4px; }
 .mix-key i {
   display: inline-flex; align-items: center; gap: 5px;
-  font-style: normal; font-size: 11.5px; color: var(--text-2);
+  font-style: normal; font-size: 0.71875rem; color: var(--text-2);
 }
 .mix-key i::before {
   content: ""; width: 10px; height: 10px; border-radius: 50%;
@@ -524,9 +537,9 @@ main { padding-top: 26px; }
   text-align: left; font: inherit; color: inherit;
 }
 .wk:first-child { border-top: 0; }
-.wk-t { font-size: 13px; font-weight: 700; }
-.wk-m { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-3); }
-.wk-c { font-size: 11px; color: var(--text-3); transition: transform .15s; }
+.wk-t { font-size: 0.8125rem; font-weight: 700; }
+.wk-m { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 0.75rem; color: var(--text-3); }
+.wk-c { font-size: 0.6875rem; color: var(--text-3); transition: transform .15s; }
 .wk[aria-expanded="false"] .wk-c { transform: rotate(-90deg); }
 .wk-body[hidden] { display: none; }
 
@@ -546,13 +559,13 @@ main { padding-top: 26px; }
   position: absolute; left: -62px; top: 1px;
   width: 40px; text-align: right;
 }
-.sday-dow { font-size: 10.5px; color: var(--text-3); line-height: 1.3; }
+.sday-dow { font-size: 0.65625rem; color: var(--text-3); line-height: 1.3; }
 .sday-num {
   font-variant-numeric: tabular-nums;
-  font-size: 18px; font-weight: 700; line-height: 1.15; color: var(--text-2);
+  font-size: 1.125rem; font-weight: 700; line-height: 1.15; color: var(--text-2);
   letter-spacing: -.03em;
 }
-.sday-mon { font-size: 10px; color: var(--text-3); line-height: 1.3; }
+.sday-mon { font-size: 0.625rem; color: var(--text-3); line-height: 1.3; }
 
 .sday.today .sday-num { color: var(--marigold); }
 .sday.today::after {
@@ -571,33 +584,43 @@ main { padding-top: 26px; }
    ในแอปนี้ชื่อวิชาแสดงเป็นข้อความเสมอ ไม่ได้ใช้สีสื่อความหมายลำพัง)
    สีนี้บอก "วิชาอะไร" ส่วนสีเหลืองยังสงวนไว้บอก "ตอนนี้" เหมือนเดิม
    ═══════════════════════════════════════════════════════════════ */
-[data-s="social"] { --sc: #7E9A25; --sc-dim: #f1f4e2; }
-[data-s="phys"] { --sc: #2F86C9; --sc-dim: #e7f0fa; }
-[data-s="thai"] { --sc: #BF3A2E; --sc-dim: #fbeae8; }
-[data-s="eng"] { --sc: #0FA096; --sc-dim: #e0f5f3; }
-[data-s="math1"] { --sc: #B5641A; --sc-dim: #f8eee2; }
-[data-s="chem"] { --sc: #6D2FA6; --sc-dim: #f0e8fa; }
-[data-s="bio"] { --sc: #3F9E54; --sc-dim: #e7f4ea; }
-[data-s="tpat1"] { --sc: #A32E68; --sc-dim: #fae9f1; }
+[data-s="social"] { --sc: #7E9A25; --scd: #577000; --sc-dim: #f1f4e2; }
+[data-s="phys"] { --sc: #2F86C9; --scd: #056cad; --sc-dim: #e7f0fa; }
+[data-s="thai"] { --sc: #BF3A2E; --scd: #be392d; --sc-dim: #fbeae8; }
+[data-s="eng"] { --sc: #0FA096; --scd: #00756c; --sc-dim: #e0f5f3; }
+[data-s="math1"] { --sc: #B5641A; --scd: #a15200; --sc-dim: #f8eee2; }
+[data-s="chem"] { --sc: #6D2FA6; --scd: #6d2fa6; --sc-dim: #f0e8fa; }
+[data-s="bio"] { --sc: #3F9E54; --scd: #087830; --sc-dim: #e7f4ea; }
+[data-s="tpat1"] { --sc: #A32E68; --scd: #a32e68; --sc-dim: #fae9f1; }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) [data-s="social"] { --sc: #86A038; --sc-dim: #232a15; }
-  :root:not([data-theme="light"]) [data-s="phys"] { --sc: #4593D2; --sc-dim: #16283a; }
-  :root:not([data-theme="light"]) [data-s="thai"] { --sc: #D2604F; --sc-dim: #33201d; }
-  :root:not([data-theme="light"]) [data-s="eng"] { --sc: #1BAAA1; --sc-dim: #0d2c2a; }
-  :root:not([data-theme="light"]) [data-s="math1"] { --sc: #BC6B2F; --sc-dim: #2f2115; }
-  :root:not([data-theme="light"]) [data-s="chem"] { --sc: #8C5EC4; --sc-dim: #241634; }
-  :root:not([data-theme="light"]) [data-s="bio"] { --sc: #48A961; --sc-dim: #142a1c; }
-  :root:not([data-theme="light"]) [data-s="tpat1"] { --sc: #C9548A; --sc-dim: #331726; }
+  :root:not([data-theme="light"]) [data-s="social"] { --sc: #86A038; --scd: #586f00; --sc-dim: #232a15; }
+  :root:not([data-theme="light"]) [data-s="phys"] { --sc: #4593D2; --scd: #166ca8; --sc-dim: #16283a; }
+  :root:not([data-theme="light"]) [data-s="thai"] { --sc: #D2604F; --scd: #b24334; --sc-dim: #33201d; }
+  :root:not([data-theme="light"]) [data-s="eng"] { --sc: #1BAAA1; --scd: #00756d; --sc-dim: #0d2c2a; }
+  :root:not([data-theme="light"]) [data-s="math1"] { --sc: #BC6B2F; --scd: #a1530e; --sc-dim: #2f2115; }
+  :root:not([data-theme="light"]) [data-s="chem"] { --sc: #8C5EC4; --scd: #7f51b6; --sc-dim: #241634; }
+  :root:not([data-theme="light"]) [data-s="bio"] { --sc: #48A961; --scd: #007833; --sc-dim: #142a1c; }
+  :root:not([data-theme="light"]) [data-s="tpat1"] { --sc: #C9548A; --scd: #b03d74; --sc-dim: #331726; }
 }
-[data-theme="dark"] [data-s="social"] { --sc: #86A038; --sc-dim: #232a15; }
-[data-theme="dark"] [data-s="phys"] { --sc: #4593D2; --sc-dim: #16283a; }
-[data-theme="dark"] [data-s="thai"] { --sc: #D2604F; --sc-dim: #33201d; }
-[data-theme="dark"] [data-s="eng"] { --sc: #1BAAA1; --sc-dim: #0d2c2a; }
-[data-theme="dark"] [data-s="math1"] { --sc: #BC6B2F; --sc-dim: #2f2115; }
-[data-theme="dark"] [data-s="chem"] { --sc: #8C5EC4; --sc-dim: #241634; }
-[data-theme="dark"] [data-s="bio"] { --sc: #48A961; --sc-dim: #142a1c; }
-[data-theme="dark"] [data-s="tpat1"] { --sc: #C9548A; --sc-dim: #331726; }
+[data-theme="dark"] [data-s="social"] { --sc: #86A038; --scd: #586f00; --sc-dim: #232a15; }
+[data-theme="dark"] [data-s="phys"] { --sc: #4593D2; --scd: #166ca8; --sc-dim: #16283a; }
+[data-theme="dark"] [data-s="thai"] { --sc: #D2604F; --scd: #b24334; --sc-dim: #33201d; }
+[data-theme="dark"] [data-s="eng"] { --sc: #1BAAA1; --scd: #00756d; --sc-dim: #0d2c2a; }
+[data-theme="dark"] [data-s="math1"] { --sc: #BC6B2F; --scd: #a1530e; --sc-dim: #2f2115; }
+[data-theme="dark"] [data-s="chem"] { --sc: #8C5EC4; --scd: #7f51b6; --sc-dim: #241634; }
+[data-theme="dark"] [data-s="bio"] { --sc: #48A961; --scd: #007833; --sc-dim: #142a1c; }
+[data-theme="dark"] [data-s="tpat1"] { --sc: #C9548A; --scd: #b03d74; --sc-dim: #331726; }
+
+/* --sct = เฉดสำหรับ "ตัวหนังสือสีวิชา" ซึ่งกลับด้านกันสองธีม:
+   ธีมสว่างวางบนพื้นอ่อนจึงต้องใช้เฉดเข้ม (--scd)
+   ธีมมืดวางบนพื้นเข้มจึงต้องใช้เฉดสว่าง (--sc)
+   ถ้าใช้ตัวเดียวกันทั้งสองธีม จะมีธีมหนึ่งได้คอนทราสต์ราว 2.8:1 เสมอ */
+[data-s] { --sct: var(--scd); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-s] { --sct: var(--sc); }
+}
+[data-theme="dark"] [data-s] { --sct: var(--sc); }
 
 /* ═══════════════════════════════════════════════════════════════
    BLOCK ROWS
@@ -649,18 +672,18 @@ main { padding-top: 26px; }
 @keyframes checkDraw { to { stroke-dashoffset: 0; } }
 
 .blk-body { min-width: 0; flex: 1; }
-.blk-name { font-size: 14.5px; line-height: 1.55; transition: color .12s; }
+.blk-name { font-size: 0.90625rem; line-height: 1.55; transition: color .12s; }
 .blk-meta { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 1px; align-items: baseline; }
-.blk-sub { font-size: 12px; color: var(--text-3); }
+.blk-sub { font-size: 0.75rem; color: var(--text-3); }
 
 /* เหลือชิปเดียวต่อแถว: เวลา — ที่เหลืออ่านได้จากหัวข้อกลุ่มอยู่แล้ว */
 .chip {
   display: inline-flex; align-items: center; gap: 4px;
-  font-variant-numeric: tabular-nums; font-size: 11.5px;
+  font-variant-numeric: tabular-nums; font-size: 0.71875rem;
   color: var(--text-3); white-space: nowrap;
 }
 .chip.learn, .chip.review, .chip.mock, .chip.ok {
-  padding: 2px 9px; border-radius: var(--pill); font-size: 10.5px;
+  padding: 2px 9px; border-radius: var(--pill); font-size: 0.65625rem;
 }
 .chip.learn  { background: var(--indigo-dim); color: var(--indigo); }
 .chip.review { background: var(--warn-dim);   color: var(--warn); }
@@ -675,7 +698,7 @@ main { padding-top: 26px; }
   appearance: none; cursor: pointer;
   border: 1px solid var(--line); background: var(--surface);
   border-radius: var(--r-sm); padding: 9px 16px;
-  font-size: 14px; font-weight: 600;
+  font-size: 0.875rem; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   transition: background .12s, border-color .12s;
 }
@@ -689,7 +712,9 @@ main { padding-top: 26px; }
   box-shadow: 0 1px 2px rgba(160,95,20,.2), 0 5px 14px rgba(200,125,30,.22);
 }
 .btn-pri:hover { filter: brightness(1.05); border: 0; }
-.btn-sm { padding: 5px 11px; font-size: 12.5px; font-weight: 500; }
+/* ปุ่มเล็กยังดูเล็กเหมือนเดิม แต่สูงพอให้นิ้วโป้งกดโดน —
+   เดิมสูง 33px ซึ่งต่ำกว่าเกณฑ์ทุกสำนัก */
+.btn-sm { padding: 5px 11px; font-size: 0.78125rem; font-weight: 500; min-height: 40px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -718,14 +743,14 @@ main { padding-top: 26px; }
   background: color-mix(in oklab, var(--tc) 16%, transparent);
   pointer-events: none;
 }
-.tile-n { font-variant-numeric: tabular-nums; font-size: 27px;
+.tile-n { font-variant-numeric: tabular-nums; font-size: 1.6875rem;
   font-weight: 700; line-height: 1.15; letter-spacing: -.03em; color: var(--tc); }
-.tile-l { font-size: 12px; color: var(--text-2); margin-top: 1px; position: relative; }
+.tile-l { font-size: 0.75rem; color: var(--text-2); margin-top: 1px; position: relative; }
 
 /* ═══════════════════════════════════════════════════════════════
    QUIZ
    ═══════════════════════════════════════════════════════════════ */
-.q-stem { font-size: 16px; line-height: 1.75; margin: 0 0 14px; }
+.q-stem { font-size: 1rem; line-height: 1.75; margin: 0 0 14px; }
 .q-choice {
   display: flex; align-items: flex-start; gap: 11px; width: 100%;
   padding: 9px 12px; margin-bottom: 7px;
@@ -739,13 +764,13 @@ main { padding-top: 26px; }
 .q-choice:disabled { cursor: default; }
 .q-choice.is-ok  { border-color: var(--ok);    background: var(--ok-dim); }
 .q-choice.is-bad { border-color: var(--brick); background: var(--brick-dim); }
-.q-choice-t { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.6; padding-top: 2px; }
+.q-choice-t { flex: 1; min-width: 0; font-size: 0.90625rem; line-height: 1.6; padding-top: 2px; }
 
 .q-explain {
   border-left: 3px solid var(--sc, var(--indigo));
   background: var(--surface-2);
   padding: 12px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  font-size: 13.5px; line-height: 1.7; color: var(--text-2);
+  font-size: 0.84375rem; line-height: 1.7; color: var(--text-2);
   margin-top: 10px;
 }
 
@@ -769,13 +794,13 @@ main { padding-top: 26px; }
 .srow-hd { display: flex; align-items: baseline; gap: 9px; margin-bottom: 8px; }
 /* ชื่อวิชาไม่ทาสีตัวอักษร — สีวิชาบางสี (เขียวมะกอก เทอร์ควอยซ์) ตัดกับพื้น
    ไม่ถึง 4.5:1 ตัวอักษรเล็กจะอ่านไม่ออก ใช้เม็ดสีนำหน้าแทน */
-.srow-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.srow-name { font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .srow-name::before {
   content: ""; width: 11px; height: 11px; border-radius: 50%; flex: none;
   background: var(--sc, var(--line));
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--sc, var(--line)) 22%, transparent);
 }
-.srow-pct { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 13.5px; font-weight: 600; color: var(--text-2); }
+.srow-pct { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 0.84375rem; font-weight: 600; color: var(--text-2); }
 
 /* ═══════════════════════════════════════════════════════════════
    แถบหัววันนี้ — พื้นที่สีที่ใหญ่ที่สุดบนหน้าจอ
@@ -784,24 +809,28 @@ main { padding-top: 26px; }
    ═══════════════════════════════════════════════════════════════ */
 /* โค้งมุมบนของตัวเองแทนที่จะพึ่ง overflow:hidden ของการ์ด —
    overflow:hidden บนการ์ดจะทำให้หัวสัปดาห์ที่เป็น position:sticky พัง */
+/* พื้นแถบใช้ --scd ("เฉดเข้ม") ไม่ใช่ --sc — เฉดที่ใช้ทำเส้นขอบบนพื้นขาว
+   สว่างเกินกว่าจะรองรับตัวหนังสือสีขาวได้ เดิมแถบสังคม/ชีวะ/อังกฤษ
+   ได้คอนทราสต์แค่ ~2.3:1 ซึ่งต่ำกว่าเกณฑ์ WCAG AA (4.5:1) เกินครึ่ง
+   --scd คำนวณให้เท่ากับ 5.0:1 กับสีขาวพอดีโดยรักษาเนื้อสีเดิมไว้
+   จุดที่สว่างที่สุดของไล่สีคือ --scd เอง จึงวัดค่าได้จากตรงนั้นจุดเดียว */
 .dayband {
   position: relative; overflow: hidden;
   border-radius: calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;
   display: flex; align-items: center; gap: 14px;
   padding: 17px 18px;
   color: #fff;
-  background: var(--sc, #4a5b8c);
+  background: var(--scd, #3c4b76);
   background:
-    radial-gradient(circle at center, rgba(255,255,255,.10) 3.6px, transparent 4.1px)
+    radial-gradient(circle at center, rgba(255,255,255,.05) 3.6px, transparent 4.1px)
       0 0 / 23px 23px,
     linear-gradient(112deg,
-      color-mix(in oklab, var(--sc, #4a5b8c) 88%, #ffffff) 0%,
-      var(--sc, #4a5b8c) 45%,
-      color-mix(in oklab, var(--sc, #4a5b8c) 62%, var(--ink)) 100%);
+      var(--scd, #3c4b76) 0%,
+      color-mix(in oklab, var(--scd, #3c4b76) 76%, var(--ink)) 100%);
 }
 .dayband-t { flex: 1; min-width: 0; }
-.dayband-t h2 { font-size: 18px; color: #fff; letter-spacing: -.015em; }
-.dayband-sub { font-size: 12.5px; color: rgba(255,255,255,.86); line-height: 1.55; }
+.dayband-t h2 { font-size: 1.125rem; color: #fff; letter-spacing: -.015em; }
+.dayband-sub { font-size: .78rem; color: rgba(255,255,255,.93); line-height: 1.55; }
 .dayband .ring-n { color: #fff; }
 .dayband .ring-bg { stroke: rgba(255,255,255,.28); }
 .dayband .ring-fg { stroke: #fff; }
@@ -817,65 +846,79 @@ main { padding-top: 26px; }
   display: flex; align-items: center; gap: 14px;
   padding: 17px 18px; color: #fff;
   background:
-    radial-gradient(circle at center, rgba(255,255,255,.10) 3.6px, transparent 4.1px)
+    radial-gradient(circle at center, rgba(255,255,255,.05) 3.6px, transparent 4.1px)
       0 0 / 23px 23px,
     linear-gradient(112deg, var(--ink-2), var(--ink) 70%);
 }
+/* เฉดเดียวกับ --ok/--warn/--brick แต่ปรับให้ตัวหนังสือขาวได้ 5.0:1 —
+   เดิม near ได้แค่ 2.17:1 ซึ่งอ่านไม่ออกกลางแดด */
 .scoreband.ok   { background:
-    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
-    linear-gradient(112deg, #3d9c6f, #256b4c 70%); }
+    radial-gradient(circle at center, rgba(255,255,255,.05) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #03774c, #015435 70%); }
 .scoreband.near { background:
-    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
-    linear-gradient(112deg, #d99a2b, #a5651a 70%); }
+    radial-gradient(circle at center, rgba(255,255,255,.05) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #955a00, #6d4200 70%); }
 .scoreband.far  { background:
-    radial-gradient(circle at center, rgba(255,255,255,.12) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
-    linear-gradient(112deg, #c25a45, #8e3524 70%); }
+    radial-gradient(circle at center, rgba(255,255,255,.05) 3.6px, transparent 4.1px) 0 0 / 23px 23px,
+    linear-gradient(112deg, #ae4834, #833022 70%); }
 .scoreband-n {
   flex: none; text-align: right; line-height: 1;
-  font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-size: 1.875rem; font-weight: 700;
   letter-spacing: -.03em;
 }
-.scoreband-n small { display: block; font-size: 11.5px; font-weight: 500;
-  opacity: .8; letter-spacing: 0; margin-top: 3px; }
+.scoreband-n small { display: block; font-size: .72rem; font-weight: 500;
+  opacity: .92; letter-spacing: 0; margin-top: 3px; }
 
-/* ช่องกรอกคะแนน — สองคอลัมน์บนมือถือ สี่บนจอกว้าง */
-.sgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-@media (min-width: 620px) { .sgrid { grid-template-columns: repeat(4, 1fr); } }
+/* ช่องกรอกคะแนน — สองคอลัมน์บนมือถือ สี่บนจอกว้าง
+   ต้องเป็น minmax(0,1fr) ไม่ใช่ 1fr: ค่าเริ่มต้นของกริดคือ min-width:auto
+   ซึ่งแปลว่าคอลัมน์ "ห้ามแคบกว่าเนื้อใน" — บนจอ 320px ตารางจึงกว้าง 359px
+   แล้วดันทั้งหน้าให้เลื่อนซ้ายขวาได้ ทั้งที่ตั้งใจให้พอดีจอ */
+.sgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* จอแคบมาก (iPhone SE รุ่นเก่า / ตัวอักษรใหญ่) เหลือคอลัมน์เดียว —
+   ยัดสองคอลัมน์ทำให้ชื่อวิชาถูกตัดกลางคำเป็น "อังกฤ / ษ" */
+@media (max-width: 359px) { .sgrid { grid-template-columns: 1fr; } }
+@media (min-width: 620px) { .sgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .scell {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px; min-width: 0;
   padding: 9px 10px; border-radius: var(--r-sm);
   border-left: 4px solid var(--sc, var(--line));
   background: var(--surface-2);
   background: color-mix(in oklab, var(--sc, var(--line)) 10%, var(--surface));
   cursor: text;
 }
-.scell-l { font-size: 12px; flex: 1; min-width: 0; line-height: 1.35; }
+/* ชื่อวิชาอยู่บรรทัดเดียวเสมอ ยาวเกินก็ตัดท้ายด้วย … — การตัดกลางคำไทย
+   ให้ผลอย่าง "อังกฤ / ษ" ซึ่งอ่านผิดความหมาย */
+.scell-l { font-size: 0.75rem; flex: 1 1 auto; min-width: 0; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ช่องกรอกยอมหดได้ (flex-shrink) แทนที่จะยืนกว้าง 62px ตายตัว —
+   บนจอ 320px ความกว้างตายตัวคือสิ่งที่ดันตารางให้ล้นออกนอกจอ */
 .scell input {
-  width: 62px; text-align: right; padding: 6px 7px; font-size: 14px;
+  flex: 0 1 58px; width: 58px; min-width: 46px; min-height: 40px;
+  text-align: right; padding: 6px 7px; font-size: 0.875rem;
   font-variant-numeric: tabular-nums; font-weight: 600;
   border: 1px solid var(--line); border-radius: var(--r-xs);
   background: var(--surface); color: var(--text);
 }
 .scell input:focus { border-color: var(--marigold-f); outline: none; }
-.scell-m { font-size: 11px; color: var(--text-3); flex: none; }
+.scell-m { font-size: 0.65rem; color: var(--text-3); flex: none; }
 
 /* แถบสัดส่วนคะแนนรายกลุ่ม */
 .wrow { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-.wrow-l { font-size: 13px; flex: 1; min-width: 0; }
+.wrow-l { font-size: 0.8125rem; flex: 1; min-width: 0; }
 .wrow-bar {
   flex: none; width: 84px; height: 7px; border-radius: var(--pill);
   background: var(--line); overflow: hidden;
 }
 .wrow-bar i { display: block; height: 100%; border-radius: var(--pill);
   background: linear-gradient(90deg, var(--marigold-f), #e08434); }
-.wrow-n { font-size: 12.5px; color: var(--text-2); flex: none;
+.wrow-n { font-size: 0.78125rem; color: var(--text-2); flex: none;
   font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
 
 /* แถบเตือนเมื่อบันทึกลงเครื่องไม่สำเร็จ — ต้องขวางสายตาจริง ๆ
    เพราะอาการของบั๊กนี้คือ "ทุกอย่างดูปกติแต่ไม่มีอะไรถูกบันทึก" */
 .savewarn {
   position: sticky; top: 0; z-index: 60;
-  padding: 11px 16px; font-size: 13px; line-height: 1.6;
+  padding: 11px 16px; font-size: 0.8125rem; line-height: 1.6;
   background: #8e3524; color: #fff;
   border-bottom: 1px solid rgba(255,255,255,.25);
 }
@@ -890,8 +933,8 @@ main { padding-top: 26px; }
 .fchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .fchip {
   appearance: none; cursor: pointer; font: inherit;
-  padding: 5px 12px; border-radius: var(--pill);
-  font-size: 12.5px; font-weight: 600; line-height: 1.5;
+  padding: 5px 12px; min-height: 40px; border-radius: var(--pill);
+  font-size: 0.78125rem; font-weight: 600; line-height: 1.5;
   border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2);
   transition: background .15s, color .15s, border-color .15s, transform .1s var(--spring);
 }
@@ -910,15 +953,16 @@ main { padding-top: 26px; }
 }
 .bandhd:first-of-type { border-top: 0; }
 .bandhd-d { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--bc, var(--line)); }
-.bandhd-t { font-size: 13px; font-weight: 700; color: var(--bc, var(--text)); }
-.bandhd-n { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
-.bandhd-c { margin-left: auto; font-size: 11px; color: var(--text-3); transition: transform .15s; }
+.bandhd-t { font-size: 0.8125rem; font-weight: 700; color: var(--bc, var(--text)); }
+.bandhd-n { font-size: 0.75rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.bandhd-c { margin-left: auto; font-size: 0.6875rem; color: var(--text-3); transition: transform .15s; }
 .bandhd[aria-expanded="false"] .bandhd-c { transform: rotate(-90deg); }
 .bandbody[hidden] { display: none; }
 
 /* หนึ่งแถว = หนึ่งคณะ ขอบซ้ายบอกแถบโอกาสโดยไม่ต้องอ่านตัวอักษร */
 .prow {
   display: flex; align-items: center; gap: 10px;
+  min-height: 44px;
   padding: 8px 10px; margin-bottom: 5px;
   border-radius: var(--r-sm);
   border-left: 4px solid var(--bc, var(--line));
@@ -928,22 +972,27 @@ main { padding-top: 26px; }
 .prow.is-target { box-shadow: inset 0 0 0 1px var(--marigold-f); }
 .prow-star {
   appearance: none; border: 0; background: transparent; cursor: pointer;
+  position: relative;
   flex: none; width: 26px; height: 26px; border-radius: 50%; padding: 0;
-  display: grid; place-items: center; font-size: 15px; line-height: 1;
+  display: grid; place-items: center; font-size: .9375rem; line-height: 1;
   color: var(--text-3); transition: color .15s, transform .18s var(--spring);
 }
+/* ดาวขนาด 26px แต่ให้กดโดนได้ 44×44 — ปุ่มติดดาวเป็นปุ่มที่กดพลาดบ่อยที่สุด
+   ในหน้านี้เพราะมีเรียงกัน 29 ปุ่มในคอลัมน์เดียว */
+.prow-star::before{content:"";position:absolute;left:50%;top:50%;
+  width:44px;height:44px;transform:translate(-50%,-50%)}
 .prow-star:hover { color: var(--marigold-f); }
 .prow-star:active { transform: scale(.85); }
 .prow-star[aria-pressed="true"] { color: var(--marigold-f); }
 .prow-m { flex: 1; min-width: 0; }
-.prow-n { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
-.prow-s { font-size: 11.5px; color: var(--text-3); line-height: 1.5; }
+.prow-n { font-size: 0.84375rem; font-weight: 600; line-height: 1.4; }
+.prow-s { font-size: 0.71875rem; color: var(--text-3); line-height: 1.5; }
 .prow-r { flex: none; text-align: right; line-height: 1.3; }
 .prow-d {
-  font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-size: 0.9375rem; font-weight: 700;
   letter-spacing: -.02em; color: var(--bc, var(--text));
 }
-.prow-b { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+.prow-b { font-size: 0.6875rem; color: var(--text-3); white-space: nowrap; }
 
 /* เส้นเป้าหมายรายวิชา — สามคอลัมน์ตายตัว เพื่อให้กวาดสายตาลงตรง ๆ ได้ */
 .tline {
@@ -951,24 +1000,24 @@ main { padding-top: 26px; }
   padding: 7px 0; border-bottom: 1px solid var(--line-soft);
 }
 .tline:last-child { border-bottom: 0; }
-.tline-n { flex: 1; min-width: 0; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.tline-n { flex: 1; min-width: 0; font-size: 0.84375rem; display: flex; align-items: center; gap: 8px; }
 .tline-n::before {
   content: ""; width: 4px; height: 17px; border-radius: 2px; flex: none;
   background: var(--sc, var(--line));
 }
 .tline-v {
   flex: none; min-width: 62px; text-align: right;
-  font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-size: 0.9375rem; font-weight: 700;
   letter-spacing: -.02em;
 }
-.tline-v small { font-size: 11px; font-weight: 500; color: var(--text-3); }
+.tline-v small { font-size: 0.6875rem; font-weight: 500; color: var(--text-3); }
 .tline-r {
   flex: none; min-width: 78px; text-align: right;
-  font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--text-3);
+  font-variant-numeric: tabular-nums; font-size: 0.78125rem; color: var(--text-3);
 }
 .tline.done .tline-v { color: var(--ok); }
 .tline.under .tline-v { color: var(--brick); }
-.tline-hd { font-size: 11px; color: var(--text-3); letter-spacing: .02em; }
+.tline-hd { font-size: 0.6875rem; color: var(--text-3); letter-spacing: .02em; }
 /* หัวตารางไม่ใช่วิชา จึงไม่ควรมีแถบสีนำหน้าเหมือนแถวข้อมูล */
 .tline-hd::before { display: none; }
 
@@ -1003,7 +1052,7 @@ main { padding-top: 26px; }
   border: 1px solid var(--line);
 }
 .bigring-t { flex: 1; min-width: 0; }
-.bigring-t h2 { font-size: 16px; }
+.bigring-t h2 { font-size: 1rem; }
 .bigring .ring-fg { stroke: var(--marigold-f); }
 
 @media (prefers-color-scheme: dark) {
@@ -1046,8 +1095,8 @@ input[type=range] {
 /* ═══════════════════════════════════════════════════════════════
    MISC
    ═══════════════════════════════════════════════════════════════ */
-.muted { color: var(--text-2); font-size: 13.5px; }
-.tiny  { color: var(--text-3); font-size: 12px; line-height: 1.6; }
+.muted { color: var(--text-2); font-size: 0.84375rem; }
+.tiny  { color: var(--text-3); font-size: 0.75rem; line-height: 1.6; }
 
 .note {
   border: 1px solid var(--warn);
@@ -1055,15 +1104,15 @@ input[type=range] {
   background: var(--warn-dim);
   color: var(--text);
   padding: 12px 14px; border-radius: var(--r-sm);
-  font-size: 13px; line-height: 1.7;
+  font-size: 0.8125rem; line-height: 1.7;
 }
 
-.empty { padding: 26px 16px; text-align: center; color: var(--text-3); font-size: 13.5px; }
+.empty { padding: 26px 16px; text-align: center; color: var(--text-3); font-size: 0.84375rem; }
 
 .scroll-x { overflow-x: auto; }
 
 select.sel {
-  font-family: inherit; font-size: 13px; color: var(--text);
+  font-family: inherit; font-size: 0.8125rem; color: var(--text); min-height: 44px;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r-sm); padding: 6px 9px;
 }
@@ -1660,13 +1709,22 @@ const subjLabel = code => (SUBJ[code] && (SUBJ[code].short || SUBJ[code].name)) 
 const subjName  = code => (SUBJ[code] && SUBJ[code].name) || code;
 /* ค่าที่ผู้ใช้ตั้งเองในแอปทับ config ที่ฝังมาตอน build
    เก็บใน localStorage เท่านั้น — แก้บนมือถือแล้วตารางคำนวณใหม่ทันที ไม่ต้อง deploy */
-const ST = (() => {
+function buildST() {
   const base = JSON.parse(JSON.stringify(DATA.study));
   const ov = S.settings || {};
   if (ov.hoursByWeekday) Object.assign(base.hoursByWeekday, ov.hoursByWeekday);
   if (Array.isArray(ov.daysOff)) base.daysOff = ov.daysOff;
   return base;
-})();
+}
+const ST = buildST();
+/* แก้ค่าในตัว ST เดิมแทนที่จะสร้างก้อนใหม่ เพราะทั้งไฟล์อ้าง ST ตรง ๆ อยู่ ~20 จุด
+   เดิมทุกครั้งที่เปลี่ยนเวลาว่างหรือวันหยุดต้อง location.reload() เพื่อให้ ST ใหม่
+   ซึ่งทำให้เด้งกลับไปแท็บ "วันนี้" ทุกครั้ง — แก้เวลาว่างเจ็ดวันติดกันคือเด้งเจ็ดรอบ */
+function refreshST() {
+  const next = buildST();
+  Object.keys(ST).forEach(k => delete ST[k]);
+  Object.assign(ST, next);
+}
 const studentName = () => (S.settings && S.settings.name) || (DATA.student && DATA.student.name) || "";
 const DOW_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
@@ -2049,18 +2107,50 @@ function resourceRow(icon, title, sub, href, onDelete) {
   return node;
 }
 
+/* ── กล่องโมดัล ─────────────────────────────────────────────
+   กล่องที่ทับทั้งหน้าต้องกักโฟกัสไว้ข้างใน ไม่งั้นคนที่ใช้ Tab หรือโปรแกรม
+   อ่านหน้าจอจะหลุดไปโดนของที่อยู่ "หลังฉากดำ" ทั้งที่มองไม่เห็นว่าโฟกัสอยู่ไหน
+   และเมื่อปิดต้องส่งโฟกัสกลับไปที่ปุ่มที่เปิดมัน ไม่ใช่โยนกลับไปต้นหน้า */
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),' +
+  'select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+function trapFocus(box) {
+  box.addEventListener("keydown", ev => {
+    if (ev.key !== "Tab") return;
+    const items = Array.from(box.querySelectorAll(FOCUSABLE))
+      .filter(n => n.offsetWidth || n.offsetHeight || n === document.activeElement);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+  });
+}
+
+let sheetOpener = null;
+function closeSheet() {
+  const back = $("#sheet");
+  if (back) back.remove();
+  document.body.classList.remove("no-scroll");
+  if (sheetOpener && document.contains(sheetOpener)) sheetOpener.focus();
+  sheetOpener = null;
+}
+
 function openResources(topicCode) {
   const t = TOPIC_OF.get(topicCode);
   if (!t) return;
-  const old = $("#sheet"); if (old) old.remove();
+  // เรียกซ้ำเพื่อวาดใหม่หลังเพิ่ม/ลบลิงก์ — ห้ามทับปุ่มต้นทางที่จำไว้
+  const old = $("#sheet");
+  const reopening = !!old;
+  if (!reopening) sheetOpener = document.activeElement;
+  if (old) old.remove();
 
-  const back = el('<div class="sheet-back" id="sheet"></div>');
+  const back = el('<div class="sheet-back" id="sheet" role="dialog" aria-modal="true" ' +
+    'aria-label="แหล่งอ่าน ' + esc(t.name) + '"></div>');
   const sheet = el('<div class="sheet"></div>');
-  back.addEventListener("click", ev => { if (ev.target === back) back.remove(); });
+  back.addEventListener("click", ev => { if (ev.target === back) closeSheet(); });
 
   const hd = el('<div class="sheet-hd"><h2>' + esc(t.name) + "</h2></div>");
   const x = el('<button class="sheet-x" aria-label="ปิด">×</button>');
-  x.addEventListener("click", () => back.remove());
+  x.addEventListener("click", closeSheet);
   hd.appendChild(x);
   sheet.appendChild(hd);
   sheet.appendChild(el('<p class="tiny" style="margin:0 0 13px">' +
@@ -2088,7 +2178,7 @@ function openResources(topicCode) {
 
   const addRow = el('<div class="btn-row" style="margin-top:6px"></div>');
   const urlIn = el('<input type="text" placeholder="วางลิงก์ที่นี่" ' +
-    'style="flex:1;min-width:140px;font-family:inherit;font-size:13.5px;color:var(--text);' +
+    'style="flex:1;min-width:140px;font-family:inherit;font-size:0.84375rem;color:var(--text);' +
     'background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px">');
   const addBtn = el('<button class="btn btn-sm">บันทึก</button>');
   const add = () => {
@@ -2117,6 +2207,10 @@ function openResources(topicCode) {
 
   back.appendChild(sheet);
   document.body.appendChild(back);
+  document.body.classList.add("no-scroll");
+  trapFocus(back);
+  // เปิดครั้งแรกโฟกัสปุ่มปิด — วาดใหม่หลังบันทึกลิงก์ให้กลับไปที่ช่องกรอกต่อได้เลย
+  (reopening ? urlIn : x).focus();
 }
 
 /* ── ตัวจับเวลาอ่านหนังสือ ─────────────────────────────────
@@ -2214,6 +2308,8 @@ function renderTimer() {
   node.querySelector("#tDone").addEventListener("click", () => finishTimer(true));
   node.querySelector("#tQuit").addEventListener("click", () => finishTimer(false));
   node.setAttribute("aria-modal", "true");
+  node.setAttribute("role", "dialog");
+  trapFocus(node);
   node.querySelector("#tDone").focus();
 }
 
@@ -2221,30 +2317,36 @@ function renderTimer() {
 document.addEventListener("keydown", ev => {
   if (ev.key !== "Escape") return;
   if (timerState) { finishTimer(false); return; }
-  const back = $(".sheet-back");
-  if (back) back.remove();
+  if ($("#sheet")) closeSheet();
 });
 
 /* ฟีดแบ็กตอนทำเสร็จ — เงียบ ๆ ตอนทำได้ทีละบล็อก และชัดขึ้นเมื่อครบทั้งวัน */
 let toastTimer = null;
-function celebrate(dayISO) {
-  const left = buildPlan(dayISO, 1)[0].blocks.length;
-  const st = streak();
-  const msg = left === 0
-    ? { big: "ครบแล้ววันนี้", sub: st > 1 ? "ต่อเนื่อง " + st + " วันติด 🔥" : "เริ่มนับ streak แล้ว" }
-    : { big: "บันทึกแล้ว", sub: "เหลืออีก " + left + " บล็อก" };
-
+/* ข้อความยืนยันสั้น ๆ — role="status" ให้โปรแกรมอ่านหน้าจออ่านออกด้วย
+   ไม่งั้นปุ่มที่ผลลัพธ์อยู่นอกจอ (เช่น "คืนค่าเริ่มต้น") จะเหมือนกดแล้วไม่มีอะไรเกิดขึ้น */
+function toast(big, sub, opts) {
+  const o = opts || {};
   const old = $("#toast"); if (old) old.remove();
   const node = el(
-    '<div id="toast" class="toast' + (left === 0 ? " toast-big" : "") + '">' +
-      '<span class="toast-big-t">' + esc(msg.big) + "</span>" +
-      '<span class="toast-sub">' + esc(msg.sub) + "</span>" +
+    '<div id="toast" class="toast' + (o.big ? " toast-big" : "") + '" role="status">' +
+      '<span class="toast-big-t">' + esc(big) + "</span>" +
+      (sub ? '<span class="toast-sub">' + esc(sub) + "</span>" : "") +
     "</div>");
   document.body.appendChild(node);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => node.remove(), left === 0 ? 3200 : 1700);
-  // กระดาษปลิวเฉพาะตอนปิดครบทั้งวัน — ปิดบล็อกเดียวได้แค่ toast
-  if (left === 0) confetti();
+  toastTimer = setTimeout(() => node.remove(), o.big ? 3200 : 1700);
+}
+
+function celebrate(dayISO) {
+  const left = buildPlan(dayISO, 1)[0].blocks.length;
+  const st = streak();
+  if (left === 0) {
+    toast("ครบแล้ววันนี้",
+      st > 1 ? "ต่อเนื่อง " + st + " วันติด 🔥" : "เริ่มนับ streak แล้ว", { big: true });
+    confetti();   // กระดาษปลิวเฉพาะตอนปิดครบทั้งวัน — ปิดบล็อกเดียวได้แค่ toast
+  } else {
+    toast("บันทึกแล้ว", "เหลืออีก " + left + " บล็อก");
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -2258,6 +2360,7 @@ let onbStep = 0;
 const onbDraft = { target: "", hours: null, done: {} };
 
 function onbNext() { onbStep += 1; render(); }
+function onbBack() { onbStep = Math.max(0, onbStep - 1); render(); }
 
 function onbFinish() {
   if (onbDraft.target)
@@ -2289,7 +2392,9 @@ function onbFinish() {
 
   S.seenIntro = true;
   Store.save();
-  location.reload();   // ST คำนวณตอนโหลด — โหลดใหม่ให้ตารางคิดจากค่าที่เพิ่งตั้ง
+  onbStep = 0;
+  refreshST();   // ตารางคิดจากเวลาว่างที่เพิ่งตอบ โดยไม่ต้องโหลดหน้าใหม่
+  render();
 }
 
 function onbShell(step, title, sub, bodyNode, opts) {
@@ -2306,14 +2411,24 @@ function onbShell(step, title, sub, bodyNode, opts) {
   const body = el('<div class="card-pad stack"></div>');
   body.appendChild(bodyNode);
 
+  /* เดิมปุ่ม "ข้าม" ทำงานเหมือน "ถัดไป" เป๊ะ ๆ — กดอันไหนก็ไปขั้นถัดไป
+     คนที่อยากข้ามคำถามทั้งหมดจึงต้องกดข้ามสามรอบโดยไม่รู้ตัว
+     ตอนนี้ "ข้ามทั้งหมด" ปิดจบทันทีโดยเก็บคำตอบที่ตอบไปแล้วไว้ */
   const row = el('<div class="btn-row" style="margin-top:4px"></div>');
   const next = el('<button class="btn btn-pri">' +
     (step === 2 ? "เริ่มใช้เลย" : "ถัดไป") + "</button>");
   next.addEventListener("click", step === 2 ? onbFinish : onbNext);
   row.appendChild(next);
-  const skip = el('<button class="btn">ข้าม</button>');
-  skip.addEventListener("click", step === 2 ? onbFinish : onbNext);
-  row.appendChild(skip);
+  if (step > 0) {
+    const back = el('<button class="btn">ย้อนกลับ</button>');
+    back.addEventListener("click", onbBack);
+    row.appendChild(back);
+  }
+  if (step < 2) {
+    const skip = el('<button class="btn">ข้ามทั้งหมด</button>');
+    skip.addEventListener("click", onbFinish);
+    row.appendChild(skip);
+  }
   body.appendChild(row);
   card.appendChild(body);
   return card;
@@ -2507,7 +2622,24 @@ function viewToday() {
         (st > 1 ? " · ต่อเนื่อง " + st + " วันติด" : "") + "</span>" +
       "</div>"));
   } else if (!blocks.length) {
-    body.appendChild(el('<div class="empty">' + esc(todo.note || "ไม่มีตารางของวันนี้") + "</div>"));
+    /* แถบหัวบอกเหตุผลไปแล้ว ("วันพัก" / "ทำครบแล้ว") — เดิมตรงนี้พิมพ์
+       ประโยคเดียวกันซ้ำอีกครั้งห่างกันไม่ถึงหนึ่งนิ้ว ตรงนี้จึงบอก
+       "แล้วยังไงต่อ" แทนการทวนสิ่งที่อ่านไปแล้ว */
+    const rest = todo.note === "วันพัก";
+    body.appendChild(el('<div class="empty">' +
+      (rest
+        ? "วันนี้ตั้งไว้เป็นวันพัก งานถูกกระจายไปวันอื่นให้แล้ว " +
+          "เปลี่ยนได้ที่แท็บตั้งค่า"
+        : "ไม่มีบล็อกค้างของวันนี้ อยากอ่านต่อก็เปิดแท็บตารางแล้วดึงงานของวันหน้ามาทำก่อนได้") +
+      "</div>"));
+    const jump = el('<div class="btn-row" style="margin-top:10px"></div>');
+    const jb = el('<button class="btn btn-sm">' + (rest ? "ไปตั้งค่า" : "ดูตารางล่วงหน้า") + "</button>");
+    jb.addEventListener("click", () => go(rest ? "settings" : "plan"));
+    jump.appendChild(jb);
+    const qb = el('<button class="btn btn-sm">ลองทำข้อสอบ</button>');
+    qb.addEventListener("click", () => go("quiz"));
+    jump.appendChild(qb);
+    body.appendChild(jump);
   } else {
     const reviews = blocks.filter(b => b.kind === "review");
     const learns = blocks.filter(b => b.kind === "learn");
@@ -2586,7 +2718,7 @@ function viewToday() {
     mc.appendChild(el('<div class="section-title"><h2>หมุดหมายที่ใกล้ถึง</h2></div>'));
     ms.forEach(m => mc.appendChild(el(
       '<div style="padding:7px 0;border-bottom:1px solid var(--line-soft)">' +
-        '<div style="font-size:13.5px;line-height:1.5">' + esc(m.label) + "</div>" +
+        '<div style="font-size:0.84375rem;line-height:1.5">' + esc(m.label) + "</div>" +
         '<div class="tiny">' + (m.inDays === 0 ? "วันนี้" : "อีก " + m.inDays + " วัน") +
           " · " + esc(thaiDate(m.date)) + "</div>" +
       "</div>"
@@ -2790,7 +2922,7 @@ function examTimetable() {
   Object.keys(byDay).sort().forEach(day => {
     const left = daysBetween(TODAY, day);
     card.appendChild(el('<div style="display:flex;align-items:baseline;gap:8px;' +
-      'margin:10px 0 4px"><b style="font-size:13.5px">' + esc(thaiDate(day, true)) +
+      'margin:10px 0 4px"><b style="font-size:0.84375rem">' + esc(thaiDate(day, true)) +
       '</b><span class="tiny">' +
       (left > 0 ? "อีก " + left + " วัน" : left === 0 ? "วันนี้" : "ผ่านไปแล้ว") +
       "</span></div>"));
@@ -2905,8 +3037,9 @@ function viewQuiz() {
       const acc = seen ? Math.round(100 * ok / seen) : null;
       const b = el(
         '<button class="tile press" data-s="' + esc(code) + '" ' +
-          'style="cursor:pointer;text-align:left;--tc:var(--sc);border-left:4px solid var(--sc)">' +
-          '<div class="tile-n">' + n + '<span style="font-size:13px;color:var(--text-3)"> ข้อ</span></div>' +
+          // เลขบนไทล์ใช้ --sct ซึ่งสลับเฉดตามธีมให้เอง
+          'style="cursor:pointer;text-align:left;--tc:var(--sct);border-left:4px solid var(--sc)">' +
+          '<div class="tile-n">' + n + '<span style="font-size:0.8125rem;color:var(--text-3)"> ข้อ</span></div>' +
           '<div class="tile-l">' + esc(s.name) + "</div>" +
           '<div class="tiny" style="margin-top:3px">' + (acc === null ? "ยังไม่เคยทำ" : "เคยถูก " + acc + "%") + "</div>" +
         "</button>"
@@ -2927,9 +3060,9 @@ function viewQuiz() {
       h.appendChild(el('<div class="section-title"><h2>ผลย้อนหลัง</h2></div>'));
       S.runs.slice(-8).reverse().forEach(r => h.appendChild(el(
         '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line-soft)">' +
-          '<span class="num" style="font-size:14px;min-width:52px;color:' +
+          '<span class="num" style="font-size:0.875rem;min-width:52px;color:' +
             (r.pct >= 80 ? "var(--ok)" : r.pct >= 60 ? "var(--warn)" : "var(--brick)") + '">' + r.pct + "%</span>" +
-          "<span style=\"font-size:13.5px\">" + esc(r.subject || "รวมทุกวิชา") + "</span>" +
+          "<span style=\"font-size:0.84375rem\">" + esc(r.subject || "รวมทุกวิชา") + "</span>" +
           '<span class="tiny" style="margin-left:auto">' + r.correct + "/" + r.total + " · " + esc(thaiDate(r.date)) + "</span>" +
         "</div>"
       )));
@@ -2949,7 +3082,7 @@ function viewQuiz() {
     const res = el('<div class="card card-pad stack"></div>');
     res.appendChild(el(
       '<div><div class="eyebrow">ผลการทำชุดนี้</div>' +
-      '<div class="tile-n" style="font-size:42px;color:' +
+      '<div class="tile-n" style="font-size:2.625rem;color:' +
         (pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--warn)" : "var(--brick)") + '">' + pct + "%</div>" +
       '<div class="muted">ถูก ' + correct + " จาก " + quiz.items.length + " ข้อ — " + verdict + "</div></div>"
     ));
@@ -2962,8 +3095,8 @@ function viewQuiz() {
         const t = TOPIC_OF.get(q.topic);
         res.appendChild(el(
           '<div style="padding:9px 0;border-bottom:1px solid var(--line-soft)">' +
-            '<div style="font-size:13.5px;line-height:1.65">' + esc(q.stem) + "</div>" +
-            '<div style="font-size:13.5px;margin-top:5px"><b>เฉลย:</b> ' +
+            '<div style="font-size:0.84375rem;line-height:1.65">' + esc(q.stem) + "</div>" +
+            '<div style="font-size:0.84375rem;margin-top:5px"><b>เฉลย:</b> ' +
               esc(CHOICE_LETTERS[q.answer] + ". " + q.choices[q.answer]) + "</div>" +
             (t ? '<div class="tiny" style="margin-top:3px">หัวข้อ: ' + esc(t.name) + "</div>" : "") +
           "</div>"
@@ -2991,6 +3124,17 @@ function viewQuiz() {
 
   /* ---- runner */
   const q = quiz.items[quiz.i];
+  // ตอบไปแล้วบางข้อ = การออกทำให้ข้อมูลหาย จึงต้องถามก่อน
+  function quitQuizBtn() {
+    const b = el('<button class="btn">ออกจากชุดนี้</button>');
+    b.addEventListener("click", () => {
+      const answeredCount = quiz.answers.filter(a => a !== null).length;
+      if (answeredCount && !confirm("ออกตอนนี้ ผลของ " + answeredCount +
+          " ข้อที่ตอบไปแล้วจะไม่ถูกบันทึกเป็นสถิติ ออกเลยไหม?")) return;
+      quiz = null; render();
+    });
+    return b;
+  }
   const given = quiz.answers[quiz.i];
   const answered = given !== null;
   const subj = SUBJ[q.subject];
@@ -3008,7 +3152,7 @@ function viewQuiz() {
   card.appendChild(el(
     '<div class="dayband" data-s="' + esc(q.subject) + '" style="padding:13px 16px">' +
       '<div class="dayband-t">' +
-        '<h2 style="font-size:15px">' + esc(subjName(q.subject)) + "</h2>" +
+        '<h2 style="font-size:0.9375rem">' + esc(subjName(q.subject)) + "</h2>" +
         '<div class="dayband-sub num">ข้อ ' + (quiz.i + 1) + " จาก " + quiz.items.length + "</div>" +
       "</div>" +
     "</div>"
@@ -3055,9 +3199,13 @@ function viewQuiz() {
       render();
     });
     nav.appendChild(next);
-    const quit = el('<button class="btn">ออก</button>');
-    quit.addEventListener("click", () => { quiz = null; render(); });
-    nav.appendChild(quit);
+    nav.appendChild(quitQuizBtn());
+    body.appendChild(nav);
+  } else {
+    /* เดิมปุ่มออกโผล่เฉพาะหลังตอบแล้ว — เปิดชุดผิดวิชาขึ้นมาจึงต้องตอบมั่ว ๆ
+       หนึ่งข้อก่อนถึงจะออกได้ ซึ่งไปทำสถิติจุดอ่อนเสียโดยไม่ตั้งใจ */
+    const nav = el('<div class="btn-row" style="margin-top:14px"></div>');
+    nav.appendChild(quitQuizBtn());
     body.appendChild(nav);
   }
 
@@ -3295,7 +3443,7 @@ function scorePanel() {
     const sel = el('<select class="sel" style="max-width:62%"></select>');
     sel.appendChild(el('<option value="">— ยังไม่เลือก —</option>'));
 
-    // จัดกลุ่มตามคณะ — รายการยาว 57 รายการ ถ้าเรียงรวดเดียวจะหาไม่เจอ
+    // จัดกลุ่มตามคณะ — รายการยาว 58 รายการ ถ้าเรียงรวดเดียวจะหาไม่เจอ
     const byFaculty = {};
     progs.forEach(p => (byFaculty[p.faculty] = byFaculty[p.faculty] || []).push(p));
     Object.entries(byFaculty).forEach(([faculty, list]) => {
@@ -3316,7 +3464,7 @@ function scorePanel() {
     row.appendChild(sel);
     body.appendChild(row);
 
-    /* คะแนนเป้าหมายที่ตั้งเอง — คณะส่วนใหญ่ยังไม่มีคะแนนต่ำสุดในระบบ
+    /* คะแนนเป้าหมายที่ตั้งเอง — ยังมี 15 จาก 58 คณะที่ไม่มีคะแนนต่ำสุดในระบบ
        ถ้าไปเปิดประกาศจริงมาแล้ว ใส่ตรงนี้ได้เลย ไม่ต้องรอแก้ไฟล์ config
        ค่าที่ใส่เองจะถูกใช้แทนค่าที่มากับตัวแอปเสมอ */
     const manualRow = el('<div class="field"><span class="field-l">' +
@@ -3542,12 +3690,33 @@ function progRow(p, score, target) {
   const on = isWatched(p.code);
   const row = el('<div class="prow' +
     (target && p.code === target.code ? " is-target" : "") +
-    '" style="--bc:' + (b ? b.color : "var(--line)") + '"></div>');
+    '" data-code="' + esc(p.code) + '"' +
+    ' style="--bc:' + (b ? b.color : "var(--line)") + '"></div>');
 
   const star = el('<button class="prow-star" aria-pressed="' + (on ? "true" : "false") +
     '" style="' + (on ? "--st-f:currentColor" : "") + '" aria-label="' +
     (on ? "เอาออกจากคณะที่สนใจ" : "เพิ่มเข้าคณะที่สนใจ") + '">' + STAR + "</button>");
-  star.addEventListener("click", () => { toggleWatch(p.code); render(); });
+  /* ติดดาวแล้วคณะนั้นโผล่ขึ้นไปอยู่กล่อง "คณะที่สนใจ" ด้านบน ทุกอย่างใต้กล่องนั้น
+     จึงเลื่อนลงราว 120px — แถวที่นิ้วเพิ่งกดหนีไปจากใต้นิ้ว กดดาวถัดไปเลยโดนผิดแถว
+     วิธีแก้: จำตำแหน่งแถวนั้นบนจอไว้ วาดใหม่ แล้วเลื่อนจอชดเชยให้มันอยู่ที่เดิม */
+  star.addEventListener("click", () => {
+    // กดจากกล่อง "คณะที่สนใจ" ไม่ต้องชดเชย — กล่องหดจากด้านล่าง ของที่มองอยู่ไม่ขยับ
+    const fromWatch = !!row.closest("[data-watchbox]");
+    const key = '.prow[data-code="' + p.code + '"]';
+    const before = fromWatch ? null : row.getBoundingClientRect().top;
+    toggleWatch(p.code);
+    render();
+    const news = Array.from(document.querySelectorAll(key));
+    // แถวเดิมในรายการหลัก = แถวที่ไม่ได้อยู่ในกล่องคณะที่สนใจ
+    const after = news.filter(n => !n.closest("[data-watchbox]")).pop() || news.pop();
+    if (!after) return;
+    if (before != null) {
+      const dy = after.getBoundingClientRect().top - before;
+      if (dy) window.scrollBy(0, dy);
+    }
+    const btn = after.querySelector(".prow-star");
+    if (btn) btn.focus({ preventScroll: true });   // โฟกัสคีย์บอร์ดต้องตามไปด้วย
+  });
   row.appendChild(star);
 
   /* บรรทัดรองมีที่ไม่ถึงสองบรรทัด จึงต้องเลือกเฉพาะสิ่งที่บอกอะไรใหม่
@@ -3602,7 +3771,7 @@ function chancePanel() {
   const lead = A.mode === "goal" ? "ถ้าทำได้ตามเป้า"
     : A.mode === "partial" ? "ด้วยคะแนนที่ประเมินได้"
     : "ด้วยคะแนน";
-  card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
+  card.appendChild(el('<p style="margin:0;font-size:0.875rem;line-height:1.7">' +
     lead + ' <b class="num">' + score.toFixed(2) + "</b> ผ่านคะแนนต่ำสุดของปีที่แล้ว " +
     '<b class="num">' + passed + "</b> จาก " + withData.length + " คณะที่มีข้อมูล</p>" ));
   if (A.mode === "goal")
@@ -3701,7 +3870,7 @@ function chancePanel() {
     watched.sort((a, b) => (b.projected || 0) - (a.projected || 0));
     card.appendChild(el('<div class="section-title" style="margin:6px 0 0">' +
       "<h2>คณะที่สนใจ</h2></div>"));
-    const box = el("<div></div>");
+    const box = el('<div data-watchbox="1"></div>');
     watched.forEach(p => box.appendChild(progRow(p, score, target)));
     card.appendChild(box);
   }
@@ -3803,7 +3972,7 @@ function targetLinePanel() {
   const line = Math.max(0, Math.min(100, raw));
   const easy = raw < 0;   // ถึงเป้าแล้วแม้วิชาที่เหลือได้ศูนย์
 
-  card.appendChild(el('<p style="margin:0;font-size:14px;line-height:1.7">' +
+  card.appendChild(el('<p style="margin:0;font-size:0.875rem;line-height:1.7">' +
     "เป้า <b class=\"num\">" + goal.toFixed(2) + "</b> คะแนน = " +
     (easy
       ? "<b>ถึงแล้ว</b> จากวิชาที่กรอกไปอย่างเดียว"
@@ -3860,7 +4029,7 @@ function targetLinePanel() {
     card.appendChild(el(
       '<div class="tline' + state + '" data-s="' + esc(code) + '">' +
         '<span class="tline-n">' + esc(subj.short || subj.name) +
-          '<span class="tiny" style="font-size:10.5px">น้ำหนัก ' + w.toFixed(1) + "</span></span>" +
+          '<span class="tiny" style="font-size:0.65625rem">น้ำหนัก ' + w.toFixed(1) + "</span></span>" +
         '<span class="tline-v">' +
           (done ? Math.round(scores[code]) : Math.round(aimRaw)) +
           "<small>/" + max + "</small></span>" +
@@ -4492,7 +4661,8 @@ const DOW_TH = { mon: "จันทร์", tue: "อังคาร", wed: "พ
 function saveSetting(patch) {
   S.settings = Object.assign({}, S.settings, patch);
   Store.save();
-  location.reload();   // ST ถูกคำนวณตอนโหลด — โหลดใหม่ให้ตารางคิดจากค่าใหม่ทั้งหมด
+  refreshST();   // ตารางคิดจากค่าใหม่โดยไม่ต้องโหลดหน้าใหม่ จึงไม่หลุดจากแท็บที่อยู่
+  render();
 }
 
 function viewSettings() {
@@ -4554,7 +4724,7 @@ function viewSettings() {
   offCard.appendChild(list);
 
   const addRow = el('<div class="btn-row"></div>');
-  const dateIn = el('<input type="date" style="font-size:13.5px">');
+  const dateIn = el('<input type="date" style="font-size:0.84375rem">');
   const addBtn = el('<button class="btn btn-sm">เพิ่มวันหยุด</button>');
   addBtn.addEventListener("click", () => {
     const v = dateIn.value;
@@ -4574,8 +4744,8 @@ function viewSettings() {
     look.forEach(o => im.appendChild(el(
       '<div style="display:flex;gap:10px;align-items:baseline;padding:5px 0;' +
         'border-bottom:1px solid var(--line-soft)">' +
-        '<span style="font-size:13.5px;flex:1">' + esc(o.name) + "</span>" +
-        '<span class="num" style="font-size:13px;color:' +
+        '<span style="font-size:0.84375rem;flex:1">' + esc(o.name) + "</span>" +
+        '<span class="num" style="font-size:0.8125rem;color:' +
           (o.status === "over" ? "var(--brick)" : o.status === "tight" ? "var(--marigold)" : "var(--ok)") +
         '">' + Math.round(o.need) + " / " + Math.round(o.avail) + " ชม.</span>" +
       "</div>")));
@@ -4596,7 +4766,7 @@ function viewSettings() {
     const head = el('<div style="display:flex;align-items:center;gap:16px"></div>');
     head.appendChild(el(ringHTML(pct, 62, 7, "verifyRing")));
     head.appendChild(el('<div style="flex:1;min-width:0">' +
-      '<div style="font-size:14.5px;font-weight:600">ยืนยันกับประกาศจริงแล้ว ' +
+      '<div style="font-size:0.90625rem;font-weight:600">ยืนยันกับประกาศจริงแล้ว ' +
         V.verified + " จาก " + V.total + " ค่า</div>" +
       '<p class="tiny" style="margin:2px 0 0">ที่เหลือตั้งตามรูปแบบปีก่อน ' +
         "ยังไม่ได้เทียบกับ mytcas.com และประกาศ กสพท ปี 2570</p></div>"));
@@ -4612,7 +4782,7 @@ function viewSettings() {
       const items = V.items.filter(i => i.severity === sev);
       if (!items.length) return;
       const meta = SEV[sev];
-      vc.appendChild(el('<div style="margin-top:6px;font-size:12.5px;font-weight:700;' +
+      vc.appendChild(el('<div style="margin-top:6px;font-size:0.78125rem;font-weight:700;' +
         'color:var(--' + meta.tone + ')">' + esc(meta.label) + " · " + items.length + " ค่า</div>"));
       items.slice(0, 6).forEach(i => vc.appendChild(el(
         '<div class="tiny" style="margin:0;padding-left:11px;border-left:3px solid var(--' +
@@ -4703,7 +4873,7 @@ function viewSettings() {
   function paintVaultStatus() {
     stat.innerHTML = "";
     const row = (label, value, tone) => stat.appendChild(el(
-      '<div style="display:flex;gap:10px;align-items:baseline;font-size:13px">' +
+      '<div style="display:flex;gap:10px;align-items:baseline;font-size:0.8125rem">' +
         '<span style="flex:1;color:var(--text-2)">' + esc(label) + "</span>" +
         '<span class="num" style="font-weight:600' +
           (tone ? ";color:var(--" + tone + ")" : "") + '">' + esc(value) + "</span>" +
@@ -4775,6 +4945,26 @@ function viewSettings() {
   th.appendChild(thRow);
   wrap.appendChild(th);
 
+  /* ---- ตอบคำถามเริ่มต้นใหม่ */
+  const onbCard = el('<div class="card card-pad stack"></div>');
+  onbCard.appendChild(el('<div class="section-title"><h2>คำถามตอนเปิดครั้งแรก</h2></div>'));
+  onbCard.appendChild(el('<p class="tiny" style="margin:-8px 0 0">' +
+    "เปิดสามคำถามแรก (คณะเป้าหมาย · เวลาว่าง · อ่านไปถึงไหน) ขึ้นมาตอบใหม่ " +
+    "ความคืบหน้าที่ทำไว้ไม่หาย — ส่วนที่ตอบว่า \"อ่านไปแล้วกี่ %\" จะ<b>บวกเพิ่ม</b>จากของเดิม " +
+    "ถ้าไม่อยากให้บวกซ้ำ ให้เว้นสไลเดอร์ไว้ที่ 0</p>"));
+  const onbBtn = el('<button class="btn btn-sm">ตอบคำถามเริ่มต้นใหม่</button>');
+  onbBtn.addEventListener("click", () => {
+    onbStep = 0;
+    onbDraft.target = (S.settings || {}).targetProgram || "";
+    onbDraft.hours = null;
+    onbDraft.done = {};
+    S.seenIntro = false;
+    Store.save();
+    go("today");
+  });
+  onbCard.appendChild(onbBtn);
+  wrap.appendChild(onbCard);
+
   /* ---- คืนค่าเริ่มต้น */
   const rst = el('<div class="card card-pad stack"></div>');
   rst.appendChild(el('<p class="tiny" style="margin:0">ค่าที่ตั้งที่นี่เก็บในเครื่องนี้เท่านั้น ' +
@@ -4789,7 +4979,8 @@ function viewSettings() {
     delete next.hoursByWeekday;
     delete next.daysOff;
     S.settings = next;
-    Store.save(); location.reload();
+    Store.save(); refreshST(); render();
+    toast("คืนค่าเวลาว่างและวันหยุดแล้ว");
   });
   rst.appendChild(rb);
   wrap.appendChild(rst);
@@ -4832,11 +5023,15 @@ function syncStickyOffset() {
   const bar = document.querySelector(".topbar");
   const tabs = document.querySelector(".tabs");
   let top = bar ? bar.getBoundingClientRect().height : 58;
+  const tabH = tabs ? tabs.getBoundingClientRect().height : 62;
+  const sticky = tabs && getComputedStyle(tabs).position === "sticky";
   // บนจอกว้าง แท็บเป็น sticky ต่อจากแถบบน จึงต้องบวกความสูงแท็บด้วย
-  if (tabs && getComputedStyle(tabs).position === "sticky")
-    top += tabs.getBoundingClientRect().height;
+  if (sticky) top += tabH;
   document.documentElement.style.setProperty("--stick", Math.round(top) + "px");
+  // แถบลอยล่างจอเท่านั้นที่ต้องเว้นที่ให้ — แบบ sticky กินที่ในสายเนื้อหาอยู่แล้ว
+  document.documentElement.style.setProperty("--tabh", (sticky ? 0 : Math.round(tabH)) + "px");
 }
+window.addEventListener("resize", syncStickyOffset);
 
 /* ผูกไฟล์สำรองอัตโนมัติเข้ากับทุกครั้งที่ข้อมูลเปลี่ยน
    ทำหลัง Vault ถูกประกาศครบแล้ว จึงอยู่ตรงนี้ไม่ใช่ในตัว Store */
@@ -4854,23 +5049,46 @@ Store.subscribe(() => { Vault.autoBackup(); });
 function render() {
   renderTop();
   VIEWS[current]();
+  renderFoot();
   syncStickyOffset();
   runCounters();
 }
 
-/* footer */
-$("#foot").innerHTML =
-  '<hr class="rule" style="margin-bottom:14px">' +
-  '<p class="tiny" style="font-size:11.5px;line-height:1.65">' +
-  "<b>คะแนนต่ำสุดของคณะ</b> เป็นสถิติจริงจากประกาศ TCAS ปีการศึกษา 2569 รอบ 3 " +
-  "ประมวลผลครั้งที่ 1 — เป็นตัวเลขของปีที่แล้ว ไม่ใช่เส้นตัดของปี 2570 ที่กำลังจะสอบ " +
-  "และบางคณะยังไม่มีข้อมูล<br>" +
-  "<b>วันสอบ</b> ถอดจากปฏิทินการสอบ TCAS70 ของ ทปอ. ที่ประกาศแล้ว<br>" +
-  "<b>สัดส่วนคะแนนและเกณฑ์ขั้นต่ำ</b> ถอดจากประกาศ กสพท ฉบับที่ 1 <b>ปีการศึกษา 2569</b> — " +
-  "ประกาศของปี 2570 ยังไม่ออก เกณฑ์ชุดนี้นิ่งมาหลายปีแต่ กสพท เปลี่ยนได้ทุกปี</p>" +
-  '<p class="tiny" style="margin-top:6px;font-size:11px">สร้างจากข้อมูล ณ ' + esc(thaiDate(DATA.generatedAt)) +
-  " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
-  " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>";
+/* ─────────────────────────────────────────────────────────────
+   ที่มาของข้อมูล — บอกเฉพาะแท็บที่ใช้ข้อมูลชุดนั้นจริง
+
+   เดิมพิมพ์ทั้งสี่ย่อหน้าไว้ท้ายทุกแท็บ รวมถึงแท็บที่ไม่มีตัวเลขของ กสพท
+   หรือคะแนนต่ำสุดโผล่มาเลยสักตัว ผลคือคำเตือนที่สำคัญที่สุด
+   ("นี่เป็นตัวเลขของปีที่แล้ว") กลายเป็นสิ่งที่ตาเลื่อนข้ามไปทุกครั้ง
+   ───────────────────────────────────────────────────────────── */
+const FOOT_NOTES = {
+  progress:
+    "<b>คะแนนต่ำสุดของคณะ</b> เป็นสถิติจริงจากประกาศ TCAS ปีการศึกษา 2569 รอบ 3 " +
+    "ประมวลผลครั้งที่ 1 — เป็นตัวเลขของปีที่แล้ว ไม่ใช่เส้นตัดของปี 2570 ที่กำลังจะสอบ " +
+    "และบางคณะยังไม่มีข้อมูล<br>" +
+    "<b>สัดส่วนคะแนนและเกณฑ์ขั้นต่ำ</b> ถอดจากประกาศ กสพท ฉบับที่ 1 <b>ปีการศึกษา 2569</b> — " +
+    "ประกาศของปี 2570 ยังไม่ออก เกณฑ์ชุดนี้นิ่งมาหลายปีแต่ กสพท เปลี่ยนได้ทุกปี",
+  tests:
+    "<b>วันสอบ</b> ถอดจากปฏิทินการสอบ TCAS70 ของ ทปอ. ที่ประกาศแล้ว " +
+    "หมุดหมายที่ยังไม่มีวันแน่นอนมีคำว่า “คาดการณ์” กำกับไว้ทุกอัน",
+};
+
+function renderFoot() {
+  const note = FOOT_NOTES[current];
+  const build = current === "settings"
+    ? '<p class="tiny" style="margin-top:6px;font-size:.6875rem">สร้างจากข้อมูล ณ ' +
+      esc(thaiDate(DATA.generatedAt)) +
+      " · ตารางอ่าน " + DATA.plan.length + " วัน · ตารางทดสอบ " + DATA.tests.length +
+      " ครั้ง · ข้อสอบ " + DATA.questions.length + " ข้อ</p>"
+    : "";
+  const foot = $("#foot");
+  foot.innerHTML = note || build
+    ? '<hr class="rule" style="margin-bottom:14px">' +
+      (note ? '<p class="tiny" style="font-size:.72rem;line-height:1.65">' + note + "</p>" : "") +
+      build
+    : "";
+  foot.hidden = !(note || build);
+}
 
 /* ─────────────────────────────────────────────────────────────
    สามอย่างที่ต้องทำตอนบูต — ทั้งหมดเป็นเรื่อง "ข้อมูลไม่หาย"
