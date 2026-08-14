@@ -126,10 +126,10 @@
         1.0,
         0.5
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 1.50680331,
+      "result_r": -1.0,
+      "closed_date": "2026-08-14",
       "logged_at": "2026-07-25T04:13:26.534311+00:00"
     },
     {
