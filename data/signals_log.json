@@ -205,6 +205,24 @@
       "result_r": -1.0,
       "closed_date": "2026-08-16",
       "logged_at": "2026-08-12T03:24:10.642510+00:00"
+    },
+    {
+      "date": "2026-08-17",
+      "symbol": "MKRUSDT",
+      "direction": "SHORT",
+      "confidence": 59.0,
+      "entry": 1284.41748047,
+      "stop": 1647.84391473,
+      "tps": [
+        500.0,
+        375.85139482,
+        -169.28825657
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-08-17T02:20:49.265632+00:00"
     }
   ]
 }
