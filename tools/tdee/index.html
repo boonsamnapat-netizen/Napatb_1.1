@@ -1,0 +1,1053 @@
+<title>งบแคลอรี่รายวัน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --paper:#F1F2F7; --card:#FCFCFB; --sunk:#F6F6FA;
+  --ink:#14151C; --ink-2:#474A5A; --ink-3:#787C8E;
+  --hair:#DCDDE6; --rule:#14151C;
+  --accent:#2F3BE8; --accent-soft:#E7E9FD; --on-accent:#FFFFFF;
+  --good:#0E7A54; --warn:#A8560B; --bad:#B3261E;
+  --good-soft:#E2F3EC; --warn-soft:#FBEDDF; --bad-soft:#FBE7E5;
+  --m-pro:#0072B2; --m-fat:#D55E00; --m-carb:#009E73;
+  --grid:#E4E5EC; --dot:#9A9EAE;
+  --shadow:0 1px 2px rgba(20,21,28,.06), 0 8px 24px -16px rgba(20,21,28,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B0C11; --card:#15161D; --sunk:#101118;
+    --ink:#EDEEF4; --ink-2:#AFB2C1; --ink-3:#7D8090;
+    --hair:#272935; --rule:#EDEEF4;
+    --accent:#98A0FF; --accent-soft:#1C2046; --on-accent:#0B0C11;
+    --good:#3FCB96; --warn:#E39A4B; --bad:#FF8377;
+    --good-soft:#10261F; --warn-soft:#2A2015; --bad-soft:#2B1715;
+    --m-pro:#3592D0; --m-fat:#DB7430; --m-carb:#1BAA7C;
+    --grid:#22242E; --dot:#5C6070;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B0C11; --card:#15161D; --sunk:#101118;
+  --ink:#EDEEF4; --ink-2:#AFB2C1; --ink-3:#7D8090;
+  --hair:#272935; --rule:#EDEEF4;
+  --accent:#98A0FF; --accent-soft:#1C2046; --on-accent:#0B0C11;
+  --good:#3FCB96; --warn:#E39A4B; --bad:#FF8377;
+  --good-soft:#10261F; --warn-soft:#2A2015; --bad-soft:#2B1715;
+  --m-pro:#3592D0; --m-fat:#DB7430; --m-carb:#1BAA7C;
+  --grid:#22242E; --dot:#5C6070;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:600; margin:0; text-wrap:balance; line-height:1.3}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px}
+
+.wrap{max-width:1160px; margin:0 auto; padding:26px 20px 72px}
+
+/* ---- masthead ---- */
+.mast{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  border-bottom:8px solid var(--rule); padding-bottom:10px; margin-bottom:0}
+.mast h1{font-size:clamp(26px,4.4vw,40px); font-weight:700; letter-spacing:-.02em}
+.mast p{margin:2px 0 0; color:var(--ink-3); font-size:13.5px; max-width:62ch}
+.themebtn{background:none; border:1px solid var(--hair); color:var(--ink-2); border-radius:999px;
+  padding:5px 13px; font:inherit; font-size:12.5px; cursor:pointer; white-space:nowrap}
+.themebtn:hover{border-color:var(--ink-3); color:var(--ink)}
+
+/* ---- tabs ---- */
+.tabs{display:flex; gap:0; border-bottom:1px solid var(--hair); margin:0 0 22px}
+.tab{appearance:none; background:none; border:0; border-bottom:3px solid transparent;
+  font-family:"Kanit",sans-serif; font-size:15px; font-weight:500; color:var(--ink-3);
+  padding:12px 16px; cursor:pointer; margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.tab .badge{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3); margin-left:6px}
+[hidden]{display:none !important}
+
+/* ---- panels ---- */
+.grid2{display:grid; grid-template-columns:minmax(0,1fr) minmax(340px,400px); gap:22px; align-items:start}
+@media (max-width:920px){ .grid2{grid-template-columns:minmax(0,1fr)} }
+
+.card{background:var(--card); border:1px solid var(--hair); border-radius:3px; box-shadow:var(--shadow)}
+.card + .card{margin-top:18px}
+.card > .head{display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  padding:14px 18px 11px; border-bottom:1px solid var(--hair)}
+.card > .head h2{font-size:16px}
+.card > .head .hint{font-size:12px; color:var(--ink-3)}
+.card > .body{padding:16px 18px 20px}
+
+.eyebrow{font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+
+/* ---- form ---- */
+.fieldrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px}
+.field{display:flex; flex-direction:column; gap:5px; min-width:0}
+.field > label{font-size:12.5px; color:var(--ink-2); font-weight:500}
+.inputbox{display:flex; align-items:center; border:1px solid var(--hair); border-radius:2px;
+  background:var(--sunk); overflow:hidden}
+.inputbox:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.inputbox input{flex:1; min-width:0; appearance:none; border:0; background:none; color:var(--ink);
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:16px; font-weight:500;
+  padding:9px 10px; outline:none}
+.inputbox input::-webkit-outer-spin-button,.inputbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inputbox input[type=number]{-moz-appearance:textfield}
+.inputbox .unit{font-size:12px; color:var(--ink-3); padding:0 11px 0 4px; white-space:nowrap}
+
+.seg{display:flex; border:1px solid var(--hair); border-radius:2px; overflow:hidden; background:var(--sunk)}
+.seg label{flex:1; text-align:center; padding:9px 6px; font-size:14px; cursor:pointer; color:var(--ink-2)}
+.seg label:has(input:checked){background:var(--ink); color:var(--card); font-weight:500}
+.seg input{position:absolute; opacity:0; pointer-events:none}
+
+.acts{display:flex; flex-direction:column; gap:0; border:1px solid var(--hair); border-radius:2px; overflow:hidden}
+.act{display:flex; align-items:center; gap:11px; padding:10px 13px; cursor:pointer; background:var(--card)}
+.act + .act{border-top:1px solid var(--hair)}
+.act:hover{background:var(--sunk)}
+.act input{position:absolute; opacity:0; pointer-events:none}
+.act .mark{flex:none; width:15px; height:15px; border-radius:50%; border:1.5px solid var(--ink-3)}
+.act:has(input:checked){background:var(--accent-soft)}
+.act:has(input:checked) .mark{border-color:var(--accent); border-width:4.5px}
+.act .txt{flex:1; min-width:0}
+.act .txt b{display:block; font-weight:500; font-size:14px}
+.act .txt span{display:block; font-size:12px; color:var(--ink-3); line-height:1.45}
+.act .mult{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+
+.sub{font-size:12px; color:var(--ink-3); margin:9px 0 0}
+.sub code{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+
+select.plain{appearance:none; width:100%; border:1px solid var(--hair); border-radius:2px; background:var(--sunk);
+  color:var(--ink); font:inherit; font-size:14px; padding:9px 30px 9px 10px; cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%; background-size:5px 5px,5px 5px; background-repeat:no-repeat}
+
+/* ---- the readout panel (nutrition-label rules) ---- */
+.label{background:var(--card); border:1.5px solid var(--rule); border-radius:2px; padding:0 16px 16px; position:sticky; top:16px}
+@media (max-width:920px){ .label{position:static} }
+.label .cap{font-family:"Kanit",sans-serif; font-weight:700; font-size:20px; padding:13px 0 8px; letter-spacing:-.01em}
+.rule-hi{border-top:9px solid var(--rule); margin:0 -16px}
+.rule-mid{border-top:4px solid var(--rule); margin:0 -16px}
+.rule-lo{border-top:1px solid var(--hair); margin:0 -16px}
+.lrow{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:7px 0}
+.lrow .k{font-size:13.5px; color:var(--ink-2)}
+.lrow .v{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:14px; font-weight:600}
+.hero{padding:12px 0 10px}
+.hero .eyebrow{display:block; margin-bottom:2px}
+.hero .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600;
+  font-size:clamp(44px,9vw,58px); line-height:1; letter-spacing:-.03em; display:flex; align-items:baseline; gap:8px}
+.hero .n small{font-family:"IBM Plex Sans Thai",sans-serif; font-size:15px; font-weight:400; color:var(--ink-3); letter-spacing:0}
+.hero .why{font-size:12.5px; color:var(--ink-3); margin-top:5px}
+.hero.target .n{color:var(--accent)}
+
+/* ---- goals table ---- */
+.gtable{width:100%; border-collapse:collapse; font-size:13.5px}
+.gtable th{text-align:right; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; padding:0 0 7px; border-bottom:1px solid var(--hair)}
+.gtable th:first-child{text-align:left}
+.gtable td{padding:0; border-bottom:1px solid var(--hair)}
+.gtable tr:last-child td{border-bottom:0}
+.gcell{display:block; width:100%; text-align:left; background:none; border:0; font:inherit; color:var(--ink); cursor:pointer}
+.gtable tbody tr:hover td{background:var(--sunk)}
+.gtable tbody tr[data-on="1"] td{background:var(--accent-soft)}
+.gtable td.c{padding:9px 0 9px 10px; text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.gtable td.name{padding:9px 0}
+.gname{display:flex; align-items:center; gap:8px}
+.gname .tick{flex:none; width:13px; height:13px; border:1.5px solid var(--ink-3); border-radius:50%}
+tr[data-on="1"] .gname .tick{border-color:var(--accent); border-width:4px}
+.gname b{font-weight:500}
+.gnote{display:block; font-size:11.5px; color:var(--ink-3); padding-left:21px; line-height:1.4}
+.pill{display:inline-block; font-size:10.5px; font-weight:600; padding:1px 6px; border-radius:999px; vertical-align:1px}
+.pill.rec{background:var(--good-soft); color:var(--good)}
+.pill.warn{background:var(--warn-soft); color:var(--warn)}
+.pill.bad{background:var(--bad-soft); color:var(--bad)}
+td.c.neg{color:var(--good)}
+td.c.pos{color:var(--warn)}
+
+/* ---- macros ---- */
+.macbar{display:flex; height:34px; border-radius:2px; overflow:hidden; gap:2px; margin:4px 0 12px}
+.macbar span{display:flex; align-items:center; justify-content:center; color:#fff; font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px; font-weight:600; min-width:0; overflow:hidden}
+.macbar span:first-child{border-radius:2px 0 0 2px}
+.macbar span:last-child{border-radius:0 2px 2px 0}
+.mactable{width:100%; border-collapse:collapse; font-size:13.5px}
+.mactable td{padding:7px 0; border-bottom:1px solid var(--hair)}
+.mactable tr:last-child td{border-bottom:0}
+.mactable td.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
+.mactable td.p{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink-3); width:52px}
+.swatch{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:8px; vertical-align:0}
+
+.slider{display:flex; align-items:center; gap:12px}
+.slider input[type=range]{flex:1; accent-color:var(--accent); min-width:0}
+.slider .out{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:13px;
+  min-width:66px; text-align:right; color:var(--ink-2)}
+
+.note{border-left:3px solid var(--hair); padding:2px 0 2px 12px; font-size:12.5px; color:var(--ink-3); margin:12px 0 0}
+.note.warn{border-left-color:var(--warn); color:var(--warn)}
+.note.bad{border-left-color:var(--bad); color:var(--bad)}
+.note.good{border-left-color:var(--good); color:var(--good)}
+.note b{font-weight:600}
+
+/* ---- stat strip ---- */
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--hair);
+  border:1px solid var(--hair); border-radius:2px; overflow:hidden}
+.stat{background:var(--card); padding:11px 13px}
+.stat .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.stat .v{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:21px; font-weight:600; line-height:1.35}
+.stat .v small{font-family:"IBM Plex Sans Thai",sans-serif; font-size:12px; font-weight:400; color:var(--ink-3)}
+.stat .s{font-size:11.5px; color:var(--ink-3); line-height:1.4}
+
+/* ---- chart ---- */
+.chartwrap{position:relative; margin:2px 0 0}
+canvas{display:block; width:100%; height:230px; touch-action:none}
+.tip{position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-100%);
+  background:var(--ink); color:var(--card); font-size:12px; line-height:1.45; padding:6px 9px; border-radius:3px;
+  white-space:nowrap; transition:opacity .1s; z-index:3}
+.tip .mono{font-size:12.5px; font-weight:600}
+.chartlegend{display:flex; gap:16px; font-size:11.5px; color:var(--ink-3); padding:6px 0 0}
+.chartlegend i{display:inline-block; vertical-align:2px; margin-right:6px}
+.chartlegend .d{width:8px; height:8px; border-radius:50%; background:var(--dot)}
+.chartlegend .l{width:14px; height:2px; background:var(--accent); vertical-align:4px}
+
+/* ---- log table ---- */
+.logtable{width:100%; border-collapse:collapse; font-size:13.5px}
+.logtable th{text-align:right; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; padding:0 8px 7px; border-bottom:1px solid var(--hair)}
+.logtable th:first-child{text-align:left; padding-left:0}
+.logtable th:last-child{padding-right:0; width:34px}
+.logtable td{padding:7px 8px; border-bottom:1px solid var(--hair); text-align:right;
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.logtable td:first-child{text-align:left; padding-left:0; font-family:"IBM Plex Sans Thai",sans-serif}
+.logtable td:last-child{padding-right:0}
+.logtable tbody tr:hover td{background:var(--sunk)}
+.logtable .empty td{text-align:center; color:var(--ink-3); font-family:"IBM Plex Sans Thai",sans-serif; padding:22px 0}
+.del{background:none; border:0; color:var(--ink-3); cursor:pointer; font-size:15px; line-height:1; padding:3px 5px; border-radius:2px}
+.del:hover{color:var(--bad); background:var(--bad-soft)}
+.scroll{overflow-x:auto; max-height:340px; overflow-y:auto}
+
+.btn{appearance:none; font-family:"Kanit",sans-serif; font-size:14px; font-weight:500; border-radius:2px;
+  padding:9px 16px; cursor:pointer; border:1px solid var(--rule); background:var(--ink); color:var(--card)}
+.btn:hover{opacity:.88}
+.btn.ghost{background:none; color:var(--ink); border-color:var(--hair)}
+.btn.ghost:hover{border-color:var(--ink-3); opacity:1}
+.btn.sm{font-size:12.5px; padding:6px 12px}
+.btnrow{display:flex; gap:9px; flex-wrap:wrap; align-items:center}
+
+.foot{margin-top:26px; padding-top:14px; border-top:1px solid var(--hair); font-size:12px; color:var(--ink-3); max-width:78ch}
+.foot a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <h1>งบแคลอรี่รายวัน</h1>
+      <p>คำนวณ TDEE แล้วแปลงเป็นเป้าหมายลดน้ำหนักกับมาโครที่กินได้จริง — พร้อมโหมดหา TDEE จริงจากน้ำหนักที่ชั่งกับแคลที่กิน</p>
+    </div>
+    <button class="themebtn" id="themebtn" type="button">โหมดมืด/สว่าง</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-calc" aria-selected="true" aria-controls="panel-calc">คำนวณ</button>
+    <button class="tab" role="tab" id="tab-track" aria-selected="false" aria-controls="panel-track">ติดตามจริง<span class="badge" id="logcount"></span></button>
+  </nav>
+
+  <!-- ═══════════ TAB 1 ═══════════ -->
+  <div id="panel-calc" role="tabpanel" aria-labelledby="tab-calc">
+  <div class="grid2">
+
+    <!-- LEFT: inputs -->
+    <div>
+      <section class="card">
+        <div class="head"><h2>ข้อมูลตัวคุณ</h2><span class="hint">บันทึกอัตโนมัติในเครื่อง</span></div>
+        <div class="body">
+          <div class="fieldrow">
+            <div class="field">
+              <label for="i-sex">เพศ</label>
+              <div class="seg" id="i-sex">
+                <label><input type="radio" name="sex" value="male" checked>ชาย</label>
+                <label><input type="radio" name="sex" value="female">หญิง</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="i-age">อายุ</label>
+              <div class="inputbox"><input type="number" id="i-age" min="14" max="100" step="1" value="30"><span class="unit">ปี</span></div>
+            </div>
+            <div class="field">
+              <label for="i-ht">ส่วนสูง</label>
+              <div class="inputbox"><input type="number" id="i-ht" min="120" max="230" step="0.5" value="172"><span class="unit">ซม.</span></div>
+            </div>
+            <div class="field">
+              <label for="i-wt">น้ำหนัก</label>
+              <div class="inputbox"><input type="number" id="i-wt" min="30" max="300" step="0.1" value="70"><span class="unit">กก.</span></div>
+            </div>
+            <div class="field">
+              <label for="i-bf">ไขมันในร่างกาย <span style="color:var(--ink-3)">(ถ้ารู้)</span></label>
+              <div class="inputbox"><input type="number" id="i-bf" min="3" max="60" step="0.1" placeholder="—"><span class="unit">%</span></div>
+            </div>
+            <div class="field">
+              <label for="i-goalwt">น้ำหนักเป้าหมาย</label>
+              <div class="inputbox"><input type="number" id="i-goalwt" min="30" max="300" step="0.1" placeholder="—"><span class="unit">กก.</span></div>
+            </div>
+          </div>
+          <p class="sub" id="bf-hint"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>ระดับกิจกรรม</h2><span class="hint">จุดที่คนประเมินพลาดมากที่สุด</span></div>
+        <div class="body">
+          <div class="acts" id="i-act">
+            <label class="act"><input type="radio" name="act" value="1.2">
+              <span class="mark"></span><span class="txt"><b>นั่งทำงานเป็นหลัก</b><span>แทบไม่ออกกำลังกาย เดินน้อยกว่า 5,000 ก้าว/วัน</span></span><span class="mult">1.20</span></label>
+            <label class="act"><input type="radio" name="act" value="1.375" checked>
+              <span class="mark"></span><span class="txt"><b>ออกกำลังเบา</b><span>ออกกำลังกาย 1–3 วัน/สัปดาห์ หรือเดิน 7,000–10,000 ก้าว</span></span><span class="mult">1.375</span></label>
+            <label class="act"><input type="radio" name="act" value="1.55">
+              <span class="mark"></span><span class="txt"><b>ออกกำลังปานกลาง</b><span>ออกกำลังกายจริงจัง 3–5 วัน/สัปดาห์</span></span><span class="mult">1.55</span></label>
+            <label class="act"><input type="radio" name="act" value="1.725">
+              <span class="mark"></span><span class="txt"><b>ออกกำลังหนัก</b><span>ซ้อมหนัก 6–7 วัน/สัปดาห์</span></span><span class="mult">1.725</span></label>
+            <label class="act"><input type="radio" name="act" value="1.9">
+              <span class="mark"></span><span class="txt"><b>หนักมาก / งานใช้แรง</b><span>ซ้อมวันละ 2 รอบ หรือทำงานใช้แรงกายทั้งวัน</span></span><span class="mult">1.90</span></label>
+          </div>
+          <p class="note" id="act-note">เลือกต่ำไว้ก่อนดีกว่าเลือกสูง — ประเมินเกินไปนิดเดียวก็เพี้ยนได้ 200–400 kcal/วัน แล้วน้ำหนักจะไม่ลงทั้งที่คิดว่าขาดดุลอยู่</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>เป้าหมาย</h2><span class="hint">กดเลือกแถวที่จะใช้</span></div>
+        <div class="body">
+          <table class="gtable">
+            <thead><tr><th>ระดับ</th><th>ปรับ</th><th>kcal/วัน</th><th>กก./สัปดาห์</th></tr></thead>
+            <tbody id="goalbody"></tbody>
+          </table>
+          <p class="note" id="goal-note"></p>
+          <p class="note" id="eta-note" hidden></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>ปรับมาโคร</h2><span class="hint">คาร์บคือส่วนที่เหลือ</span></div>
+        <div class="body">
+          <div class="fieldrow" style="grid-template-columns:1fr">
+            <div class="field">
+              <label for="i-pro">โปรตีน <span style="color:var(--ink-3)">— ต่อน้ำหนักตัว 1 กก.</span></label>
+              <div class="slider"><input type="range" id="i-pro" min="1.2" max="2.6" step="0.1" value="2"><span class="out mono" id="o-pro">2.0 ก/กก</span></div>
+            </div>
+            <div class="field">
+              <label for="i-fat">ไขมัน <span style="color:var(--ink-3)">— % ของแคลทั้งวัน</span></label>
+              <div class="slider"><input type="range" id="i-fat" min="15" max="40" step="1" value="25"><span class="out mono" id="o-fat">25%</span></div>
+            </div>
+            <div class="field">
+              <label for="i-meals">แบ่งกินกี่มื้อ</label>
+              <div class="slider"><input type="range" id="i-meals" min="2" max="6" step="1" value="3"><span class="out mono" id="o-meals">3 มื้อ</span></div>
+            </div>
+          </div>
+          <p class="note" id="macro-note"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>สูตรคำนวณ BMR</h2><span class="hint">เทียบกันดูได้</span></div>
+        <div class="body">
+          <div class="field" style="margin-bottom:14px">
+            <label for="i-formula">สูตรที่ใช้</label>
+            <select class="plain" id="i-formula">
+              <option value="mifflin">Mifflin-St Jeor — มาตรฐาน แม่นสุดสำหรับคนทั่วไป</option>
+              <option value="katch">Katch-McArdle — แม่นกว่า ถ้ารู้ % ไขมัน</option>
+              <option value="harris">Harris-Benedict (ฉบับปรับปรุง) — สูตรเก่า</option>
+            </select>
+          </div>
+          <table class="mactable" id="formulatable"></table>
+          <p class="note">ทุกสูตรคือค่าประมาณจากค่าเฉลี่ยประชากร ตัวจริงของแต่ละคนต่างได้ ±10% — ถ้าอยากได้เลขจริงของคุณ ใช้แท็บ <b>ติดตามจริง</b></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT: readout -->
+    <div>
+      <div class="label">
+        <div class="cap">สรุปพลังงานต่อวัน</div>
+        <div class="rule-hi"></div>
+        <div class="lrow"><span class="k">BMR — เผาตอนนอนนิ่ง ๆ</span><span class="v mono" id="o-bmr">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">× ตัวคูณกิจกรรม</span><span class="v mono" id="o-mult">—</span></div>
+        <div class="rule-mid"></div>
+        <div class="hero">
+          <span class="eyebrow">TDEE — เผาจริงทั้งวัน</span>
+          <div class="n mono"><span id="o-tdee">—</span><small>kcal</small></div>
+          <div class="why" id="o-tdee-why">กินเท่านี้น้ำหนักจะนิ่ง</div>
+        </div>
+        <div class="rule-hi"></div>
+        <div class="hero target">
+          <span class="eyebrow" id="o-goal-label">เป้าหมาย</span>
+          <div class="n mono"><span id="o-target">—</span><small>kcal</small></div>
+          <div class="why" id="o-target-why"></div>
+        </div>
+        <div class="rule-mid"></div>
+        <div class="macbar" id="macbar"></div>
+        <table class="mactable" id="macrotable"></table>
+        <div class="rule-lo" style="margin-top:6px"></div>
+        <div class="lrow"><span class="k">โปรตีนต่อมื้อ</span><span class="v mono" id="o-permeal">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">น้ำดื่ม/วัน</span><span class="v mono" id="o-water">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">BMI</span><span class="v mono" id="o-bmi">—</span></div>
+        <div class="lrow" style="padding-top:0"><span class="k" style="font-size:12px; color:var(--ink-3)" id="o-bmi-note"></span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">มวลไร้ไขมัน (LBM)</span><span class="v mono" id="o-lbm">—</span></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ═══════════ TAB 2 ═══════════ -->
+  <div id="panel-track" role="tabpanel" aria-labelledby="tab-track" hidden>
+    <section class="card">
+      <div class="head">
+        <h2>TDEE จริงของคุณ</h2>
+        <span class="hint">คำนวณย้อนกลับจาก 21 วันล่าสุด</span>
+      </div>
+      <div class="body">
+        <div class="stats">
+          <div class="stat"><div class="k">TDEE จริง</div><div class="v" id="a-tdee">—</div><div class="s" id="a-tdee-s">ยังไม่มีข้อมูลพอ</div></div>
+          <div class="stat"><div class="k">น้ำหนักเทรนด์</div><div class="v" id="a-trend">—</div><div class="s" id="a-trend-s">น้ำหนักจริงที่ตัดน้ำในตัวออกแล้ว</div></div>
+          <div class="stat"><div class="k">อัตราเปลี่ยน</div><div class="v" id="a-rate">—</div><div class="s" id="a-rate-s">ต่อสัปดาห์</div></div>
+          <div class="stat"><div class="k">กินเฉลี่ย</div><div class="v" id="a-intake">—</div><div class="s" id="a-intake-s">kcal/วัน</div></div>
+        </div>
+        <p class="note" id="a-verdict">ชั่งน้ำหนักตอนเช้าหลังเข้าห้องน้ำก่อนกินอะไร แล้วบันทึกแคลที่กินทั้งวัน — ทำให้ครบ 14 วันแล้วระบบจะบอก TDEE จริงของคุณ ซึ่งแม่นกว่าสูตรมาก</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>น้ำหนัก</h2><span class="hint">จุด = ที่ชั่งจริง · เส้น = เทรนด์ 21 วัน</span></div>
+      <div class="body">
+        <div class="chartwrap"><canvas id="chart"></canvas><div class="tip" id="tip"></div></div>
+        <div class="chartlegend">
+          <span><i class="d"></i>ชั่งได้</span><span><i class="l"></i>เทรนด์ 21 วัน (ตัดน้ำในตัวออก)</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="card" style="margin-top:0">
+        <div class="head"><h2>บันทึกประจำวัน</h2><span class="hint" id="log-hint"></span></div>
+        <div class="body">
+          <div class="scroll">
+            <table class="logtable">
+              <thead><tr><th>วันที่</th><th>น้ำหนัก</th><th>kcal</th><th></th></tr></thead>
+              <tbody id="logbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:0">
+        <div class="head"><h2>เพิ่มรายการ</h2></div>
+        <div class="body">
+          <div class="fieldrow" style="grid-template-columns:1fr">
+            <div class="field"><label for="l-date">วันที่</label>
+              <div class="inputbox"><input type="date" id="l-date"></div></div>
+            <div class="field"><label for="l-wt">น้ำหนักตอนเช้า</label>
+              <div class="inputbox"><input type="number" id="l-wt" step="0.1" min="30" max="300" placeholder="—"><span class="unit">กก.</span></div></div>
+            <div class="field"><label for="l-kcal">กินไปทั้งวัน</label>
+              <div class="inputbox"><input type="number" id="l-kcal" step="10" min="0" max="10000" placeholder="—"><span class="unit">kcal</span></div></div>
+          </div>
+          <div class="btnrow" style="margin-top:14px">
+            <button class="btn" id="l-add" type="button">บันทึก</button>
+            <button class="btn ghost sm" id="l-copy" type="button">คัดลอกข้อมูลสำรอง</button>
+            <button class="btn ghost sm" id="l-paste" type="button">กู้จากข้อมูลสำรอง</button>
+          </div>
+          <p class="note" id="l-msg" hidden></p>
+          <p class="note">ลงวันเดิมซ้ำ = ทับของเดิม · เว้นช่องไหนว่างไว้ได้ แต่ต้องมีทั้งน้ำหนักและ kcal ถึงจะคำนวณ TDEE จริงได้</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">
+    เครื่องมือช่วยตัดสินใจเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ — ถ้ามีโรคประจำตัว ตั้งครรภ์ กำลังกินยา หรือจะลดต่ำกว่า 1,500 kcal (ชาย) / 1,200 kcal (หญิง) ควรคุยกับแพทย์หรือนักกำหนดอาหารก่อน ·
+    ข้อมูลทั้งหมดเก็บอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ถูกส่งไปไหน
+  </p>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const KEY = "tdee.v1";
+const KCAL_PER_KG = 7700;          // พลังงานต่อไขมัน 1 กก.
+const FLOOR = { male: 1500, female: 1200 };
+
+/* ─────────── state ─────────── */
+const S = {
+  sex: "male", age: 30, ht: 172, wt: 70, bf: null, goalWt: null,
+  act: 1.375, formula: "mifflin",
+  goalPct: -15, proPerKg: 2.0, fatPct: 25, meals: 3,
+  log: [], theme: null
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) Object.assign(S, JSON.parse(raw));
+  }catch(e){/* private mode / blocked storage — carry on with defaults */}
+  if(!Array.isArray(S.log)) S.log = [];
+}
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+  }, 150);
+}
+
+/* ─────────── helpers ─────────── */
+const n0 = v => Math.round(v).toLocaleString("en-US");
+const n1 = v => v.toFixed(1);
+const num = el => { const v = parseFloat(el.value); return Number.isFinite(v) ? v : null; };
+const dayNum = d => Math.round(new Date(d + "T00:00:00").getTime() / 86400000);
+const todayISO = () => { const t = new Date(); t.setMinutes(t.getMinutes() - t.getTimezoneOffset()); return t.toISOString().slice(0,10); };
+const thDate = d => { const p = d.split("-"); return p[2] + "/" + p[1]; };
+
+/* ─────────── metabolism ─────────── */
+function lbm(){ return S.bf != null ? S.wt * (1 - S.bf/100) : null; }
+
+function bmrOf(f){
+  const w = S.wt, h = S.ht, a = S.age;
+  if(f === "katch"){ const l = lbm(); return l == null ? null : 370 + 21.6 * l; }
+  if(f === "harris") return S.sex === "male"
+      ? 88.362 + 13.397*w + 4.799*h - 5.677*a
+      : 447.593 +  9.247*w + 3.098*h - 4.330*a;
+  return 10*w + 6.25*h - 5*a + (S.sex === "male" ? 5 : -161);   // Mifflin-St Jeor
+}
+function bmr(){ return bmrOf(S.formula) ?? bmrOf("mifflin"); }
+function tdee(){ return bmr() * S.act; }
+
+const GOALS = [
+  { pct:  10, label: "เพิ่มกล้ามแบบลีน", note: "ส่วนเกินพอดี ไขมันขึ้นน้อย" },
+  { pct:   0, label: "รักษาน้ำหนัก",     note: "กินเท่าที่เผา" },
+  { pct: -10, label: "ลดช้า / รีคอมป์",  note: "เก็บกล้ามได้ดีที่สุด หิวน้อย" },
+  { pct: -15, label: "ลดปกติ",           note: "สมดุลระหว่างเร็วกับยั่งยืน", rec: true },
+  { pct: -20, label: "ลดเร็ว",           note: "ต้องเวทเทรน + โปรตีนสูง ไม่งั้นเสียกล้าม" },
+  { pct: -25, label: "ลดเร่ง",           note: "หิวหนัก แรงตก ทำได้ไม่นาน", warn: true }
+];
+const goalOf = p => GOALS.find(g => g.pct === p) || GOALS[3];
+
+function targetKcal(pct){ return tdee() * (1 + pct/100); }
+function kgPerWeek(pct){ return (tdee() * pct/100) * 7 / KCAL_PER_KG; }
+function floorKcal(){ return FLOOR[S.sex]; }
+
+/* ─────────── macros ─────────── */
+function macros(){
+  const kcal = targetKcal(S.goalPct);
+  const proG = S.wt * S.proPerKg;
+  const proK = proG * 4;
+  let fatG = (kcal * S.fatPct/100) / 9;
+  const fatMin = S.wt * 0.6;                    // ขั้นต่ำเพื่อฮอร์โมน
+  const fatClamped = fatG < fatMin;
+  if(fatClamped) fatG = fatMin;
+  const fatK = fatG * 9;
+  let carbK = kcal - proK - fatK;
+  const short = carbK < 0;
+  if(short) carbK = 0;
+  return { kcal, proG, proK, fatG, fatK, carbG: carbK/4, carbK, fatClamped, short };
+}
+
+/* ─────────── render: readout panel ─────────── */
+function renderLabel(){
+  const b = bmr(), t = tdee(), m = macros();
+  $("o-bmr").textContent  = n0(b) + " kcal";
+  $("o-mult").textContent = "× " + S.act;
+  $("o-tdee").textContent = n0(t);
+
+  const g = goalOf(S.goalPct);
+  const kw = kgPerWeek(S.goalPct);
+  $("o-goal-label").textContent = "เป้าหมาย — " + g.label;
+  $("o-target").textContent = n0(m.kcal);
+  const delta = m.kcal - t;
+  $("o-target-why").textContent = S.goalPct === 0
+    ? "เท่ากับที่เผา น้ำหนักนิ่ง"
+    : (delta < 0 ? "ขาดดุล " : "เกินดุล ") + n0(Math.abs(delta)) + " kcal/วัน · ประมาณ "
+      + (kw > 0 ? "+" : "") + n1(kw) + " กก./สัปดาห์";
+
+  // stacked macro bar — direct-labelled, 2px gaps
+  const parts = [
+    { g: m.proG,  k: m.proK,  c: "var(--m-pro)",  t: "โปรตีน" },
+    { g: m.fatG,  k: m.fatK,  c: "var(--m-fat)",  t: "ไขมัน"  },
+    { g: m.carbG, k: m.carbK, c: "var(--m-carb)", t: "คาร์บ"  }
+  ];
+  const tot = m.proK + m.fatK + m.carbK || 1;
+  $("macbar").innerHTML = parts.map(p => {
+    const pc = p.k/tot*100;
+    return '<span style="flex:' + pc.toFixed(2) + ' 1 0%;background:' + p.c + '">'
+         + (pc > 11 ? Math.round(pc) + "%" : "") + "</span>";
+  }).join("");
+  $("macrotable").innerHTML = parts.map(p =>
+      '<tr><td><span class="swatch" style="background:' + p.c + '"></span>' + p.t + "</td>"
+    + '<td class="n">' + n0(p.g) + " ก.</td>"
+    + '<td class="p">' + n0(p.k) + "</td></tr>"
+  ).join("") + '<tr><td style="color:var(--ink-3)">รวมพลังงาน</td><td class="n"></td><td class="p">' + n0(tot) + "</td></tr>";
+
+  const perMeal = m.proG / S.meals;
+  const perMealMin = S.wt * 0.25;
+  $("o-permeal").textContent = n0(perMeal) + " ก. × " + S.meals;
+  $("o-water").textContent   = n1(S.wt * 35 / 1000) + " ล.";
+
+  const bmi = S.wt / Math.pow(S.ht/100, 2);
+  $("o-bmi").textContent = n1(bmi);
+  const lo = 18.5 * Math.pow(S.ht/100,2), hi = 22.9 * Math.pow(S.ht/100,2);
+  const cat = bmi < 18.5 ? "ผอม" : bmi < 23 ? "ปกติ" : bmi < 25 ? "ท้วม" : bmi < 30 ? "อ้วนระดับ 1" : "อ้วนระดับ 2";
+  $("o-bmi-note").textContent = cat + " · ช่วงปกติสำหรับส่วนสูงนี้ " + n1(lo) + "–" + n1(hi) + " กก. (เกณฑ์เอเชีย)";
+
+  const l = lbm();
+  $("o-lbm").textContent = l == null ? "—" : n1(l) + " กก.";
+  $("bf-hint").textContent = l == null
+    ? "ไม่รู้ % ไขมันก็ใช้ได้ปกติ — ถ้าใส่มา จะปลดล็อกสูตร Katch-McArdle ที่แม่นกว่าและคิดมวลไร้ไขมันให้"
+    : "มวลไร้ไขมัน " + n1(l) + " กก. · มวลไขมัน " + n1(S.wt - l) + " กก.";
+
+  // macro sanity notes
+  const mn = $("macro-note");
+  let msg = [], cls = "note";
+  if(m.short){ msg.push("<b>แคลไม่พอ</b> โปรตีนกับไขมันรวมกันเกินเป้าแล้ว ลดโปรตีน/ไขมันลง หรือเพิ่มแคลเป้าหมาย"); cls = "note bad"; }
+  else if(m.carbG < 50){ msg.push("คาร์บเหลือแค่ " + n0(m.carbG) + " ก. — ต่ำมาก แรงซ้อมจะตก ลองลดไขมันลงหน่อย"); cls = "note warn"; }
+  if(m.fatClamped) msg.push("ดันไขมันขึ้นเป็นขั้นต่ำ " + n0(S.wt*0.6) + " ก. (0.6 ก./กก.) แล้ว ต่ำกว่านี้ฮอร์โมนจะรวน");
+  if(perMeal < perMealMin) msg.push("โปรตีนต่อมื้อ " + n0(perMeal) + " ก. ต่ำกว่าที่กระตุ้นการสร้างกล้ามได้เต็มที่ (~" + n0(perMealMin) + " ก.) — ลดจำนวนมื้อลงหรือเพิ่มโปรตีน");
+  if(!msg.length && S.goalPct < 0) msg.push("โปรตีน " + S.proPerKg.toFixed(1) + " ก./กก. อยู่ในช่วง 1.6–2.2 ที่งานวิจัยใช้รักษากล้ามระหว่างลดไขมัน");
+  mn.className = cls;
+  mn.innerHTML = msg.join(" · ") || "&nbsp;";
+}
+
+/* ─────────── render: goal table ─────────── */
+function renderGoals(){
+  const t = tdee(), fl = floorKcal();
+  $("goalbody").innerHTML = GOALS.map(g => {
+    const k = targetKcal(g.pct), kw = kgPerWeek(g.pct);
+    const below = k < fl;
+    let tag = "";
+    if(g.rec)  tag = ' <span class="pill rec">แนะนำ</span>';
+    if(below)  tag = ' <span class="pill bad">ต่ำเกินไป</span>';
+    else if(g.warn) tag = ' <span class="pill warn">ระวัง</span>';
+    return '<tr data-pct="' + g.pct + '" data-on="' + (g.pct === S.goalPct ? 1 : 0) + '">'
+      + '<td class="name"><span class="gname"><span class="tick"></span><b>' + g.label + "</b>" + tag + "</span>"
+      + '<span class="gnote">' + g.note + "</span></td>"
+      + '<td class="c">' + (g.pct > 0 ? "+" : "") + g.pct + "%</td>"
+      + '<td class="c">' + n0(k) + "</td>"
+      + '<td class="c ' + (kw < 0 ? "neg" : kw > 0 ? "pos" : "") + '">' + (kw > 0 ? "+" : "") + n1(kw) + "</td></tr>";
+  }).join("");
+
+  const g = goalOf(S.goalPct), k = targetKcal(S.goalPct), gn = $("goal-note");
+  if(k < fl){
+    gn.className = "note bad";
+    gn.innerHTML = "<b>" + n0(k) + " kcal ต่ำกว่าขั้นต่ำ " + n0(fl) + " kcal</b> ที่ควรกินต่อวัน — กินต่ำขนาดนี้นาน ๆ เสี่ยงขาดสารอาหาร แรงตก และเสียกล้าม เลือกระดับที่ลดช้ากว่านี้ แล้วเพิ่มการเดิน/ซ้อมแทน";
+  } else if(g.warn){
+    gn.className = "note warn";
+    gn.innerHTML = "งานวิจัยส่วนใหญ่แนะนำขาดดุล <b>10–20%</b> ระดับนี้เกินมา — ถ้าจะใช้จริง อย่าใช้เกิน 6–8 สัปดาห์แล้วกลับมากินระดับรักษาสักพัก";
+  } else {
+    gn.className = "note good";
+    gn.innerHTML = "อยู่ในช่วงที่แนะนำ · ลดไขมันได้โดยเก็บกล้ามไว้ ถ้าโปรตีนถึงและมีเวทเทรน";
+  }
+
+  const eta = $("eta-note"), kw = kgPerWeek(S.goalPct);
+  if(S.goalWt != null && Math.abs(S.wt - S.goalWt) > 0.2 && kw !== 0 && (S.goalWt - S.wt) / kw > 0){
+    const weeks = (S.goalWt - S.wt) / kw;
+    const d = new Date(); d.setDate(d.getDate() + Math.round(weeks * 7));
+    eta.hidden = false;
+    eta.className = "note";
+    eta.innerHTML = "จาก <b>" + n1(S.wt) + " → " + n1(S.goalWt) + " กก.</b> ที่อัตรานี้ใช้เวลาราว <b>"
+      + Math.round(weeks) + " สัปดาห์</b> ถึงประมาณ " + d.toLocaleDateString("th-TH", {day:"numeric", month:"long", year:"numeric"})
+      + " — ของจริงจะช้ากว่านี้นิดหน่อยเพราะ TDEE ลดตามน้ำหนักที่ลดลง";
+  } else eta.hidden = true;
+}
+
+/* ─────────── render: formula comparison ─────────── */
+function renderFormulas(){
+  const rows = [
+    ["mifflin", "Mifflin-St Jeor"],
+    ["katch",   "Katch-McArdle"],
+    ["harris",  "Harris-Benedict"]
+  ];
+  $("formulatable").innerHTML = rows.map(([k, name]) => {
+    const b = bmrOf(k);
+    const on = k === S.formula;
+    return "<tr><td" + (on ? ' style="font-weight:600"' : "") + ">" + name
+      + (on ? ' <span class="pill rec">ใช้อยู่</span>' : "") + "</td>"
+      + '<td class="n">' + (b == null ? "ต้องใส่ % ไขมัน" : n0(b) + " kcal") + "</td>"
+      + '<td class="p">' + (b == null ? "—" : n0(b * S.act)) + "</td></tr>";
+  }).join("") + '<tr><td style="color:var(--ink-3);font-size:12px">BMR · TDEE (kcal)</td><td></td><td></td></tr>';
+}
+
+/* ─────────── tracker: local-linear trend + back-calculated TDEE ───────────
+   ปรับเรียบด้วยการฟิตเส้นตรงบนข้อมูลดิบ 21 วันย้อนหลังของแต่ละจุด
+   (ไม่ใช้ค่าเฉลี่ยเคลื่อนที่ เพราะมันหน่วง ทำให้เทรนด์ตื้นกว่าจริงและ TDEE เพี้ยนต่ำ) */
+const WINDOW = 21;      // วันที่ใช้ฟิตเส้นเทรนด์
+
+function fit(rows){                       // least squares: น้ำหนัก ~ วัน
+  const n = rows.length;
+  if(n < 2) return null;
+  const mx = rows.reduce((s,r) => s + r.x, 0) / n;
+  const my = rows.reduce((s,r) => s + r.w, 0) / n;
+  let sxy = 0, sxx = 0;
+  rows.forEach(r => { sxy += (r.x - mx) * (r.w - my); sxx += (r.x - mx) * (r.x - mx); });
+  if(sxx <= 0) return null;
+  const slope = sxy / sxx;
+  return { slope, at: x => my + slope * (x - mx) };
+}
+
+function series(){
+  const rows = S.log.filter(r => r.w != null)
+    .map(r => ({ d: r.d, x: dayNum(r.d), w: r.w }))
+    .sort((a,b) => a.x - b.x);
+  // ค่าเทรนด์ของแต่ละจุด = เส้นตรงที่ฟิตจาก 21 วันก่อนหน้าจุดนั้น (ไม่มี lag ที่ปลายเส้น)
+  return rows.map((r,i) => {
+    const win = rows.slice(0, i+1).filter(q => q.x > r.x - WINDOW);
+    const f = win.length >= 3 && (win[win.length-1].x - win[0].x) >= 5 ? fit(win) : null;
+    const run = win.reduce((s,q) => s + q.w, 0) / win.length;
+    return { d: r.d, x: r.x, w: r.w, t: f ? f.at(r.x) : run };
+  });
+}
+
+function adaptive(){
+  const sm = series();
+  if(!sm.length) return { sm: [], ok: false, days: 0 };
+  const last = sm[sm.length - 1].x;
+  const win = sm.filter(r => r.x > last - WINDOW);
+  const span = win.length > 1 ? win[win.length-1].x - win[0].x + 1 : 1;
+
+  const f = (win.length >= 3 && span >= 7) ? fit(win) : null;
+  const slope = f ? f.slope : null;                       // กก./วัน
+
+  const eats = S.log.filter(r => r.k != null && dayNum(r.d) > last - WINDOW);
+  const meanK = eats.length ? eats.reduce((s,r) => s + r.k, 0) / eats.length : null;
+
+  const ok = slope != null && meanK != null && eats.length >= 10 && win.length >= 10 && span >= 14;
+  return {
+    sm, win, ok, span,
+    days: Math.min(eats.length, win.length),
+    slope, meanK, eats: eats.length,
+    trendW: f ? f.at(last) : sm[sm.length-1].t,
+    tdee: (slope != null && meanK != null) ? meanK - slope * KCAL_PER_KG : null
+  };
+}
+
+function renderTrack(){
+  const a = adaptive();
+  const set = (id, v, s) => { $(id).textContent = v; if(s != null) $(id + "-s").textContent = s; };
+
+  if(a.tdee != null){
+    set("a-tdee", n0(a.tdee), a.ok ? "kcal/วัน · เชื่อถือได้" : "kcal/วัน · ยังต้องเก็บข้อมูลอีก");
+    $("a-tdee").innerHTML = n0(a.tdee) + ' <small style="font-size:12px;color:var(--ink-3)">kcal</small>';
+  } else set("a-tdee", "—", "ต้องมีน้ำหนัก + kcal อย่างน้อย 10 วัน");
+
+  set("a-trend", a.sm.length ? n1(a.trendW) + " " : "—", a.sm.length ? "กก. · ล่าสุด " + thDate(a.sm[a.sm.length-1].d) : "ยังไม่มีข้อมูล");
+  if(a.sm.length) $("a-trend").innerHTML = n1(a.trendW) + ' <small style="font-size:12px;color:var(--ink-3)">กก.</small>';
+
+  if(a.slope != null){
+    const kw = a.slope * 7;
+    $("a-rate").innerHTML = (kw > 0 ? "+" : "") + n1(kw) + ' <small style="font-size:12px;color:var(--ink-3)">กก./สัปดาห์</small>';
+    $("a-rate").style.color = kw < -0.02 ? "var(--good)" : kw > 0.02 ? "var(--warn)" : "var(--ink)";
+    $("a-rate-s").textContent = "จาก " + a.win.length + " ครั้งที่ชั่งใน " + a.span + " วัน";
+  } else { $("a-rate").textContent = "—"; $("a-rate-s").textContent = "ต้องชั่งอย่างน้อย 3 ครั้ง ห่างกัน 7 วัน"; }
+
+  set("a-intake", a.meanK != null ? n0(a.meanK) : "—", a.meanK != null ? "kcal/วัน · เฉลี่ย " + a.eats + " วัน" : "kcal/วัน");
+
+  const v = $("a-verdict");
+  if(a.tdee == null){
+    const need = Math.max(0, 10 - a.days);
+    v.className = "note";
+    v.innerHTML = "ชั่งน้ำหนักตอนเช้าหลังเข้าห้องน้ำก่อนกินอะไร แล้วบันทึกแคลที่กินทั้งวัน — อีก <b>" + need + " วัน</b> ระบบจะเริ่มบอก TDEE จริงของคุณได้";
+  } else {
+    const est = tdee(), diff = a.tdee - est, pct = diff / est * 100;
+    const newTarget = a.tdee * (1 + S.goalPct/100);
+    let head;
+    if(!a.ok) head = "<b>ตัวเลขเบื้องต้น</b> (ข้อมูลยังไม่ครบ 14 วัน อาจแกว่ง) — ";
+    else if(Math.abs(pct) < 5) head = "<b>สูตรตรงกับตัวจริง</b> ต่างกันแค่ " + n1(Math.abs(pct)) + "% — ";
+    else if(diff < 0) head = "<b>คุณเผาน้อยกว่าที่สูตรบอก " + n0(-diff) + " kcal</b> (" + n1(Math.abs(pct)) + "%) — มักแปลว่าประเมินระดับกิจกรรมสูงไป หรือแคลที่บันทึกต่ำกว่าจริง — ";
+    else head = "<b>คุณเผามากกว่าที่สูตรบอก " + n0(diff) + " kcal</b> (" + n1(pct) + "%) — ";
+    v.className = a.ok ? "note good" : "note warn";
+    v.innerHTML = head + "ถ้าจะเดินเป้าหมาย <b>" + goalOf(S.goalPct).label + " (" + S.goalPct + "%)</b> ต่อจากนี้ ให้ยึด <b>" + n0(newTarget) + " kcal/วัน</b> แทนเลข " + n0(targetKcal(S.goalPct)) + " จากสูตร";
+  }
+
+  // log table
+  const rows = S.log.slice().sort((a,b) => a.d < b.d ? 1 : -1);
+  $("logcount").textContent = S.log.length ? "(" + S.log.length + ")" : "";
+  $("log-hint").textContent = S.log.length ? S.log.length + " วัน" : "";
+  $("logbody").innerHTML = rows.length
+    ? rows.map(r => '<tr><td>' + thDate(r.d) + "</td><td>" + (r.w != null ? n1(r.w) : "—")
+        + "</td><td>" + (r.k != null ? n0(r.k) : "—")
+        + '</td><td><button class="del" type="button" data-d="' + r.d + '" aria-label="ลบ ' + r.d + '">×</button></td></tr>').join("")
+    : '<tr class="empty"><td colspan="4">ยังไม่มีข้อมูล — เริ่มจากชั่งน้ำหนักพรุ่งนี้เช้า</td></tr>';
+
+  drawChart(a);
+}
+
+/* ─────────── chart ─────────── */
+const cv = $("chart"), tip = $("tip");
+let pts = [];
+function css(v){ return getComputedStyle(document.body).getPropertyValue(v).trim(); }
+
+function drawChart(a){
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if(!W || !H) return;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const c = cv.getContext("2d");
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, W, H);
+  pts = [];
+
+  const sm = a.sm;
+  const inkMuted = css("--ink-3"), grid = css("--grid"), accent = css("--accent"), dot = css("--dot"), surface = css("--card");
+
+  if(sm.length < 2){
+    c.fillStyle = inkMuted;
+    c.font = '13px "IBM Plex Sans Thai", sans-serif';
+    c.textAlign = "center";
+    c.fillText("บันทึกน้ำหนักอย่างน้อย 2 วันเพื่อดูกราฟ", W/2, H/2);
+    return;
+  }
+
+  const padL = 42, padR = 14, padT = 14, padB = 24;
+  const xs = sm.map(p => p.x), ws = sm.flatMap(p => [p.w, p.t]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  let y0 = Math.min(...ws), y1 = Math.max(...ws);
+  const pad = Math.max((y1 - y0) * 0.18, 0.5);
+  y0 -= pad; y1 += pad;
+  const X = v => padL + (v - x0) / Math.max(x1 - x0, 1) * (W - padL - padR);
+  const Y = v => padT + (y1 - v) / (y1 - y0) * (H - padT - padB);
+
+  // recessive grid + y labels
+  c.strokeStyle = grid; c.lineWidth = 1;
+  c.fillStyle = inkMuted;
+  c.font = '11px "IBM Plex Mono", monospace';
+  c.textAlign = "right"; c.textBaseline = "middle";
+  for(let i = 0; i <= 3; i++){
+    const v = y0 + (y1 - y0) * i / 3, y = Math.round(Y(v)) + 0.5;
+    c.beginPath(); c.moveTo(padL, y); c.lineTo(W - padR, y); c.stroke();
+    c.fillText(v.toFixed(1), padL - 8, y);
+  }
+  // x labels: first & last
+  c.textAlign = "left"; c.textBaseline = "top";
+  c.font = '11px "IBM Plex Sans Thai", sans-serif';
+  c.fillText(thDate(sm[0].d), padL, H - padB + 6);
+  c.textAlign = "right";
+  c.fillText(thDate(sm[sm.length-1].d), W - padR, H - padB + 6);
+
+  // raw weigh-ins — recessive dots with a surface ring
+  sm.forEach(p => {
+    const px = X(p.x), py = Y(p.w);
+    pts.push({ px, py, p });
+    c.beginPath(); c.arc(px, py, 4, 0, Math.PI*2);
+    c.fillStyle = dot; c.fill();
+    c.lineWidth = 2; c.strokeStyle = surface; c.stroke();
+  });
+
+  // trend line — 2px, the emphasised mark
+  c.beginPath();
+  sm.forEach((p, i) => { const px = X(p.x), py = Y(p.t); i ? c.lineTo(px, py) : c.moveTo(px, py); });
+  c.strokeStyle = accent; c.lineWidth = 2; c.lineJoin = "round"; c.lineCap = "round"; c.stroke();
+
+  // emphasised endpoint + direct label
+  const last = sm[sm.length-1], lx = X(last.x), ly = Y(last.t);
+  c.beginPath(); c.arc(lx, ly, 5, 0, Math.PI*2);
+  c.fillStyle = accent; c.fill();
+  c.lineWidth = 2.5; c.strokeStyle = surface; c.stroke();
+  c.font = '600 12px "IBM Plex Mono", monospace';
+  c.fillStyle = accent; c.textBaseline = "bottom";
+  c.textAlign = lx > W - 60 ? "right" : "left";
+  c.fillText(last.t.toFixed(1), lx > W - 60 ? lx - 9 : lx + 9, ly - 6);
+}
+
+function hover(ev){
+  if(!pts.length){ tip.style.opacity = 0; return; }
+  const r = cv.getBoundingClientRect(), mx = ev.clientX - r.left;
+  let best = pts[0], bd = Infinity;
+  pts.forEach(q => { const d = Math.abs(q.px - mx); if(d < bd){ bd = d; best = q; } });
+  if(bd > 40){ tip.style.opacity = 0; return; }
+  const rec = S.log.find(l => l.d === best.p.d);
+  tip.innerHTML = thDate(best.p.d) + '<br><span class="mono">' + n1(best.p.w) + " กก.</span>"
+    + '<br><span style="color:var(--ink-3)">เทรนด์ ' + n1(best.p.t) + " กก."
+    + (rec && rec.k != null ? " · " + n0(rec.k) + " kcal" : "") + "</span>";
+  tip.style.left = best.px + "px";
+  tip.style.top = (best.py - 10) + "px";
+  tip.style.opacity = 1;
+}
+cv.addEventListener("mousemove", hover);
+cv.addEventListener("mouseleave", () => tip.style.opacity = 0);
+cv.addEventListener("touchstart", e => { if(e.touches[0]) hover(e.touches[0]); }, {passive:true});
+cv.addEventListener("touchmove",  e => { if(e.touches[0]) hover(e.touches[0]); }, {passive:true});
+
+/* ─────────── wiring ─────────── */
+function renderAll(){ renderLabel(); renderGoals(); renderFormulas(); renderTrack(); save(); }
+
+function pushInputs(){                      // state → DOM
+  document.querySelector('input[name="sex"][value="' + S.sex + '"]').checked = true;
+  const act = document.querySelector('input[name="act"][value="' + S.act + '"]');
+  if(act) act.checked = true;
+  $("i-age").value = S.age; $("i-ht").value = S.ht; $("i-wt").value = S.wt;
+  $("i-bf").value = S.bf ?? ""; $("i-goalwt").value = S.goalWt ?? "";
+  $("i-formula").value = S.formula;
+  $("i-pro").value = S.proPerKg; $("i-fat").value = S.fatPct; $("i-meals").value = S.meals;
+  syncOuts();
+}
+function syncOuts(){
+  $("o-pro").textContent   = S.proPerKg.toFixed(1) + " ก/กก";
+  $("o-fat").textContent   = S.fatPct + "%";
+  $("o-meals").textContent = S.meals + " มื้อ";
+}
+
+function bindNum(id, key, min, max, allowNull){
+  $(id).addEventListener("input", () => {
+    const v = num($(id));
+    if(v == null){ if(allowNull){ S[key] = null; renderAll(); } return; }
+    if(v < min || v > max) return;           // ปล่อยให้พิมพ์ต่อ ไม่เด้ง
+    S[key] = v; renderAll();
+  });
+}
+bindNum("i-age", "age", 14, 100);
+bindNum("i-ht", "ht", 120, 230);
+bindNum("i-wt", "wt", 30, 300);
+bindNum("i-bf", "bf", 3, 60, true);
+bindNum("i-goalwt", "goalWt", 30, 300, true);
+
+document.querySelectorAll('input[name="sex"]').forEach(el =>
+  el.addEventListener("change", () => { S.sex = el.value; renderAll(); }));
+document.querySelectorAll('input[name="act"]').forEach(el =>
+  el.addEventListener("change", () => { S.act = parseFloat(el.value); renderAll(); }));
+$("i-formula").addEventListener("change", () => {
+  S.formula = $("i-formula").value;
+  if(S.formula === "katch" && S.bf == null){ $("i-bf").focus(); }
+  renderAll();
+});
+[["i-pro","proPerKg",parseFloat],["i-fat","fatPct",parseInt],["i-meals","meals",parseInt]].forEach(([id,key,fn]) =>
+  $(id).addEventListener("input", () => { S[key] = fn($(id).value); syncOuts(); renderAll(); }));
+
+$("goalbody").addEventListener("click", ev => {
+  const tr = ev.target.closest("tr[data-pct]");
+  if(!tr) return;
+  S.goalPct = parseInt(tr.dataset.pct, 10);
+  if(S.goalPct <= -20 && S.proPerKg < 2.0){ S.proPerKg = 2.0; $("i-pro").value = 2.0; syncOuts(); }
+  renderAll();
+});
+
+/* tabs */
+const TABS = [["tab-calc","panel-calc"],["tab-track","panel-track"]];
+TABS.forEach(([t,p]) => $(t).addEventListener("click", () => {
+  TABS.forEach(([t2,p2]) => {
+    const on = t2 === t;
+    $(t2).setAttribute("aria-selected", on ? "true" : "false");
+    $(p2).hidden = !on;
+  });
+  if(p === "panel-track") requestAnimationFrame(() => drawChart(adaptive()));
+}));
+
+/* theme */
+function applyTheme(){
+  if(S.theme) document.documentElement.setAttribute("data-theme", S.theme);
+  else document.documentElement.removeAttribute("data-theme");
+}
+$("themebtn").addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark"
+    || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  S.theme = dark ? "light" : "dark";
+  applyTheme(); save();
+  requestAnimationFrame(() => drawChart(adaptive()));
+});
+
+/* log */
+function msg(text, cls){
+  const el = $("l-msg");
+  el.hidden = false; el.className = "note " + (cls || "");
+  el.innerHTML = text;
+}
+$("l-add").addEventListener("click", () => {
+  const d = $("l-date").value || todayISO();
+  const w = num($("l-wt")), k = num($("l-kcal"));
+  if(w == null && k == null){ msg("ใส่น้ำหนักหรือ kcal อย่างน้อยอย่างหนึ่งก่อน", "warn"); return; }
+  const i = S.log.findIndex(r => r.d === d);
+  const rec = { d, w, k };
+  if(i >= 0){
+    if(w == null) rec.w = S.log[i].w;
+    if(k == null) rec.k = S.log[i].k;
+    S.log[i] = rec;
+  } else S.log.push(rec);
+
+  const newest = S.log.reduce((m, r) => (r.w != null && (!m || r.d > m.d)) ? r : m, null);
+  let extra = "";
+  if(rec.w != null && newest && newest.d === d && Math.abs(S.wt - rec.w) > 0.05){
+    S.wt = rec.w; $("i-wt").value = rec.w;
+    extra = " · อัปเดตน้ำหนักในแท็บคำนวณเป็น " + n1(rec.w) + " กก. ให้แล้ว";
+  }
+  $("l-wt").value = ""; $("l-kcal").value = "";
+  $("l-date").value = todayISO();
+  msg("บันทึก " + thDate(d) + " เรียบร้อย" + extra, "good");
+  renderAll();
+});
+$("logbody").addEventListener("click", ev => {
+  const b = ev.target.closest("button.del");
+  if(!b) return;
+  S.log = S.log.filter(r => r.d !== b.dataset.d);
+  renderAll();
+});
+
+/* backup / restore — ไม่มีการส่งข้อมูลออกไปไหน */
+$("l-copy").addEventListener("click", async () => {
+  const json = JSON.stringify(S);
+  try{
+    await navigator.clipboard.writeText(json);
+    msg("คัดลอกข้อมูลทั้งหมดแล้ว เอาไปวางเก็บไว้ที่ไหนก็ได้ (โน้ต/แชท) กันหาย", "good");
+  }catch(e){
+    showRestoreBox(json, true);
+    msg("คัดลอกอัตโนมัติไม่ได้ — เลือกข้อความในกล่องด้านล่างแล้วคัดลอกเอง", "warn");
+  }
+});
+let box = null;
+function showRestoreBox(value, readonly){
+  if(!box){
+    box = document.createElement("textarea");
+    box.rows = 4;
+    box.style.cssText = "width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;"
+      + "border:1px solid var(--hair);border-radius:2px;background:var(--sunk);color:var(--ink);padding:8px";
+    const go = document.createElement("button");
+    go.className = "btn sm"; go.type = "button"; go.textContent = "กู้ข้อมูลจากกล่องนี้";
+    go.style.marginTop = "8px";
+    go.addEventListener("click", () => {
+      try{
+        const data = JSON.parse(box.value);
+        if(!data || typeof data !== "object" || !Array.isArray(data.log)) throw new Error("bad");
+        Object.assign(S, data);
+        pushInputs(); applyTheme(); renderAll();
+        msg("กู้ข้อมูลสำเร็จ — " + S.log.length + " วัน", "good");
+      }catch(e){ msg("ข้อมูลไม่ถูกต้อง — ต้องเป็นข้อความที่ได้จากปุ่ม “คัดลอกข้อมูลสำรอง”", "bad"); }
+    });
+    $("l-msg").insertAdjacentElement("afterend", box);
+    box.insertAdjacentElement("afterend", go);
+    box._go = go;
+  }
+  box.hidden = false; box._go.hidden = !!readonly;
+  box.readOnly = !!readonly;
+  box.value = value || "";
+  if(readonly) box.select();
+  else box.focus();
+}
+$("l-paste").addEventListener("click", () => {
+  showRestoreBox("", false);
+  msg("วางข้อความสำรองลงในกล่องด้านล่าง แล้วกดปุ่มกู้ข้อมูล — ข้อมูลปัจจุบันจะถูกทับ", "warn");
+});
+
+/* resize */
+let rz;
+addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => drawChart(adaptive()), 120); });
+
+/* init */
+load();
+applyTheme();
+pushInputs();
+$("l-date").value = todayISO();
+renderAll();
+document.fonts && document.fonts.ready.then(() => drawChart(adaptive()));
+})();
+</script>
