@@ -218,10 +218,10 @@
         375.85139482,
         -169.28825657
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 1647.84391473,
+      "result_r": -1.0,
+      "closed_date": "2026-08-20",
       "logged_at": "2026-08-17T02:20:49.265632+00:00"
     }
   ]
