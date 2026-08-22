@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="งบแคลอรี่รายวัน">
+  <rect width="512" height="512" rx="96" fill="#FCFCFB"/>
+  <rect x="72" y="112" width="368" height="40" fill="#14151C"/>
+  <polyline points="96,230 184,268 272,256 360,312 424,352" fill="none" stroke="#2F3BE8"
+            stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="424" cy="354" r="27" fill="#2F3BE8"/>
+  <rect x="72" y="410" width="368" height="12" fill="#14151C"/>
+</svg>

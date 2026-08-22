@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>งบแคลอรี่รายวัน</title>
+<meta name="description" content="เครื่องคำนวณ TDEE ภาษาไทย พร้อมเป้าหมายลดน้ำหนัก มาโคร และโหมดหา TDEE จริงจากน้ำหนักที่ชั่งกับแคลที่กิน">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F1F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C11" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="งบแคล">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <h1>งบแคลอรี่รายวัน</h1>
+      <p>คำนวณ TDEE แล้วแปลงเป็นเป้าหมายลดน้ำหนักกับมาโครที่กินได้จริง — พร้อมโหมดหา TDEE จริงจากน้ำหนักที่ชั่งกับแคลที่กิน</p>
+    </div>
+    <div class="mastbtns">
+      <button class="themebtn" id="installbtn" type="button" hidden>ติดตั้งเป็นแอป</button>
+      <button class="themebtn" id="themebtn" type="button">โหมดมืด/สว่าง</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-calc" aria-selected="true" aria-controls="panel-calc">คำนวณ</button>
+    <button class="tab" role="tab" id="tab-track" aria-selected="false" aria-controls="panel-track">ติดตามจริง<span class="badge" id="logcount"></span></button>
+  </nav>
+
+  <!-- ═══════════ TAB 1 ═══════════ -->
+  <div id="panel-calc" role="tabpanel" aria-labelledby="tab-calc">
+  <div class="grid2">
+
+    <!-- LEFT: inputs -->
+    <div>
+      <section class="card">
+        <div class="head"><h2>ข้อมูลตัวคุณ</h2><span class="hint">บันทึกอัตโนมัติในเครื่อง</span></div>
+        <div class="body">
+          <div class="fieldrow">
+            <div class="field">
+              <label for="i-sex">เพศ</label>
+              <div class="seg" id="i-sex">
+                <label><input type="radio" name="sex" value="male" checked>ชาย</label>
+                <label><input type="radio" name="sex" value="female">หญิง</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="i-age">อายุ</label>
+              <div class="inputbox"><input type="number" id="i-age" min="14" max="100" step="1" value="30"><span class="unit">ปี</span></div>
+            </div>
+            <div class="field">
+              <label for="i-ht">ส่วนสูง</label>
+              <div class="inputbox"><input type="number" id="i-ht" min="120" max="230" step="0.5" value="172"><span class="unit">ซม.</span></div>
+            </div>
+            <div class="field">
+              <label for="i-wt">น้ำหนัก</label>
+              <div class="inputbox"><input type="number" id="i-wt" min="30" max="300" step="0.1" value="70"><span class="unit">กก.</span></div>
+            </div>
+            <div class="field">
+              <label for="i-bf">ไขมันในร่างกาย <span style="color:var(--ink-3)">(ถ้ารู้)</span></label>
+              <div class="inputbox"><input type="number" id="i-bf" min="3" max="60" step="0.1" placeholder="—"><span class="unit">%</span></div>
+            </div>
+            <div class="field">
+              <label for="i-goalwt">น้ำหนักเป้าหมาย</label>
+              <div class="inputbox"><input type="number" id="i-goalwt" min="30" max="300" step="0.1" placeholder="—"><span class="unit">กก.</span></div>
+            </div>
+          </div>
+          <p class="sub" id="bf-hint"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>ระดับกิจกรรม</h2><span class="hint">จุดที่คนประเมินพลาดมากที่สุด</span></div>
+        <div class="body">
+          <div class="acts" id="i-act">
+            <label class="act"><input type="radio" name="act" value="1.2">
+              <span class="mark"></span><span class="txt"><b>นั่งทำงานเป็นหลัก</b><span>แทบไม่ออกกำลังกาย เดินน้อยกว่า 5,000 ก้าว/วัน</span></span><span class="mult">1.20</span></label>
+            <label class="act"><input type="radio" name="act" value="1.375" checked>
+              <span class="mark"></span><span class="txt"><b>ออกกำลังเบา</b><span>ออกกำลังกาย 1–3 วัน/สัปดาห์ หรือเดิน 7,000–10,000 ก้าว</span></span><span class="mult">1.375</span></label>
+            <label class="act"><input type="radio" name="act" value="1.55">
+              <span class="mark"></span><span class="txt"><b>ออกกำลังปานกลาง</b><span>ออกกำลังกายจริงจัง 3–5 วัน/สัปดาห์</span></span><span class="mult">1.55</span></label>
+            <label class="act"><input type="radio" name="act" value="1.725">
+              <span class="mark"></span><span class="txt"><b>ออกกำลังหนัก</b><span>ซ้อมหนัก 6–7 วัน/สัปดาห์</span></span><span class="mult">1.725</span></label>
+            <label class="act"><input type="radio" name="act" value="1.9">
+              <span class="mark"></span><span class="txt"><b>หนักมาก / งานใช้แรง</b><span>ซ้อมวันละ 2 รอบ หรือทำงานใช้แรงกายทั้งวัน</span></span><span class="mult">1.90</span></label>
+          </div>
+          <p class="note" id="act-note">เลือกต่ำไว้ก่อนดีกว่าเลือกสูง — ประเมินเกินไปนิดเดียวก็เพี้ยนได้ 200–400 kcal/วัน แล้วน้ำหนักจะไม่ลงทั้งที่คิดว่าขาดดุลอยู่</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>เป้าหมาย</h2><span class="hint">กดเลือกแถวที่จะใช้</span></div>
+        <div class="body">
+          <table class="gtable">
+            <thead><tr><th>ระดับ</th><th>ปรับ</th><th>kcal/วัน</th><th>กก./สัปดาห์</th></tr></thead>
+            <tbody id="goalbody"></tbody>
+          </table>
+          <p class="note" id="goal-note"></p>
+          <p class="note" id="eta-note" hidden></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>ปรับมาโคร</h2><span class="hint">คาร์บคือส่วนที่เหลือ</span></div>
+        <div class="body">
+          <div class="fieldrow" style="grid-template-columns:1fr">
+            <div class="field">
+              <label for="i-pro">โปรตีน <span style="color:var(--ink-3)">— ต่อน้ำหนักตัว 1 กก.</span></label>
+              <div class="slider"><input type="range" id="i-pro" min="1.2" max="2.6" step="0.1" value="2"><span class="out mono" id="o-pro">2.0 ก/กก</span></div>
+            </div>
+            <div class="field">
+              <label for="i-fat">ไขมัน <span style="color:var(--ink-3)">— % ของแคลทั้งวัน</span></label>
+              <div class="slider"><input type="range" id="i-fat" min="15" max="40" step="1" value="25"><span class="out mono" id="o-fat">25%</span></div>
+            </div>
+            <div class="field">
+              <label for="i-meals">แบ่งกินกี่มื้อ</label>
+              <div class="slider"><input type="range" id="i-meals" min="2" max="6" step="1" value="3"><span class="out mono" id="o-meals">3 มื้อ</span></div>
+            </div>
+          </div>
+          <p class="note" id="macro-note"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head"><h2>สูตรคำนวณ BMR</h2><span class="hint">เทียบกันดูได้</span></div>
+        <div class="body">
+          <div class="field" style="margin-bottom:14px">
+            <label for="i-formula">สูตรที่ใช้</label>
+            <select class="plain" id="i-formula">
+              <option value="mifflin">Mifflin-St Jeor — มาตรฐาน แม่นสุดสำหรับคนทั่วไป</option>
+              <option value="katch">Katch-McArdle — แม่นกว่า ถ้ารู้ % ไขมัน</option>
+              <option value="harris">Harris-Benedict (ฉบับปรับปรุง) — สูตรเก่า</option>
+            </select>
+          </div>
+          <table class="mactable" id="formulatable"></table>
+          <p class="note">ทุกสูตรคือค่าประมาณจากค่าเฉลี่ยประชากร ตัวจริงของแต่ละคนต่างได้ ±10% — ถ้าอยากได้เลขจริงของคุณ ใช้แท็บ <b>ติดตามจริง</b></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT: readout -->
+    <div>
+      <div class="label">
+        <div class="cap">สรุปพลังงานต่อวัน</div>
+        <div class="rule-hi"></div>
+        <div class="lrow"><span class="k">BMR — เผาตอนนอนนิ่ง ๆ</span><span class="v mono" id="o-bmr">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">× ตัวคูณกิจกรรม</span><span class="v mono" id="o-mult">—</span></div>
+        <div class="rule-mid"></div>
+        <div class="hero">
+          <span class="eyebrow">TDEE — เผาจริงทั้งวัน</span>
+          <div class="n mono"><span id="o-tdee">—</span><small>kcal</small></div>
+          <div class="why" id="o-tdee-why">กินเท่านี้น้ำหนักจะนิ่ง</div>
+        </div>
+        <div class="rule-hi"></div>
+        <div class="hero target">
+          <span class="eyebrow" id="o-goal-label">เป้าหมาย</span>
+          <div class="n mono"><span id="o-target">—</span><small>kcal</small></div>
+          <div class="why" id="o-target-why"></div>
+        </div>
+        <div class="rule-mid"></div>
+        <div class="macbar" id="macbar"></div>
+        <table class="mactable" id="macrotable"></table>
+        <div class="rule-lo" style="margin-top:6px"></div>
+        <div class="lrow"><span class="k">โปรตีนต่อมื้อ</span><span class="v mono" id="o-permeal">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">น้ำดื่ม/วัน</span><span class="v mono" id="o-water">—</span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">BMI</span><span class="v mono" id="o-bmi">—</span></div>
+        <div class="lrow" style="padding-top:0"><span class="k" style="font-size:12px; color:var(--ink-3)" id="o-bmi-note"></span></div>
+        <div class="rule-lo"></div>
+        <div class="lrow"><span class="k">มวลไร้ไขมัน (LBM)</span><span class="v mono" id="o-lbm">—</span></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ═══════════ TAB 2 ═══════════ -->
+  <div id="panel-track" role="tabpanel" aria-labelledby="tab-track" hidden>
+    <section class="card">
+      <div class="head">
+        <h2>TDEE จริงของคุณ</h2>
+        <span class="hint">คำนวณย้อนกลับจาก 21 วันล่าสุด</span>
+      </div>
+      <div class="body">
+        <div class="stats">
+          <div class="stat"><div class="k">TDEE จริง</div><div class="v" id="a-tdee">—</div><div class="s" id="a-tdee-s">ยังไม่มีข้อมูลพอ</div></div>
+          <div class="stat"><div class="k">น้ำหนักเทรนด์</div><div class="v" id="a-trend">—</div><div class="s" id="a-trend-s">น้ำหนักจริงที่ตัดน้ำในตัวออกแล้ว</div></div>
+          <div class="stat"><div class="k">อัตราเปลี่ยน</div><div class="v" id="a-rate">—</div><div class="s" id="a-rate-s">ต่อสัปดาห์</div></div>
+          <div class="stat"><div class="k">กินเฉลี่ย</div><div class="v" id="a-intake">—</div><div class="s" id="a-intake-s">kcal/วัน</div></div>
+        </div>
+        <p class="note" id="a-verdict">ชั่งน้ำหนักตอนเช้าหลังเข้าห้องน้ำก่อนกินอะไร แล้วบันทึกแคลที่กินทั้งวัน — ทำให้ครบ 14 วันแล้วระบบจะบอก TDEE จริงของคุณ ซึ่งแม่นกว่าสูตรมาก</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>น้ำหนัก</h2><span class="hint">จุด = ที่ชั่งจริง · เส้น = เทรนด์ 21 วัน</span></div>
+      <div class="body">
+        <div class="chartwrap"><canvas id="chart"></canvas><div class="tip" id="tip"></div></div>
+        <div class="chartlegend">
+          <span><i class="d"></i>ชั่งได้</span><span><i class="l"></i>เทรนด์ 21 วัน (ตัดน้ำในตัวออก)</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="card" style="margin-top:0">
+        <div class="head"><h2>บันทึกประจำวัน</h2><span class="hint" id="log-hint"></span></div>
+        <div class="body">
+          <div class="scroll">
+            <table class="logtable">
+              <thead><tr><th>วันที่</th><th>น้ำหนัก</th><th>kcal</th><th></th></tr></thead>
+              <tbody id="logbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:0">
+        <div class="head"><h2>เพิ่มรายการ</h2></div>
+        <div class="body">
+          <div class="fieldrow" style="grid-template-columns:1fr">
+            <div class="field"><label for="l-date">วันที่</label>
+              <div class="inputbox"><input type="date" id="l-date"></div></div>
+            <div class="field"><label for="l-wt">น้ำหนักตอนเช้า</label>
+              <div class="inputbox"><input type="number" id="l-wt" step="0.1" min="30" max="300" placeholder="—"><span class="unit">กก.</span></div></div>
+            <div class="field"><label for="l-kcal">กินไปทั้งวัน</label>
+              <div class="inputbox"><input type="number" id="l-kcal" step="10" min="0" max="10000" placeholder="—"><span class="unit">kcal</span></div></div>
+          </div>
+          <div class="btnrow" style="margin-top:14px">
+            <button class="btn" id="l-add" type="button">บันทึก</button>
+            <button class="btn ghost sm" id="l-copy" type="button">คัดลอกข้อมูลสำรอง</button>
+            <button class="btn ghost sm" id="l-paste" type="button">กู้จากข้อมูลสำรอง</button>
+          </div>
+          <p class="note" id="l-msg" hidden></p>
+          <p class="note">ลงวันเดิมซ้ำ = ทับของเดิม · เว้นช่องไหนว่างไว้ได้ แต่ต้องมีทั้งน้ำหนักและ kcal ถึงจะคำนวณ TDEE จริงได้</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">
+    เครื่องมือช่วยตัดสินใจเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ — ถ้ามีโรคประจำตัว ตั้งครรภ์ กำลังกินยา หรือจะลดต่ำกว่า 1,500 kcal (ชาย) / 1,200 kcal (หญิง) ควรคุยกับแพทย์หรือนักกำหนดอาหารก่อน ·
+    ข้อมูลทั้งหมดเก็บอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ถูกส่งไปไหน
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+<script src="pwa.js"></script>
+</body>
+</html>

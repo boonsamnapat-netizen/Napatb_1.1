@@ -238,6 +238,46 @@ canvas{display:block; width:100%; height:230px; touch-action:none}
 .foot{margin-top:26px; padding-top:14px; border-top:1px solid var(--hair); font-size:12px; color:var(--ink-3); max-width:78ch}
 .foot a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+
+/* ═══ web app chrome (PWA) ═══ */
+.wrap{
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+  padding-top:max(26px, calc(env(safe-area-inset-top) + 14px));
+  padding-bottom:max(72px, calc(env(safe-area-inset-bottom) + 48px));
+}
+.mastbtns{display:flex; gap:8px; flex-wrap:wrap}
+#installbtn{border-color:var(--accent); color:var(--accent); font-weight:600}
+#installbtn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+
+.toast{
+  position:fixed; left:50%; bottom:max(18px, calc(env(safe-area-inset-bottom) + 12px));
+  transform:translate(-50%,14px); z-index:50;
+  display:flex; align-items:center; gap:12px; max-width:min(92vw,460px);
+  background:var(--ink); color:var(--card); font-size:13px; line-height:1.5;
+  padding:11px 15px; border-radius:4px; box-shadow:0 10px 34px -12px rgba(0,0,0,.55);
+  opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease;
+}
+.toast[data-on="1"]{opacity:1; transform:translate(-50%,0); pointer-events:auto}
+.toast button{
+  flex:none; appearance:none; background:none; border:1px solid currentColor; color:inherit;
+  font:inherit; font-size:12.5px; font-weight:600; padding:4px 11px; border-radius:3px; cursor:pointer;
+}
+.toast button:hover{background:rgba(127,127,127,.25)}
+
+/* ยืนยันว่าเป็นแอปที่ติดตั้งแล้ว */
+@media (display-mode: standalone){
+  #installbtn{display:none !important}
+}
+
+@media (max-width:600px){
+  .mast{align-items:flex-start; gap:12px; padding-bottom:12px}
+  .mast p{font-size:13px}
+  .mastbtns{width:100%}
+  .mastbtns .themebtn{flex:1; text-align:center; padding:8px 10px}
+  .card > .head{flex-wrap:wrap; gap:2px}
+  .card > .head .hint{flex-basis:100%}
+}
 </style>
 
 <div class="wrap">
@@ -247,7 +287,10 @@ canvas{display:block; width:100%; height:230px; touch-action:none}
       <h1>งบแคลอรี่รายวัน</h1>
       <p>คำนวณ TDEE แล้วแปลงเป็นเป้าหมายลดน้ำหนักกับมาโครที่กินได้จริง — พร้อมโหมดหา TDEE จริงจากน้ำหนักที่ชั่งกับแคลที่กิน</p>
     </div>
-    <button class="themebtn" id="themebtn" type="button">โหมดมืด/สว่าง</button>
+    <div class="mastbtns">
+      <button class="themebtn" id="installbtn" type="button" hidden>ติดตั้งเป็นแอป</button>
+      <button class="themebtn" id="themebtn" type="button">โหมดมืด/สว่าง</button>
+    </div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -933,16 +976,21 @@ $("goalbody").addEventListener("click", ev => {
   renderAll();
 });
 
-/* tabs */
-const TABS = [["tab-calc","panel-calc"],["tab-track","panel-track"]];
-TABS.forEach(([t,p]) => $(t).addEventListener("click", () => {
+/* tabs — รองรับลิงก์ตรง #track (ใช้กับ shortcut ของแอปที่ติดตั้งไว้) */
+const TABS = [["tab-calc","panel-calc","calc"],["tab-track","panel-track","track"]];
+function showTab(hash, push){
+  const row = TABS.find(r => r[2] === hash) || TABS[0];
   TABS.forEach(([t2,p2]) => {
-    const on = t2 === t;
+    const on = t2 === row[0];
     $(t2).setAttribute("aria-selected", on ? "true" : "false");
     $(p2).hidden = !on;
   });
-  if(p === "panel-track") requestAnimationFrame(() => drawChart(adaptive()));
-}));
+  if(push && location.hash !== "#" + row[2])
+    history.replaceState(null, "", "#" + row[2]);
+  if(row[2] === "track") requestAnimationFrame(() => drawChart(adaptive()));
+}
+TABS.forEach(([t,,h]) => $(t).addEventListener("click", () => showTab(h, true)));
+addEventListener("hashchange", () => showTab(location.hash.slice(1), false));
 
 /* theme */
 function applyTheme(){
@@ -1048,6 +1096,7 @@ applyTheme();
 pushInputs();
 $("l-date").value = todayISO();
 renderAll();
+showTab(location.hash.slice(1), false);
 document.fonts && document.fonts.ready.then(() => drawChart(adaptive()));
 })();
 </script>
