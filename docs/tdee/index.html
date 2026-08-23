@@ -36,6 +36,7 @@
 
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-calc" aria-selected="true" aria-controls="panel-calc">คำนวณ</button>
+    <button class="tab" role="tab" id="tab-food" aria-selected="false" aria-controls="panel-food">อาหาร<span class="badge" id="foodcount"></span></button>
     <button class="tab" role="tab" id="tab-track" aria-selected="false" aria-controls="panel-track">ติดตามจริง<span class="badge" id="logcount"></span></button>
   </nav>
 
@@ -188,6 +189,70 @@
   </div>
   </div>
 
+
+  <!-- ═══════════ TAB: อาหาร ═══════════ -->
+  <div id="panel-food" role="tabpanel" aria-labelledby="tab-food" hidden>
+    <section class="card">
+      <div class="head">
+        <h2>งบวันนี้</h2>
+        <div class="datenav">
+          <button type="button" id="d-prev" aria-label="วันก่อนหน้า">‹</button>
+          <input type="date" id="d-cur" aria-label="วันที่">
+          <button type="button" id="d-next" aria-label="วันถัดไป">›</button>
+        </div>
+      </div>
+      <div class="body">
+        <div class="budget">
+          <div class="bnum"><span id="f-eaten">0</span> <small class="u">/ <span id="f-target">—</span> kcal</small></div>
+          <div class="bbar"><span id="f-bar" style="width:0%"></span></div>
+          <div class="bleft" id="f-left">ยังไม่ได้บันทึกอะไรวันนี้</div>
+        </div>
+        <div class="macrogoals" id="f-macros"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>เพิ่มอาหาร</h2><span class="hint" id="a-hint"></span></div>
+      <div class="body">
+        <div class="addrow">
+          <button class="addbtn" type="button" id="a-photo"><span class="ic">📷</span><b>ถ่ายรูป</b><span>ให้ AI ประเมินให้</span></button>
+          <button class="addbtn" type="button" id="a-scan"><span class="ic">▥</span><b>สแกนบาร์โค้ด</b><span>ของซอง ของกล่อง</span></button>
+          <button class="addbtn" type="button" id="a-lib"><span class="ic">★</span><b>คลังอาหาร</b><span>ที่เคยกินมาแล้ว</span></button>
+          <button class="addbtn" type="button" id="a-manual"><span class="ic">✎</span><b>พิมพ์เอง</b><span>รู้ตัวเลขอยู่แล้ว</span></button>
+        </div>
+        <input type="file" id="photoin" accept="image/*" capture="environment" hidden>
+        <p class="note" id="a-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>กินอะไรไปบ้าง</h2><span class="hint" id="f-count"></span></div>
+      <div class="body" id="mealwrap"></div>
+    </section>
+
+    <details class="settings" id="aisettings">
+      <summary>ตั้งค่า AI ดูรูปอาหาร</summary>
+      <div class="body">
+        <p class="note">ปุ่ม “ถ่ายรูป” จะใช้ได้ต่อเมื่อตั้งค่าสองช่องนี้แล้ว — ต้องติดตั้ง Cloudflare Worker ก่อน วิธีทำอยู่ในไฟล์ <code>worker/README.md</code> ของ repo ค่าที่กรอกเก็บอยู่ในเครื่องนี้เท่านั้น ไม่ขึ้น git</p>
+        <div class="fieldrow" style="grid-template-columns:1fr; margin-top:14px">
+          <div class="field">
+            <label for="ai-url">ที่อยู่ Worker</label>
+            <div class="inputbox"><input type="url" id="ai-url" placeholder="https://tdee-food-vision.xxx.workers.dev" style="font-size:13px"></div>
+          </div>
+          <div class="field">
+            <label for="ai-token">รหัสแอป (APP_TOKEN)</label>
+            <div class="inputbox"><input type="password" id="ai-token" placeholder="••••••••" style="font-size:13px"></div>
+          </div>
+        </div>
+        <div class="btnrow" style="margin-top:14px">
+          <button class="btn sm" type="button" id="ai-test">ทดสอบการเชื่อมต่อ</button>
+          <button class="btn ghost sm" type="button" id="ai-clear">ล้างค่า</button>
+        </div>
+        <p class="note" id="ai-msg" hidden></p>
+      </div>
+    </details>
+  </div>
+
   <!-- ═══════════ TAB 2 ═══════════ -->
   <div id="panel-track" role="tabpanel" aria-labelledby="tab-track" hidden>
     <section class="card">
@@ -254,9 +319,100 @@
 
   <p class="foot">
     เครื่องมือช่วยตัดสินใจเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ — ถ้ามีโรคประจำตัว ตั้งครรภ์ กำลังกินยา หรือจะลดต่ำกว่า 1,500 kcal (ชาย) / 1,200 kcal (หญิง) ควรคุยกับแพทย์หรือนักกำหนดอาหารก่อน ·
-    ข้อมูลทั้งหมดเก็บอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ถูกส่งไปไหน
+    แคลจากรูปและจากบาร์โค้ดเป็นค่าประมาณ จุดที่พลาดง่ายที่สุดคือปริมาณ ไม่ใช่ชนิดอาหาร ·
+    น้ำหนัก รายการอาหาร และรูปทั้งหมดเก็บอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น
+    <b>ยกเว้นตอนกดปุ่มถ่ายรูป</b> ซึ่งจะส่งรูปนั้นไปที่ Worker ของคุณเองแล้วต่อไปยัง Claude เพื่อประเมินแคล
+    และ<b>ตอนสแกนบาร์โค้ด</b> ซึ่งส่งเฉพาะเลขบาร์โค้ดไปถาม Open Food Facts
   </p>
 </div>
+
+
+<!-- ═══════════ กล่องแก้ไขรายการอาหาร ═══════════ -->
+<dialog id="dlg-edit">
+  <form method="dialog" class="dhead">
+    <h2 id="ed-title">เพิ่มอาหาร</h2>
+    <button class="xbtn" type="submit" value="cancel" aria-label="ปิด">×</button>
+  </form>
+  <div class="dbody">
+    <img class="previewimg" id="ed-img" alt="รูปอาหารที่ถ่ายไว้" hidden style="margin-bottom:14px">
+    <div class="aibox" id="ed-ai" hidden style="margin-bottom:14px"></div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label for="ed-meal">มื้อ</label>
+      <div class="mealpick" id="ed-meal">
+        <label><input type="radio" name="meal" value="เช้า">เช้า</label>
+        <label><input type="radio" name="meal" value="กลางวัน" checked>กลางวัน</label>
+        <label><input type="radio" name="meal" value="เย็น">เย็น</label>
+        <label><input type="radio" name="meal" value="ว่าง">ว่าง</label>
+      </div>
+    </div>
+
+    <div class="fieldrow" style="grid-template-columns:1fr; gap:12px">
+      <div class="field">
+        <label for="ed-name">ชื่ออาหาร</label>
+        <div class="inputbox"><input type="text" id="ed-name" placeholder="เช่น ข้าวกะเพราไก่ไข่ดาว" style="font-family:var(--f-body); font-size:15px"></div>
+      </div>
+      <div class="field">
+        <label for="ed-qty">ปริมาณ</label>
+        <div class="inputbox"><input type="text" id="ed-qty" placeholder="เช่น 1 จาน / 200 ก. / 1 กระป๋อง" style="font-family:var(--f-body); font-size:15px"></div>
+      </div>
+    </div>
+
+    <div class="macro4" style="margin-top:12px">
+      <div class="field"><label for="ed-kcal">kcal</label>
+        <div class="inputbox"><input type="number" id="ed-kcal" min="0" max="9000" step="1" placeholder="0"></div></div>
+      <div class="field"><label for="ed-p">โปรตีน</label>
+        <div class="inputbox"><input type="number" id="ed-p" min="0" max="500" step="0.1" placeholder="0"></div></div>
+      <div class="field"><label for="ed-f">ไขมัน</label>
+        <div class="inputbox"><input type="number" id="ed-f" min="0" max="500" step="0.1" placeholder="0"></div></div>
+      <div class="field"><label for="ed-c">คาร์บ</label>
+        <div class="inputbox"><input type="number" id="ed-c" min="0" max="900" step="0.1" placeholder="0"></div></div>
+    </div>
+    <p class="note" id="ed-check"></p>
+
+    <label style="display:flex; align-items:center; gap:9px; margin-top:14px; font-size:13.5px; cursor:pointer">
+      <input type="checkbox" id="ed-save" checked style="width:16px; height:16px; accent-color:var(--accent)">
+      เก็บเข้าคลังอาหาร เอาไว้กดซ้ำวันหลัง
+    </label>
+  </div>
+  <div class="dfoot">
+    <button class="btn ghost sm" type="button" id="ed-del" hidden>ลบรายการนี้</button>
+    <button class="btn ghost sm" type="button" id="ed-cancel">ยกเลิก</button>
+    <button class="btn" type="button" id="ed-ok">บันทึก</button>
+  </div>
+</dialog>
+
+<!-- ═══════════ คลังอาหาร ═══════════ -->
+<dialog id="dlg-lib">
+  <form method="dialog" class="dhead">
+    <h2>คลังอาหารของคุณ</h2>
+    <button class="xbtn" type="submit" value="cancel" aria-label="ปิด">×</button>
+  </form>
+  <div class="dbody">
+    <input type="search" class="libsearch" id="lib-q" placeholder="พิมพ์ค้นหา หรือเลขบาร์โค้ด">
+    <div id="lib-list"></div>
+  </div>
+</dialog>
+
+<!-- ═══════════ สแกนบาร์โค้ด ═══════════ -->
+<dialog id="dlg-scan">
+  <form method="dialog" class="dhead">
+    <h2>สแกนบาร์โค้ด</h2>
+    <button class="xbtn" type="submit" value="cancel" aria-label="ปิด">×</button>
+  </form>
+  <div class="dbody">
+    <video id="scanvideo" playsinline muted></video>
+    <p class="scanhint" id="scan-msg">กำลังเปิดกล้อง…</p>
+    <div class="field" style="margin-top:14px">
+      <label for="scan-manual">หรือพิมพ์เลขใต้บาร์โค้ดเอง</label>
+      <div class="inputbox"><input type="text" id="scan-manual" inputmode="numeric" placeholder="8850000000000"><span class="unit"></span></div>
+    </div>
+  </div>
+  <div class="dfoot">
+    <button class="btn ghost sm" type="button" id="scan-close">ปิด</button>
+    <button class="btn" type="button" id="scan-go">ค้นหาเลขนี้</button>
+  </div>
+</dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js"></script>

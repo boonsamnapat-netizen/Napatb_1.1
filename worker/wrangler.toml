@@ -1,0 +1,14 @@
+name = "tdee-food-vision"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ตั้งค่าให้ตรงกับที่อยู่เว็บของคุณ — Worker จะรับเฉพาะคำขอที่มาจากตรงนี้
+[vars]
+ALLOWED_ORIGINS = "https://boonsamnapat-netizen.github.io,http://localhost:8099"
+CLAUDE_MODEL = "claude-opus-5"
+EFFORT = "medium"
+
+# ความลับ 2 ตัว ไม่ได้อยู่ในไฟล์นี้ ตั้งด้วยคำสั่ง (ดู README):
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put APP_TOKEN

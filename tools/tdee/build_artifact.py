@@ -36,6 +36,7 @@ def main() -> None:
         body,
         "",
         "<script>",
+        "window.__TDEE_ARTIFACT__ = true;  // ปิดสแกนบาร์โค้ด/AI ดูรูป — CSP ของหน้า Artifact ห้ามต่อออกนอก",
         (SRC / "app.js").read_text(encoding="utf-8").strip(),
         "</script>",
         "",

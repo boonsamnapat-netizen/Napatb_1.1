@@ -283,3 +283,112 @@ canvas{display:block; width:100%; height:230px; touch-action:none}
   .card > .head{flex-wrap:wrap; gap:2px}
   .card > .head .hint{flex-basis:100%}
 }
+
+/* ═══════════ แท็บอาหาร ═══════════ */
+.datenav{display:flex; align-items:center; gap:2px}
+.datenav button{appearance:none; background:none; border:1px solid var(--hair); color:var(--ink-2);
+  border-radius:2px; width:30px; height:30px; font-size:17px; line-height:1; cursor:pointer; padding:0}
+.datenav button:hover{border-color:var(--ink-3); color:var(--ink)}
+.datenav input{border:1px solid var(--hair); border-radius:2px; background:var(--sunk); color:var(--ink);
+  font-family:var(--f-data); font-size:12.5px; padding:6px 8px; margin:0 4px}
+
+.budget{display:flex; flex-direction:column; gap:8px}
+.bnum{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-weight:600;
+  font-size:clamp(32px,7vw,42px); line-height:1; letter-spacing:-.02em}
+.bbar{height:12px; border-radius:2px; background:var(--sunk); border:1px solid var(--hair); overflow:hidden; position:relative}
+.bbar span{display:block; height:100%; background:var(--accent); transition:width .25s}
+.bbar[data-over="1"] span{background:var(--warn)}
+.bleft{font-size:13px; color:var(--ink-3)}
+.bleft b{font-weight:600; color:var(--ink)}
+.bleft.over b{color:var(--warn)}
+
+.macrogoals{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:16px}
+.mg .k{font-size:12px; color:var(--ink-2); display:flex; justify-content:space-between; gap:6px; margin-bottom:4px}
+.mg .k b{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink)}
+.mg .t{height:6px; border-radius:999px; background:var(--sunk); overflow:hidden}
+.mg .t span{display:block; height:100%}
+
+.addrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px}
+.addbtn{display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left;
+  appearance:none; background:var(--card); border:1px solid var(--hair); border-radius:3px;
+  padding:12px 13px; cursor:pointer; color:var(--ink); font:inherit}
+.addbtn:hover{border-color:var(--accent); background:var(--accent-soft)}
+.addbtn .ic{font-size:19px; line-height:1.2; margin-bottom:3px}
+.addbtn b{font-family:var(--f-display); font-weight:600; font-size:14px}
+.addbtn span{font-size:11.5px; color:var(--ink-3); line-height:1.4}
+.addbtn:disabled{opacity:.45; cursor:not-allowed}
+.addbtn:disabled:hover{border-color:var(--hair); background:var(--card)}
+
+.meal + .meal{margin-top:18px}
+.mealhead{display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  border-bottom:2px solid var(--rule); padding-bottom:5px; margin-bottom:2px}
+.mealhead h3{font-size:14px; font-weight:600}
+.mealhead .kc{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--ink-2)}
+.fitem{display:flex; align-items:center; gap:11px; padding:9px 0; border-bottom:1px solid var(--hair)}
+.fitem:last-child{border-bottom:0}
+.fthumb{flex:none; width:42px; height:42px; border-radius:3px; object-fit:cover; background:var(--sunk); border:1px solid var(--hair)}
+.fthumb.ph{display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink-3)}
+.fmain{flex:1; min-width:0}
+.fmain > b{display:block; font-weight:500; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.fmain > span{display:block; font-size:11.5px; color:var(--ink-3); line-height:1.45}
+.fkc{flex:none; text-align:right; font-family:var(--f-data); font-variant-numeric:tabular-nums}
+.fkc > b{display:block; font-weight:600; font-size:14px}
+.fkc > span{display:block; font-size:11px; color:var(--ink-3)}
+.fempty{font-size:12.5px; color:var(--ink-3); padding:10px 0}
+.srcpill{display:inline-block; font-size:10px; font-weight:600; padding:0 5px; border-radius:2px;
+  background:var(--sunk); color:var(--ink-3); border:1px solid var(--hair); margin-left:5px; vertical-align:1px}
+
+/* ═══════════ กล่องโต้ตอบ ═══════════ */
+dialog{border:1px solid var(--hair); border-radius:4px; background:var(--card); color:var(--ink);
+  padding:0; max-width:min(94vw,470px); width:100%; box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(10,10,14,.55); backdrop-filter:blur(2px)}
+dialog .dhead{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:14px 18px 11px; border-bottom:1px solid var(--hair)}
+dialog .dhead h2{font-size:16px}
+dialog .dbody{padding:16px 18px; max-height:min(68vh,560px); overflow-y:auto}
+dialog .dfoot{display:flex; gap:9px; justify-content:flex-end; padding:12px 18px;
+  border-top:1px solid var(--hair); background:var(--sunk); flex-wrap:wrap}
+.xbtn{appearance:none; background:none; border:0; color:var(--ink-3); font-size:21px; line-height:1;
+  cursor:pointer; padding:2px 6px; border-radius:2px}
+.xbtn:hover{color:var(--ink); background:var(--sunk)}
+
+.mealpick{display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--hair);
+  border-radius:2px; overflow:hidden; background:var(--sunk)}
+.mealpick label{text-align:center; padding:8px 4px; font-size:13px; cursor:pointer; color:var(--ink-2)}
+.mealpick label:has(input:checked){background:var(--ink); color:var(--card); font-weight:500}
+.mealpick input{position:absolute; opacity:0; pointer-events:none}
+
+.macro4{display:grid; grid-template-columns:repeat(4,1fr); gap:9px}
+.previewimg{width:100%; max-height:190px; object-fit:cover; border-radius:3px; border:1px solid var(--hair); display:block}
+.aibox{border:1px solid var(--hair); border-left:3px solid var(--accent); border-radius:2px;
+  padding:10px 12px; font-size:12.5px; color:var(--ink-2); background:var(--sunk)}
+.aibox .cf{font-weight:600; margin-right:6px}
+.cf.high{color:var(--good)} .cf.medium{color:var(--warn)} .cf.low{color:var(--bad)}
+.aiitems{margin:8px 0 0; padding:0; list-style:none; font-size:12px}
+.aiitems li{display:flex; justify-content:space-between; gap:10px; padding:3px 0; border-top:1px dashed var(--hair)}
+.aiitems .n{font-family:var(--f-data); font-variant-numeric:tabular-nums; color:var(--ink-3)}
+
+.libsearch{width:100%; border:1px solid var(--hair); border-radius:2px; background:var(--sunk); color:var(--ink);
+  font:inherit; font-size:14px; padding:9px 11px; margin-bottom:12px}
+.libsearch:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.libitem{display:flex; align-items:center; gap:10px; width:100%; text-align:left; appearance:none;
+  background:none; border:0; border-bottom:1px solid var(--hair); padding:10px 0; cursor:pointer; color:var(--ink); font:inherit}
+.libitem:hover{background:var(--sunk)}
+.libitem .m{flex:1; min-width:0}
+.libitem .m b{display:block; font-weight:500; font-size:14px}
+.libitem .m span{display:block; font-size:11.5px; color:var(--ink-3)}
+.libitem .kc{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-weight:600; font-size:13.5px}
+
+#scanvideo{width:100%; border-radius:3px; background:#000; display:block; aspect-ratio:4/3; object-fit:cover}
+.scanhint{font-size:12.5px; color:var(--ink-3); margin:10px 0 0; text-wrap:pretty}
+.spin{display:inline-block; width:13px; height:13px; border:2px solid var(--hair); border-top-color:var(--accent);
+  border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:7px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .spin{animation-duration:2.4s} }
+
+.settings{border:1px solid var(--hair); border-radius:3px; background:var(--card); margin-top:18px}
+.settings > summary{padding:13px 18px; cursor:pointer; font-family:var(--f-display); font-weight:600; font-size:15px; list-style:none}
+.settings > summary::-webkit-details-marker{display:none}
+.settings > summary::before{content:"▸"; display:inline-block; margin-right:9px; color:var(--ink-3); transition:transform .15s}
+.settings[open] > summary::before{transform:rotate(90deg)}
+.settings > .body{padding:2px 18px 18px; border-top:1px solid var(--hair)}

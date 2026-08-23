@@ -1,0 +1,16 @@
+{
+  "name": "tdee-food-vision",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ตัวกลางระหว่างเว็บแอปงบแคลอรี่รายวันกับ Claude — ถือ API key ไว้ฝั่งเซิร์ฟเวอร์",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.125.0"
+  }
+}

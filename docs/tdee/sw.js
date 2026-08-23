@@ -1,6 +1,6 @@
 /* งบแคลอรี่รายวัน — service worker
    เปลี่ยน VERSION ทุกครั้งที่แก้ไฟล์ในเชลล์ เพื่อให้เครื่องที่ติดตั้งไว้ดึงของใหม่ */
-const VERSION = "tdee-2026-08-23a";
+const VERSION = "tdee-2026-08-23b";
 const SHELL   = VERSION + "-shell";
 const FONTS   = "tdee-fonts-v1";
 
@@ -59,7 +59,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // ไฟล์อื่นในเชลล์: แคชก่อน
+  // ไฟล์อื่นในเชลล์ (รวมตัวอ่านบาร์โค้ดที่โหลดทีหลัง): แคชก่อน
   e.respondWith((async () => {
     const c = await caches.open(SHELL);
     const hit = await c.match(req);
