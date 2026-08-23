@@ -1,6 +1,6 @@
 /* งบแคลอรี่รายวัน — service worker
    เปลี่ยน VERSION ทุกครั้งที่แก้ไฟล์ในเชลล์ เพื่อให้เครื่องที่ติดตั้งไว้ดึงของใหม่ */
-const VERSION = "tdee-2026-08-22a";
+const VERSION = "tdee-2026-08-23a";
 const SHELL   = VERSION + "-shell";
 const FONTS   = "tdee-fonts-v1";
 

@@ -17,7 +17,7 @@ FONTS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
-    "family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600"
+    "family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600"
     '&family=IBM+Plex+Mono:wght@500;600&display=swap">'
 )
 

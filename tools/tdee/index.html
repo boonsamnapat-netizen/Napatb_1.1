@@ -1,9 +1,18 @@
 <title>งบแคลอรี่รายวัน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root{
+  /* Anuphan คือ IBM Plex Thai เวอร์ชันไม่มีหัว (Cadson Demak เจ้าเดียวกัน)
+     หัวข้อไม่มีหัว + เนื้อความมีหัว = แนวทางที่แอปไทยใช้กันบนจอมือถือ
+     ส่วน --f-data ต้องมี Plex Sans Thai ต่อท้าย เพราะ Plex Mono ไม่มีตัวไทย
+     ถ้าไม่ใส่ หน่วย "กก." จะหล่นไปใช้ฟอนต์ระบบคนละตัวกับตัวเลข */
+  --f-display:"Anuphan","IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --f-data:"IBM Plex Mono","IBM Plex Sans Thai",ui-monospace,SFMono-Regular,monospace;
+  --track:.045em;
+
   --paper:#F1F2F7; --card:#FCFCFB; --sunk:#F6F6FA;
   --ink:#14151C; --ink-2:#474A5A; --ink-3:#787C8E;
   --hair:#DCDDE6; --rule:#14151C;
@@ -42,11 +51,11 @@
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  font-family:var(--f-body);
   font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
-h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:600; margin:0; text-wrap:balance; line-height:1.3}
+.mono{font-family:var(--f-data); font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--f-display); font-weight:600; margin:0; text-wrap:balance; line-height:1.4}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px}
 
 .wrap{max-width:1160px; margin:0 auto; padding:26px 20px 72px}
@@ -55,7 +64,7 @@ h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:
 .mast{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;
   border-bottom:8px solid var(--rule); padding-bottom:10px; margin-bottom:0}
 .mast h1{font-size:clamp(26px,4.4vw,40px); font-weight:700; letter-spacing:-.02em}
-.mast p{margin:2px 0 0; color:var(--ink-3); font-size:13.5px; max-width:62ch}
+.mast p{margin:3px 0 0; color:var(--ink-3); font-size:13.5px; max-width:62ch; text-wrap:pretty}
 .themebtn{background:none; border:1px solid var(--hair); color:var(--ink-2); border-radius:999px;
   padding:5px 13px; font:inherit; font-size:12.5px; cursor:pointer; white-space:nowrap}
 .themebtn:hover{border-color:var(--ink-3); color:var(--ink)}
@@ -63,11 +72,11 @@ h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:
 /* ---- tabs ---- */
 .tabs{display:flex; gap:0; border-bottom:1px solid var(--hair); margin:0 0 22px}
 .tab{appearance:none; background:none; border:0; border-bottom:3px solid transparent;
-  font-family:"Kanit",sans-serif; font-size:15px; font-weight:500; color:var(--ink-3);
+  font-family:var(--f-display); font-size:15px; font-weight:500; color:var(--ink-3);
   padding:12px 16px; cursor:pointer; margin-bottom:-1px}
 .tab:hover{color:var(--ink)}
 .tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
-.tab .badge{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3); margin-left:6px}
+.tab .badge{font-family:var(--f-data); font-size:11px; color:var(--ink-3); margin-left:6px}
 [hidden]{display:none !important}
 
 /* ---- panels ---- */
@@ -82,7 +91,7 @@ h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:
 .card > .head .hint{font-size:12px; color:var(--ink-3)}
 .card > .body{padding:16px 18px 20px}
 
-.eyebrow{font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.eyebrow{font-size:11px; letter-spacing:var(--track); text-transform:uppercase; color:var(--ink-3); font-weight:600}
 
 /* ---- form ---- */
 .fieldrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px}
@@ -92,7 +101,7 @@ h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:
   background:var(--sunk); overflow:hidden}
 .inputbox:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
 .inputbox input{flex:1; min-width:0; appearance:none; border:0; background:none; color:var(--ink);
-  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:16px; font-weight:500;
+  font-family:var(--f-data); font-variant-numeric:tabular-nums; font-size:16px; font-weight:500;
   padding:9px 10px; outline:none}
 .inputbox input::-webkit-outer-spin-button,.inputbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .inputbox input[type=number]{-moz-appearance:textfield}
@@ -114,10 +123,10 @@ h1,h2,h3{font-family:"Kanit","Noto Sans Thai",system-ui,sans-serif; font-weight:
 .act .txt{flex:1; min-width:0}
 .act .txt b{display:block; font-weight:500; font-size:14px}
 .act .txt span{display:block; font-size:12px; color:var(--ink-3); line-height:1.45}
-.act .mult{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.act .mult{font-family:var(--f-data); font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums}
 
 .sub{font-size:12px; color:var(--ink-3); margin:9px 0 0}
-.sub code{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+.sub code{font-family:var(--f-data); font-size:11.5px}
 
 select.plain{appearance:none; width:100%; border:1px solid var(--hair); border-radius:2px; background:var(--sunk);
   color:var(--ink); font:inherit; font-size:14px; padding:9px 30px 9px 10px; cursor:pointer;
@@ -127,24 +136,25 @@ select.plain{appearance:none; width:100%; border:1px solid var(--hair); border-r
 /* ---- the readout panel (nutrition-label rules) ---- */
 .label{background:var(--card); border:1.5px solid var(--rule); border-radius:2px; padding:0 16px 16px; position:sticky; top:16px}
 @media (max-width:920px){ .label{position:static} }
-.label .cap{font-family:"Kanit",sans-serif; font-weight:700; font-size:20px; padding:13px 0 8px; letter-spacing:-.01em}
+.label .cap{font-family:var(--f-display); font-weight:700; font-size:20px; padding:13px 0 8px; letter-spacing:-.01em}
 .rule-hi{border-top:9px solid var(--rule); margin:0 -16px}
 .rule-mid{border-top:4px solid var(--rule); margin:0 -16px}
 .rule-lo{border-top:1px solid var(--hair); margin:0 -16px}
 .lrow{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:7px 0}
 .lrow .k{font-size:13.5px; color:var(--ink-2)}
-.lrow .v{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:14px; font-weight:600}
+.lrow .v{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-size:14px; font-weight:600}
 .hero{padding:12px 0 10px}
 .hero .eyebrow{display:block; margin-bottom:2px}
-.hero .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600;
+.hero .n{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-weight:600;
   font-size:clamp(44px,9vw,58px); line-height:1; letter-spacing:-.03em; display:flex; align-items:baseline; gap:8px}
-.hero .n small{font-family:"IBM Plex Sans Thai",sans-serif; font-size:15px; font-weight:400; color:var(--ink-3); letter-spacing:0}
+.hero .n small{font-family:var(--f-body); font-size:15px; font-weight:400; color:var(--ink-3); letter-spacing:0}
+.u{font-family:var(--f-body); font-size:12px; font-weight:400; color:var(--ink-3); letter-spacing:0}
 .hero .why{font-size:12.5px; color:var(--ink-3); margin-top:5px}
 .hero.target .n{color:var(--accent)}
 
 /* ---- goals table ---- */
 .gtable{width:100%; border-collapse:collapse; font-size:13.5px}
-.gtable th{text-align:right; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+.gtable th{text-align:right; font-size:11px; letter-spacing:var(--track); text-transform:uppercase; color:var(--ink-3);
   font-weight:600; padding:0 0 7px; border-bottom:1px solid var(--hair)}
 .gtable th:first-child{text-align:left}
 .gtable td{padding:0; border-bottom:1px solid var(--hair)}
@@ -152,7 +162,7 @@ select.plain{appearance:none; width:100%; border:1px solid var(--hair); border-r
 .gcell{display:block; width:100%; text-align:left; background:none; border:0; font:inherit; color:var(--ink); cursor:pointer}
 .gtable tbody tr:hover td{background:var(--sunk)}
 .gtable tbody tr[data-on="1"] td{background:var(--accent-soft)}
-.gtable td.c{padding:9px 0 9px 10px; text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.gtable td.c{padding:9px 0 9px 10px; text-align:right; font-family:var(--f-data); font-variant-numeric:tabular-nums}
 .gtable td.name{padding:9px 0}
 .gname{display:flex; align-items:center; gap:8px}
 .gname .tick{flex:none; width:13px; height:13px; border:1.5px solid var(--ink-3); border-radius:50%}
@@ -168,23 +178,23 @@ td.c.pos{color:var(--warn)}
 
 /* ---- macros ---- */
 .macbar{display:flex; height:34px; border-radius:2px; overflow:hidden; gap:2px; margin:4px 0 12px}
-.macbar span{display:flex; align-items:center; justify-content:center; color:#fff; font-family:"IBM Plex Mono",monospace;
+.macbar span{display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--f-data);
   font-size:11.5px; font-weight:600; min-width:0; overflow:hidden}
 .macbar span:first-child{border-radius:2px 0 0 2px}
 .macbar span:last-child{border-radius:0 2px 2px 0}
 .mactable{width:100%; border-collapse:collapse; font-size:13.5px}
 .mactable td{padding:7px 0; border-bottom:1px solid var(--hair)}
 .mactable tr:last-child td{border-bottom:0}
-.mactable td.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
-.mactable td.p{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink-3); width:52px}
+.mactable td.n{text-align:right; font-family:var(--f-data); font-variant-numeric:tabular-nums; font-weight:600}
+.mactable td.p{text-align:right; font-family:var(--f-data); font-variant-numeric:tabular-nums; color:var(--ink-3); width:52px}
 .swatch{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:8px; vertical-align:0}
 
 .slider{display:flex; align-items:center; gap:12px}
 .slider input[type=range]{flex:1; accent-color:var(--accent); min-width:0}
-.slider .out{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:13px;
+.slider .out{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-size:13px;
   min-width:66px; text-align:right; color:var(--ink-2)}
 
-.note{border-left:3px solid var(--hair); padding:2px 0 2px 12px; font-size:12.5px; color:var(--ink-3); margin:12px 0 0}
+.note{border-left:3px solid var(--hair); padding:2px 0 2px 12px; font-size:12.5px; color:var(--ink-3); margin:12px 0 0; text-wrap:pretty}
 .note.warn{border-left-color:var(--warn); color:var(--warn)}
 .note.bad{border-left-color:var(--bad); color:var(--bad)}
 .note.good{border-left-color:var(--good); color:var(--good)}
@@ -194,9 +204,9 @@ td.c.pos{color:var(--warn)}
 .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--hair);
   border:1px solid var(--hair); border-radius:2px; overflow:hidden}
 .stat{background:var(--card); padding:11px 13px}
-.stat .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
-.stat .v{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:21px; font-weight:600; line-height:1.35}
-.stat .v small{font-family:"IBM Plex Sans Thai",sans-serif; font-size:12px; font-weight:400; color:var(--ink-3)}
+.stat .k{font-size:11px; letter-spacing:var(--track); text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.stat .v{font-family:var(--f-data); font-variant-numeric:tabular-nums; font-size:21px; font-weight:600; line-height:1.35}
+.stat .v small{font-family:var(--f-body); font-size:12px; font-weight:400; color:var(--ink-3)}
 .stat .s{font-size:11.5px; color:var(--ink-3); line-height:1.4}
 
 /* ---- chart ---- */
@@ -213,21 +223,21 @@ canvas{display:block; width:100%; height:230px; touch-action:none}
 
 /* ---- log table ---- */
 .logtable{width:100%; border-collapse:collapse; font-size:13.5px}
-.logtable th{text-align:right; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+.logtable th{text-align:right; font-size:11px; letter-spacing:var(--track); text-transform:uppercase; color:var(--ink-3);
   font-weight:600; padding:0 8px 7px; border-bottom:1px solid var(--hair)}
 .logtable th:first-child{text-align:left; padding-left:0}
 .logtable th:last-child{padding-right:0; width:34px}
 .logtable td{padding:7px 8px; border-bottom:1px solid var(--hair); text-align:right;
-  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
-.logtable td:first-child{text-align:left; padding-left:0; font-family:"IBM Plex Sans Thai",sans-serif}
+  font-family:var(--f-data); font-variant-numeric:tabular-nums}
+.logtable td:first-child{text-align:left; padding-left:0; font-family:var(--f-body)}
 .logtable td:last-child{padding-right:0}
 .logtable tbody tr:hover td{background:var(--sunk)}
-.logtable .empty td{text-align:center; color:var(--ink-3); font-family:"IBM Plex Sans Thai",sans-serif; padding:22px 0}
+.logtable .empty td{text-align:center; color:var(--ink-3); font-family:var(--f-body); padding:22px 0}
 .del{background:none; border:0; color:var(--ink-3); cursor:pointer; font-size:15px; line-height:1; padding:3px 5px; border-radius:2px}
 .del:hover{color:var(--bad); background:var(--bad-soft)}
 .scroll{overflow-x:auto; max-height:340px; overflow-y:auto}
 
-.btn{appearance:none; font-family:"Kanit",sans-serif; font-size:14px; font-weight:500; border-radius:2px;
+.btn{appearance:none; font-family:var(--f-display); font-size:14px; font-weight:500; border-radius:2px;
   padding:9px 16px; cursor:pointer; border:1px solid var(--rule); background:var(--ink); color:var(--card)}
 .btn:hover{opacity:.88}
 .btn.ghost{background:none; color:var(--ink); border-color:var(--hair)}
@@ -782,15 +792,15 @@ function renderTrack(){
 
   if(a.tdee != null){
     set("a-tdee", n0(a.tdee), a.ok ? "kcal/วัน · เชื่อถือได้" : "kcal/วัน · ยังต้องเก็บข้อมูลอีก");
-    $("a-tdee").innerHTML = n0(a.tdee) + ' <small style="font-size:12px;color:var(--ink-3)">kcal</small>';
+    $("a-tdee").innerHTML = n0(a.tdee) + ' <small class="u">kcal</small>';
   } else set("a-tdee", "—", "ต้องมีน้ำหนัก + kcal อย่างน้อย 10 วัน");
 
   set("a-trend", a.sm.length ? n1(a.trendW) + " " : "—", a.sm.length ? "กก. · ล่าสุด " + thDate(a.sm[a.sm.length-1].d) : "ยังไม่มีข้อมูล");
-  if(a.sm.length) $("a-trend").innerHTML = n1(a.trendW) + ' <small style="font-size:12px;color:var(--ink-3)">กก.</small>';
+  if(a.sm.length) $("a-trend").innerHTML = n1(a.trendW) + ' <small class="u">กก.</small>';
 
   if(a.slope != null){
     const kw = a.slope * 7;
-    $("a-rate").innerHTML = (kw > 0 ? "+" : "") + n1(kw) + ' <small style="font-size:12px;color:var(--ink-3)">กก./สัปดาห์</small>';
+    $("a-rate").innerHTML = (kw > 0 ? "+" : "") + n1(kw) + ' <small class="u">กก./สัปดาห์</small>';
     $("a-rate").style.color = kw < -0.02 ? "var(--good)" : kw > 0.02 ? "var(--warn)" : "var(--ink)";
     $("a-rate-s").textContent = "จาก " + a.win.length + " ครั้งที่ชั่งใน " + a.span + " วัน";
   } else { $("a-rate").textContent = "—"; $("a-rate-s").textContent = "ต้องชั่งอย่างน้อย 3 ครั้ง ห่างกัน 7 วัน"; }
@@ -844,10 +854,11 @@ function drawChart(a){
 
   const sm = a.sm;
   const inkMuted = css("--ink-3"), grid = css("--grid"), accent = css("--accent"), dot = css("--dot"), surface = css("--card");
+  const fBody = css("--f-body"), fData = css("--f-data");
 
   if(sm.length < 2){
     c.fillStyle = inkMuted;
-    c.font = '13px "IBM Plex Sans Thai", sans-serif';
+    c.font = "13px " + fBody;
     c.textAlign = "center";
     c.fillText("บันทึกน้ำหนักอย่างน้อย 2 วันเพื่อดูกราฟ", W/2, H/2);
     return;
@@ -865,7 +876,7 @@ function drawChart(a){
   // recessive grid + y labels
   c.strokeStyle = grid; c.lineWidth = 1;
   c.fillStyle = inkMuted;
-  c.font = '11px "IBM Plex Mono", monospace';
+  c.font = "11px " + fData;
   c.textAlign = "right"; c.textBaseline = "middle";
   for(let i = 0; i <= 3; i++){
     const v = y0 + (y1 - y0) * i / 3, y = Math.round(Y(v)) + 0.5;
@@ -874,7 +885,7 @@ function drawChart(a){
   }
   // x labels: first & last
   c.textAlign = "left"; c.textBaseline = "top";
-  c.font = '11px "IBM Plex Sans Thai", sans-serif';
+  c.font = "11px " + fBody;
   c.fillText(thDate(sm[0].d), padL, H - padB + 6);
   c.textAlign = "right";
   c.fillText(thDate(sm[sm.length-1].d), W - padR, H - padB + 6);
@@ -898,7 +909,7 @@ function drawChart(a){
   c.beginPath(); c.arc(lx, ly, 5, 0, Math.PI*2);
   c.fillStyle = accent; c.fill();
   c.lineWidth = 2.5; c.strokeStyle = surface; c.stroke();
-  c.font = '600 12px "IBM Plex Mono", monospace';
+  c.font = "600 12px " + fData;
   c.fillStyle = accent; c.textBaseline = "bottom";
   c.textAlign = lx > W - 60 ? "right" : "left";
   c.fillText(last.t.toFixed(1), lx > W - 60 ? lx - 9 : lx + 9, ly - 6);
@@ -1057,7 +1068,7 @@ function showRestoreBox(value, readonly){
   if(!box){
     box = document.createElement("textarea");
     box.rows = 4;
-    box.style.cssText = "width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;"
+    box.style.cssText = "width:100%;margin-top:12px;font-family:var(--f-data);font-size:11px;"
       + "border:1px solid var(--hair);border-radius:2px;background:var(--sunk);color:var(--ink);padding:8px";
     const go = document.createElement("button");
     go.className = "btn sm"; go.type = "button"; go.textContent = "กู้ข้อมูลจากกล่องนี้";

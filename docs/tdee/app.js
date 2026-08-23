@@ -262,15 +262,15 @@ function renderTrack(){
 
   if(a.tdee != null){
     set("a-tdee", n0(a.tdee), a.ok ? "kcal/วัน · เชื่อถือได้" : "kcal/วัน · ยังต้องเก็บข้อมูลอีก");
-    $("a-tdee").innerHTML = n0(a.tdee) + ' <small style="font-size:12px;color:var(--ink-3)">kcal</small>';
+    $("a-tdee").innerHTML = n0(a.tdee) + ' <small class="u">kcal</small>';
   } else set("a-tdee", "—", "ต้องมีน้ำหนัก + kcal อย่างน้อย 10 วัน");
 
   set("a-trend", a.sm.length ? n1(a.trendW) + " " : "—", a.sm.length ? "กก. · ล่าสุด " + thDate(a.sm[a.sm.length-1].d) : "ยังไม่มีข้อมูล");
-  if(a.sm.length) $("a-trend").innerHTML = n1(a.trendW) + ' <small style="font-size:12px;color:var(--ink-3)">กก.</small>';
+  if(a.sm.length) $("a-trend").innerHTML = n1(a.trendW) + ' <small class="u">กก.</small>';
 
   if(a.slope != null){
     const kw = a.slope * 7;
-    $("a-rate").innerHTML = (kw > 0 ? "+" : "") + n1(kw) + ' <small style="font-size:12px;color:var(--ink-3)">กก./สัปดาห์</small>';
+    $("a-rate").innerHTML = (kw > 0 ? "+" : "") + n1(kw) + ' <small class="u">กก./สัปดาห์</small>';
     $("a-rate").style.color = kw < -0.02 ? "var(--good)" : kw > 0.02 ? "var(--warn)" : "var(--ink)";
     $("a-rate-s").textContent = "จาก " + a.win.length + " ครั้งที่ชั่งใน " + a.span + " วัน";
   } else { $("a-rate").textContent = "—"; $("a-rate-s").textContent = "ต้องชั่งอย่างน้อย 3 ครั้ง ห่างกัน 7 วัน"; }
@@ -324,10 +324,11 @@ function drawChart(a){
 
   const sm = a.sm;
   const inkMuted = css("--ink-3"), grid = css("--grid"), accent = css("--accent"), dot = css("--dot"), surface = css("--card");
+  const fBody = css("--f-body"), fData = css("--f-data");
 
   if(sm.length < 2){
     c.fillStyle = inkMuted;
-    c.font = '13px "IBM Plex Sans Thai", sans-serif';
+    c.font = "13px " + fBody;
     c.textAlign = "center";
     c.fillText("บันทึกน้ำหนักอย่างน้อย 2 วันเพื่อดูกราฟ", W/2, H/2);
     return;
@@ -345,7 +346,7 @@ function drawChart(a){
   // recessive grid + y labels
   c.strokeStyle = grid; c.lineWidth = 1;
   c.fillStyle = inkMuted;
-  c.font = '11px "IBM Plex Mono", monospace';
+  c.font = "11px " + fData;
   c.textAlign = "right"; c.textBaseline = "middle";
   for(let i = 0; i <= 3; i++){
     const v = y0 + (y1 - y0) * i / 3, y = Math.round(Y(v)) + 0.5;
@@ -354,7 +355,7 @@ function drawChart(a){
   }
   // x labels: first & last
   c.textAlign = "left"; c.textBaseline = "top";
-  c.font = '11px "IBM Plex Sans Thai", sans-serif';
+  c.font = "11px " + fBody;
   c.fillText(thDate(sm[0].d), padL, H - padB + 6);
   c.textAlign = "right";
   c.fillText(thDate(sm[sm.length-1].d), W - padR, H - padB + 6);
@@ -378,7 +379,7 @@ function drawChart(a){
   c.beginPath(); c.arc(lx, ly, 5, 0, Math.PI*2);
   c.fillStyle = accent; c.fill();
   c.lineWidth = 2.5; c.strokeStyle = surface; c.stroke();
-  c.font = '600 12px "IBM Plex Mono", monospace';
+  c.font = "600 12px " + fData;
   c.fillStyle = accent; c.textBaseline = "bottom";
   c.textAlign = lx > W - 60 ? "right" : "left";
   c.fillText(last.t.toFixed(1), lx > W - 60 ? lx - 9 : lx + 9, ly - 6);
@@ -537,7 +538,7 @@ function showRestoreBox(value, readonly){
   if(!box){
     box = document.createElement("textarea");
     box.rows = 4;
-    box.style.cssText = "width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;"
+    box.style.cssText = "width:100%;margin-top:12px;font-family:var(--f-data);font-size:11px;"
       + "border:1px solid var(--hair);border-radius:2px;background:var(--sunk);color:var(--ink);padding:8px";
     const go = document.createElement("button");
     go.className = "btn sm"; go.type = "button"; go.textContent = "กู้ข้อมูลจากกล่องนี้";
