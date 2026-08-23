@@ -53,11 +53,19 @@ class D1Stub {
   }
 }
 
-const MIGRATION = fileURLToPath(new URL("../../migrations/0001_init.sql", import.meta.url));
+import { readdirSync } from "node:fs";
 
-/** A fresh in-memory database with the schema applied. */
+const MIGRATIONS_DIR = fileURLToPath(new URL("../../migrations/", import.meta.url));
+
+/**
+ * A fresh in-memory database with every migration applied, in filename order —
+ * the same order wrangler applies them, so a migration that only works on an
+ * empty database fails here too.
+ */
 export function freshDb() {
   const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec(readFileSync(MIGRATION, "utf8"));
+  for (const file of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort()) {
+    sqlite.exec(readFileSync(MIGRATIONS_DIR + file, "utf8"));
+  }
   return new D1Stub(sqlite);
 }

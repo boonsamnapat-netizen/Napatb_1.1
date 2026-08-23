@@ -25,6 +25,23 @@ export function money(value) {
 
 const ICON = { expense: "💸", income: "💰" };
 
+/** 1,240 / 2,000 kcal — or just the figure when no goal is set. */
+function kcalAgainstGoal(netKcal, goal) {
+  const shown = `${money(netKcal)} kcal`;
+  if (!goal) return shown;
+  const left = goal - netKcal;
+  const verdict = left >= 0 ? `เหลืออีก ${money(left)}` : `เกินมา ${money(-left)}`;
+  return `${money(netKcal)} / ${money(goal)} kcal · ${verdict}`;
+}
+
+function calorieLine(entry) {
+  if (entry.direction === "burn") {
+    const duration = entry.durationMin ? ` ${money(entry.durationMin)} นาที` : "";
+    return `🏃 ${entry.label || "ออกกำลังกาย"}${duration} −${money(entry.kcal)} kcal`;
+  }
+  return `🍚 ${entry.label || "(ไม่มีชื่อ)"} ${money(entry.kcal)} kcal`;
+}
+
 /**
  * Confirmation for freshly saved entries, plus the running totals for the day
  * they landed on.
@@ -37,46 +54,118 @@ const ICON = { expense: "💸", income: "💰" };
  * @param {string} totalsDate the Bangkok date those totals cover
  * @param {string} todayDate today in Bangkok
  */
-export function savedEntries(entries, totals, totalsDate, todayDate) {
+export function savedEntries(entries, totals, totalsDate, todayDate, options = {}) {
+  const { goal = null, learned = [] } = options;
+
   const lines = entries.map((entry) => {
+    const when = entry.localDate === todayDate ? "" : ` (${formatThaiDate(entry.localDate)})`;
+    if (entry.type === "calorie") {
+      const source = entry.fromMemory ? " · ใช้ค่าที่จำไว้" : "";
+      return `${calorieLine(entry)}${when}${source}`;
+    }
     const sign = entry.type === "income" ? "+" : "";
     const label = entry.label || "(ไม่มีชื่อ)";
-    const when = entry.localDate === todayDate ? "" : ` (${formatThaiDate(entry.localDate)})`;
     return `${ICON[entry.type]} ${label} ${sign}${money(entry.amount)}฿${when}`;
   });
 
   const dayName = totalsDate === todayDate ? "วันนี้" : formatThaiDate(totalsDate);
-  lines.push(`— ${dayName} จ่าย ${money(totals.expense)}฿ · รับ ${money(totals.income)}฿`);
+  // Only total the units this batch actually touched — a coffee should not drag
+  // an unrelated calorie figure into the reply.
+  if (entries.some((entry) => entry.type !== "calorie")) {
+    lines.push(`— ${dayName} จ่าย ${money(totals.expense)}฿ · รับ ${money(totals.income)}฿`);
+  }
+  if (entries.some((entry) => entry.type === "calorie")) {
+    lines.push(`— ${dayName} ${kcalAgainstGoal(totals.netKcal, goal)}`);
+  }
 
   // Only nudge when the reading really was a coin flip.
   if (entries.some((entry) => entry.needsConfirm)) {
-    lines.push("↳ ไม่ใช่รายจ่าย? พิมพ์ `ลบ` แล้วพิมพ์ใหม่พร้อมหน่วย เช่น `กาแฟ 120 บาท`");
+    lines.push("↳ ไม่ใช่รายจ่าย? พิมพ์ `ค` เพื่อบันทึกเป็นแคลแทน");
+  }
+  for (const label of learned) {
+    lines.push(`↳ จำ "${label}" ไว้แล้ว ครั้งหน้าพิมพ์แค่ \`ค ${label}\` ก็พอ`);
   }
   return lines.join("\n");
 }
 
-export function caloriesIgnored() {
-  return "หมายเหตุ: ตอนนี้บันทึกเฉพาะเงิน ส่วนแคลอรี่ยังไม่รองรับ (รอบถัดไป)";
+/** The bot has no figure for this dish and will not invent one. */
+export function needFigure(label, direction) {
+  if (direction === "burn") {
+    return [
+      `"${label}" เผาไปกี่แคลครับ? 🤔`,
+      "แคลที่เผาขึ้นกับระยะเวลาและน้ำหนักตัว ผมเลยไม่เดาให้",
+      `พิมพ์เลขต่อท้ายได้เลย เช่น \`${label} 30 นาที 300 แคล\``,
+    ].join("\n");
+  }
+  return [
+    `"${label}" กี่แคลครับ? 🤔`,
+    "ผมไม่มีตารางแคลอรี่อาหารไทยที่เชื่อถือได้ เลยไม่เดาให้",
+    `บอกครั้งเดียวพอ เช่น \`ค ${label} 250\` แล้วผมจะจำไว้ ครั้งหน้าพิมพ์แค่ \`ค ${label}\``,
+  ].join("\n");
+}
+
+export function remembered(label, kcal, isUpdate) {
+  const verb = isUpdate ? "แก้เป็น" : "จำไว้แล้ว";
+  return `🧠 "${label}" ${verb} ${money(kcal)} kcal\nครั้งหน้าพิมพ์แค่ \`ค ${label}\` ก็พอ`;
+}
+
+export function forgotten(label, existed) {
+  return existed ? `🧠 ลืม "${label}" แล้ว` : `ไม่เคยจำ "${label}" ไว้ครับ`;
+}
+
+export function memories(rows) {
+  if (rows.length === 0) {
+    return "ยังไม่ได้จำอะไรไว้เลยครับ\nลองพิมพ์ `จำ ข้าวมันไก่ 600`";
+  }
+  return [
+    "🧠 ที่จำไว้:",
+    ...rows.map((row) => {
+      const sign = row.direction === "burn" ? "−" : "";
+      return `   · ${row.name} ${sign}${money(row.kcal)} kcal`;
+    }),
+    "",
+    "ลบทีละอันด้วย `ลืม <ชื่อ>`",
+  ].join("\n");
+}
+
+export function goalSet(kcal) {
+  return `🎯 ตั้งเป้าไว้ ${money(kcal)} kcal ต่อวัน`;
+}
+
+export function goalShow(kcal) {
+  if (!kcal) return "ยังไม่ได้ตั้งเป้าครับ — พิมพ์ `เป้า 2000` เพื่อตั้ง";
+  return `🎯 เป้าตอนนี้ ${money(kcal)} kcal ต่อวัน`;
+}
+
+/** The figure and unit a row carries, whichever kind it is. */
+function figureOf(row) {
+  if (row.type === "calorie") {
+    return { value: row.kcal, unit: " kcal", sign: row.direction === "burn" ? "−" : "" };
+  }
+  return { value: row.amount, unit: "฿", sign: row.type === "income" ? "+" : "" };
 }
 
 export function deleted(row) {
-  const sign = row.type === "income" ? "+" : "";
-  return `🗑 ลบแล้ว: ${row.label || row.raw} ${sign}${money(row.amount)}฿`;
+  const { value, unit, sign } = figureOf(row);
+  return `🗑 ลบแล้ว: ${row.label || row.raw} ${sign}${money(value)}${unit}`;
 }
 
-export function amended(row, oldAmount) {
-  return `✏️ แก้แล้ว: ${row.label || row.raw} ${money(oldAmount)}฿ → ${money(row.amount)}฿`;
+export function amended(row, oldValue) {
+  const { value, unit } = figureOf(row);
+  return `✏️ แก้แล้ว: ${row.label || row.raw} ${money(oldValue)}${unit} → ${money(value)}${unit}`;
 }
 
 export function nothingToDelete() {
   return "ไม่มีรายการให้ลบครับ";
 }
 
-export function daySummary(summary, localDate) {
+export function daySummary(summary, localDate, goal = null) {
   if (summary.count === 0) return `📊 ${formatThaiDate(localDate)} — ยังไม่มีรายการ`;
 
   const expenses = summary.rows.filter((row) => row.type === "expense");
   const incomes = summary.rows.filter((row) => row.type === "income");
+  const eaten = summary.calorieRows.filter((row) => row.direction !== "burn");
+  const burned = summary.calorieRows.filter((row) => row.direction === "burn");
   const lines = [`📊 ${formatThaiDate(localDate)}`];
 
   if (expenses.length > 0) {
@@ -87,7 +176,20 @@ export function daySummary(summary, localDate) {
     lines.push(`💰 รับ ${money(summary.income)}฿`);
     lines.push(...incomes.map((row) => `   · ${row.label || "(ไม่มีชื่อ)"} ${money(row.amount)}`));
   }
-  lines.push(`คงเหลือสุทธิ ${money(summary.net)}฿`);
+  if (expenses.length > 0 || incomes.length > 0) {
+    lines.push(`คงเหลือสุทธิ ${money(summary.net)}฿`);
+  }
+
+  if (summary.calorieRows.length > 0) {
+    if (expenses.length > 0 || incomes.length > 0) lines.push("");
+    lines.push(`🍚 กิน ${money(summary.intake)} kcal`);
+    lines.push(...eaten.map((row) => `   · ${row.label || "(ไม่มีชื่อ)"} ${money(row.kcal)}`));
+    if (burned.length > 0) {
+      lines.push(`🏃 เผา ${money(summary.burn)} kcal`);
+      lines.push(...burned.map((row) => `   · ${row.label || "ออกกำลังกาย"} ${money(row.kcal)}`));
+    }
+    lines.push(`สุทธิ ${kcalAgainstGoal(summary.netKcal, goal)}`);
+  }
   return lines.join("\n");
 }
 
@@ -96,15 +198,18 @@ const CATEGORY_TH = {
   housing: "ที่พัก", health: "สุขภาพ", shopping: "ช้อปปิ้ง", salary: "เงินเดือน",
 };
 
-export function monthSummary(summary, month) {
+export function monthSummary(summary, month, calorieDays = 0, goal = null) {
   if (summary.count === 0) return `📊 ${formatThaiMonth(month)} — ยังไม่มีรายการ`;
 
-  const lines = [
-    `📊 ${formatThaiMonth(month)}`,
-    `💰 รับ ${money(summary.income)}฿`,
-    `💸 จ่าย ${money(summary.expense)}฿`,
-    `คงเหลือสุทธิ ${money(summary.net)}฿`,
-  ];
+  const lines = [`📊 ${formatThaiMonth(month)}`];
+
+  if (summary.rows.length > 0) {
+    lines.push(
+      `💰 รับ ${money(summary.income)}฿`,
+      `💸 จ่าย ${money(summary.expense)}฿`,
+      `คงเหลือสุทธิ ${money(summary.net)}฿`,
+    );
+  }
   if (summary.topCategories.length > 0) {
     lines.push("", "หมวดที่จ่ายมากสุด:");
     lines.push(
@@ -113,26 +218,29 @@ export function monthSummary(summary, month) {
       ),
     );
   }
+
+  if (summary.calorieRows.length > 0) {
+    lines.push("");
+    // Averaged over days that actually have entries, not calendar days — a
+    // month with three days logged should not read as if the other 28 were zero.
+    const average = calorieDays > 0 ? summary.netKcal / calorieDays : summary.netKcal;
+    lines.push(`🍚 เฉลี่ย ${money(Math.round(average))} kcal/วัน (${calorieDays} วันที่บันทึก)`);
+    if (goal) lines.push(`🎯 เป้า ${money(goal)} kcal/วัน`);
+  }
   return lines.join("\n");
 }
 
 export function unsupported(feature) {
-  if (feature === "calorie") {
-    return [
-      "ตอนนี้ยังบันทึกได้แค่รายรับ-รายจ่ายครับ 🙏",
-      "การนับแคลอรี่กำลังจะตามมาในรอบถัดไป",
-    ].join("\n");
-  }
   return [
     "ข้อความนี้ดูเหมือนเป็นการนัดหมาย/ตั้งเตือน ซึ่งยังไม่รองรับครับ 🙏",
-    "ตอนนี้บันทึกได้เฉพาะรายรับ-รายจ่าย เช่น `กาแฟ 120 บาท`",
+    "ตอนนี้บันทึกได้เฉพาะรายรับ-รายจ่าย และแคลอรี่",
   ].join("\n");
 }
 
 export function unparsed() {
   return [
-    "ไม่เจอจำนวนเงินในข้อความครับ 🤔",
-    "ลองพิมพ์แบบนี้: `ข้าวเช้า 50` หรือ `จ่ายค่าไฟ 1200 บาท`",
+    "ไม่เจอตัวเลขในข้อความครับ 🤔",
+    "ลองพิมพ์แบบนี้: `ข้าวเช้า 50` · `จ่ายค่าไฟ 1200 บาท` · `ค ข้าวมันไก่ 600`",
     "พิมพ์ `ช่วย` เพื่อดูวิธีใช้ทั้งหมด",
   ].join("\n");
 }
@@ -141,26 +249,35 @@ export function help() {
   return [
     "📝 วิธีใช้ — พิมพ์สั้น ๆ ก็พอ",
     "",
-    "บันทึกรายจ่าย",
+    "💸 รายจ่าย",
     "   ข้าวเช้า 50",
     "   กาแฟ 120 บาท",
-    "   จ่ายค่าไฟ 1,200",
     "   เมื่อวานกินหมูกระทะ 350 บาท",
     "   ค่าไฟ 1200 บาท กับค่าน้ำ 300 บาท   (บันทึกทีเดียว 2 รายการ)",
     "",
-    "บันทึกรายรับ",
+    "💰 รายรับ",
     "   ได้เงินเดือน 30000",
     "   +5000 ขายของ",
     "",
-    "ดูยอด",
-    "   สรุป          — วันนี้",
-    "   สรุปเดือน     — เดือนนี้",
+    "🍚 แคลอรี่",
+    "   ข้าวมันไก่ 600 แคล",
+    "   ค ข้าวมันไก่ 600      (ค = แคล ไม่ใช่เงิน)",
+    "   ค ข้าวมันไก่          (ครั้งต่อไปไม่ต้องใส่เลข ผมจำให้)",
+    "   วิ่ง 30 นาที 300 แคล   (ออกกำลังกาย = ลบออก)",
+    "   หมูกระทะ 800 แคล จ่าย 350 บาท   (บันทึกทั้งแคลและเงิน)",
     "",
-    "แก้ไข",
-    "   ลบ            — ลบรายการล่าสุด",
-    "   ลบ 3          — ลบรายการที่ 3 นับจากล่าสุด",
-    "   แก้ 1500      — แก้จำนวนเงินของรายการล่าสุด",
+    "🧠 สอนให้จำ",
+    "   จำ ข้าวมันไก่ 600",
+    "   ลืม ข้าวมันไก่",
+    "   รายการจำ",
+    "   เป้า 2000            — ตั้งเป้าแคลต่อวัน",
     "",
-    "ยังไม่รองรับ: นับแคลอรี่ และ to-do/แจ้งเตือน (กำลังทำรอบถัดไป)",
+    "📊 ดูยอด",
+    "   สรุป / สรุปเดือน",
+    "",
+    "✏️ แก้ไข",
+    "   ลบ · ลบ 3 · แก้ 1500",
+    "",
+    "ยังไม่รองรับ: to-do / แจ้งเตือนตามเวลา (รอบถัดไป)",
   ].join("\n");
 }

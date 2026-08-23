@@ -105,7 +105,8 @@ async function handleEvent(event, env) {
  */
 async function respond(messageText, owner, now, nowIso, env) {
   const today = localDate(now);
-  const result = parseMessage(messageText, now);
+  const recall = (name) => db.recallFood(env.DB, owner, name);
+  const result = await parseMessage(messageText, now, recall);
 
   switch (result.kind) {
     case "command":
@@ -114,17 +115,38 @@ async function respond(messageText, owner, now, nowIso, env) {
     case "unsupported":
       return fmt.unsupported(result.feature);
 
+    case "need_figure":
+      return fmt.needFigure(result.label, result.direction);
+
     case "unparsed":
       return fmt.unparsed();
 
     case "entries": {
       await db.insertEntries(env.DB, owner, result.entries, nowIso);
+
+      // A calorie figure typed out in full is worth keeping: next time the dish
+      // name alone is enough. Only figures the user actually supplied are
+      // learned — one read back from memory teaches nothing new.
+      //
+      // Exercise is left out. What a workout burns depends on how long it ran,
+      // so remembering "วิ่ง = 300" would hand back the same figure for a ten
+      // minute jog. The user can still teach one explicitly with `จำ`.
+      const learned = [];
+      for (const entry of result.entries) {
+        if (entry.type !== "calorie" || entry.fromMemory || !entry.label) continue;
+        if (entry.direction === "burn") continue;
+        const known = await db.recallFood(env.DB, owner, entry.label);
+        await db.rememberFood(env.DB, owner, entry.label, entry.kcal, entry.direction, nowIso);
+        if (!known) learned.push(entry.label);
+      }
+
       // Totals for the day the entries landed on, which is not always today.
       const totalsDate = result.entries[result.entries.length - 1].localDate;
-      const totals = await db.daySummary(env.DB, owner, totalsDate);
-      const lines = [fmt.savedEntries(result.entries, totals, totalsDate, today)];
-      if (result.ignoredCalories) lines.push(fmt.caloriesIgnored());
-      return lines.join("\n");
+      const [totals, goal] = await Promise.all([
+        db.daySummary(env.DB, owner, totalsDate),
+        db.getGoal(env.DB, owner),
+      ]);
+      return fmt.savedEntries(result.entries, totals, totalsDate, today, { goal, learned });
     }
 
     default:
@@ -137,12 +159,40 @@ async function runCommand(command, owner, now, nowIso, today, env) {
     case "help":
       return fmt.help();
 
-    case "summary_day":
-      return fmt.daySummary(await db.daySummary(env.DB, owner, today), today);
+    case "summary_day": {
+      const [summary, goal] = await Promise.all([
+        db.daySummary(env.DB, owner, today),
+        db.getGoal(env.DB, owner),
+      ]);
+      return fmt.daySummary(summary, today, goal);
+    }
 
     case "summary_month": {
       const month = today.slice(0, 7);
-      return fmt.monthSummary(await db.monthSummary(env.DB, owner, month), month);
+      const [summary, days, goal] = await Promise.all([
+        db.monthSummary(env.DB, owner, month),
+        db.calorieDayCount(env.DB, owner, month),
+        db.getGoal(env.DB, owner),
+      ]);
+      return fmt.monthSummary(summary, month, days, goal);
+    }
+
+    case "remember": {
+      const known = await db.recallFood(env.DB, owner, command.label);
+      await db.rememberFood(env.DB, owner, command.label, command.kcal, "intake", nowIso);
+      return fmt.remembered(command.label, command.kcal, Boolean(known));
+    }
+
+    case "forget":
+      return fmt.forgotten(command.label, await db.forgetFood(env.DB, owner, command.label));
+
+    case "memories":
+      return fmt.memories(await db.listFoods(env.DB, owner));
+
+    case "goal": {
+      if (command.kcal === null) return fmt.goalShow(await db.getGoal(env.DB, owner));
+      await db.setGoal(env.DB, owner, command.kcal, nowIso);
+      return fmt.goalSet(command.kcal);
     }
 
     case "delete": {
@@ -157,7 +207,8 @@ async function runCommand(command, owner, now, nowIso, today, env) {
       const [latest] = await db.recentEntries(env.DB, owner, 1);
       if (!latest) return fmt.nothingToDelete();
       const updated = await db.amendAmount(env.DB, owner, latest.id, command.amount, nowIso);
-      return updated ? fmt.amended(updated, latest.amount) : fmt.nothingToDelete();
+      const previous = latest.type === "calorie" ? latest.kcal : latest.amount;
+      return updated ? fmt.amended(updated, previous) : fmt.nothingToDelete();
     }
 
     default:

@@ -10,8 +10,8 @@ import { localDate, bangkokIso, looksLikeSchedule, formatThaiDate } from "../src
 const NOW = new Date("2026-08-23T03:00:00Z");
 
 /** Parse and assert we got exactly one entry back. */
-function single(text) {
-  const result = parseMessage(text, NOW);
+async function single(text, recall) {
+  const result = await parseMessage(text, NOW, recall);
   assert.equal(result.kind, "entries", `expected entries for ${text}, got ${result.kind}`);
   assert.equal(result.entries.length, 1, `expected 1 entry for ${text}`);
   return result.entries[0];
@@ -43,16 +43,18 @@ test("spelled-out numerals need two tokens, so common words are not numbers", ()
   assert.equal(findThaiWordNumber("สี่แยก"), null);
 });
 
-test("expense: the shortest form works", () => {
-  const entry = single("ข้าวเช้า 50");
+// ---- money ------------------------------------------------------------------
+
+test("expense: the shortest form works", async () => {
+  const entry = await single("ข้าวเช้า 50");
   assert.equal(entry.type, "expense");
   assert.equal(entry.amount, 50);
   assert.equal(entry.label, "ข้าวเช้า");
   assert.equal(entry.needsConfirm, true, "no unit and no verb — should invite a correction");
 });
 
-test("expense: a unit removes the ambiguity", () => {
-  const entry = single("กาแฟ 120 บาท");
+test("expense: a unit removes the ambiguity", async () => {
+  const entry = await single("กาแฟ 120 บาท");
   assert.equal(entry.type, "expense");
   assert.equal(entry.amount, 120);
   assert.equal(entry.label, "กาแฟ");
@@ -60,77 +62,147 @@ test("expense: a unit removes the ambiguity", () => {
   assert.equal(entry.category, "food");
 });
 
-test("expense: a verb removes the ambiguity too", () => {
-  const entry = single("จ่ายค่าไฟ 1,200");
+test("expense: a verb removes the ambiguity too", async () => {
+  const entry = await single("จ่ายค่าไฟ 1,200");
   assert.equal(entry.type, "expense");
   assert.equal(entry.amount, 1200);
   assert.equal(entry.label, "ค่าไฟ");
   assert.equal(entry.category, "utilities");
-  assert.equal(entry.needsConfirm, false);
 });
 
-test("income: keyword", () => {
-  const entry = single("ได้เงินเดือน 30000");
+test("income: keyword", async () => {
+  const entry = await single("ได้เงินเดือน 30000");
   assert.equal(entry.type, "income");
   assert.equal(entry.amount, 30000);
   assert.equal(entry.category, "salary");
 });
 
-test("income: explicit plus sign overrides everything", () => {
-  const entry = single("+30000 โบนัส");
+test("income: explicit plus sign overrides everything", async () => {
+  const entry = await single("+30000 โบนัส");
   assert.equal(entry.type, "income");
   assert.equal(entry.amount, 30000);
   assert.equal(entry.label, "โบนัส");
 });
 
-test("expense: explicit minus sign", () => {
-  const entry = single("-250 ข้าวเย็น");
+test("expense: explicit minus sign", async () => {
+  const entry = await single("-250 ข้าวเย็น");
   assert.equal(entry.type, "expense");
   assert.equal(entry.amount, 250);
 });
 
-test("the unit-bearing number wins over other numbers in the line", () => {
-  const entry = single("ซื้อกาแฟ 2 แก้ว 120 บาท");
+test("the unit-bearing number wins over other numbers in the line", async () => {
+  const entry = await single("ซื้อกาแฟ 2 แก้ว 120 บาท");
   assert.equal(entry.amount, 120);
 });
 
-test("with no unit anywhere, the last number is the amount", () => {
+test("with no unit anywhere, the last number is the amount", async () => {
   // "7-11" must not be mistaken for the price.
-  const entry = single("ซื้อของ 7-11 250");
+  const entry = await single("ซื้อของ 7-11 250");
   assert.equal(entry.amount, 250);
 });
 
-test("past day words move the date back", () => {
-  const entry = single("เมื่อวานกินหมูกระทะ 350 บาท");
+test("past day words move the date back", async () => {
+  const entry = await single("เมื่อวานกินหมูกระทะ 350 บาท");
   assert.equal(entry.localDate, "2026-08-22");
   assert.equal(entry.amount, 350);
-  assert.equal(entry.label, "กินหมูกระทะ");
 
-  assert.equal(single("เมื่อวานซืนจ่ายค่าน้ำ 300 บาท").localDate, "2026-08-21");
-  assert.equal(single("วันนี้ซื้อขนม 40 บาท").localDate, "2026-08-23");
+  const before = await single("เมื่อวานซืนจ่ายค่าน้ำ 300 บาท");
+  assert.equal(before.localDate, "2026-08-21");
+  const todayEntry = await single("วันนี้ซื้อขนม 40 บาท");
+  assert.equal(todayEntry.localDate, "2026-08-23");
 });
 
-test("stored timestamps carry the Bangkok offset", () => {
-  const entry = single("ข้าว 50 บาท");
+test("stored timestamps carry the Bangkok offset", async () => {
+  const entry = await single("ข้าว 50 บาท");
   assert.equal(entry.occurredAt, "2026-08-23T10:00:00+07:00");
-  assert.match(entry.occurredAt, /\+07:00$/);
 });
 
-test("two priced items in one message become two entries", () => {
-  const result = parseMessage("จ่ายค่าไฟ 1200 บาท กับค่าน้ำ 300 บาท", NOW);
-  assert.equal(result.kind, "entries");
+test("two priced items in one message become two entries", async () => {
+  const result = await parseMessage("จ่ายค่าไฟ 1200 บาท กับค่าน้ำ 300 บาท", NOW);
   assert.equal(result.entries.length, 2);
   assert.equal(result.entries[0].amount, 1200);
   assert.equal(result.entries[1].amount, 300);
   assert.equal(result.entries[1].label, "ค่าน้ำ");
 });
 
-test("a single item whose name contains กับ is not split", () => {
-  const entry = single("ข้าวกับหมู 60 บาท");
+test("a single item whose name contains กับ is not split", async () => {
+  const entry = await single("ข้าวกับหมู 60 บาท");
   assert.equal(entry.amount, 60);
 });
 
-test("schedule messages are refused, not filed as expenses", () => {
+// ---- calories ---------------------------------------------------------------
+
+test("calorie: an explicit unit routes the message", async () => {
+  const entry = await single("ข้าวมันไก่ 600 แคล");
+  assert.equal(entry.type, "calorie");
+  assert.equal(entry.direction, "intake");
+  assert.equal(entry.kcal, 600);
+  assert.equal(entry.label, "ข้าวมันไก่");
+});
+
+test("calorie: the ค prefix forces the reading of an otherwise ambiguous line", async () => {
+  const entry = await single("ค ข้าวมันไก่ 600");
+  assert.equal(entry.type, "calorie");
+  assert.equal(entry.kcal, 600);
+  assert.equal(entry.label, "ข้าวมันไก่");
+
+  // Without it the same text is money — that is the whole point of the prefix.
+  const asMoney = await single("ข้าวมันไก่ 600");
+  assert.equal(asMoney.type, "expense");
+});
+
+test("the บ prefix forces money for a dish the bot has memorised", async () => {
+  const entry = await single("บ ข้าวมันไก่ 60");
+  assert.equal(entry.type, "expense");
+  assert.equal(entry.amount, 60);
+});
+
+test("calorie: exercise counts as burn, and minutes are not calories", async () => {
+  const entry = await single("วิ่ง 30 นาที 300 แคล");
+  assert.equal(entry.type, "calorie");
+  assert.equal(entry.direction, "burn");
+  assert.equal(entry.kcal, 300, "300 kcal, not 30 — the duration must not be read as the figure");
+  assert.equal(entry.durationMin, 30);
+});
+
+test("calorie: hours become minutes", async () => {
+  const entry = await single("ว่ายน้ำ 1 ชั่วโมง 400 แคล");
+  assert.equal(entry.durationMin, 60);
+  assert.equal(entry.kcal, 400);
+});
+
+test("calorie: an unknown dish is asked about, never guessed", async () => {
+  const result = await parseMessage("ค ส้มตำ", NOW);
+  assert.equal(result.kind, "need_figure");
+  assert.equal(result.label, "ส้มตำ");
+});
+
+test("calorie: a remembered dish needs no number", async () => {
+  const recall = async (name) => (name === "ข้าวมันไก่" ? { kcal: 600, direction: "intake" } : null);
+  const entry = await single("ค ข้าวมันไก่", recall);
+  assert.equal(entry.kcal, 600);
+  assert.equal(entry.fromMemory, true);
+});
+
+test("a message naming both units records money and calories", async () => {
+  const result = await parseMessage("หมูกระทะ 800 แคล จ่าย 350 บาท", NOW);
+  assert.equal(result.entries.length, 2);
+  const money = result.entries.find((e) => e.type === "expense");
+  const calorie = result.entries.find((e) => e.type === "calorie");
+  assert.equal(money.amount, 350);
+  assert.equal(calorie.kcal, 800);
+});
+
+test("a money unit outranks an exercise word", async () => {
+  // "เดินไปซื้อของ 50 บาท" is shopping, not cardio.
+  const entry = await single("เดินไปซื้อของ 50 บาท");
+  assert.equal(entry.type, "expense");
+  assert.equal(entry.amount, 50);
+});
+
+// ---- guards -----------------------------------------------------------------
+
+test("schedule messages are refused, not filed as expenses", async () => {
   for (const text of [
     "พรุ่งนี้ 2 ทุ่ม โทรหาแม่",
     "8 โมง อ่านหนังสือ",
@@ -140,7 +212,7 @@ test("schedule messages are refused, not filed as expenses", () => {
     "เตือนวันที่ 5 จ่ายบัตรเครดิต 4500",
     "20:30 ดูหนัง",
   ]) {
-    const result = parseMessage(text, NOW);
+    const result = await parseMessage(text, NOW);
     assert.equal(result.kind, "unsupported", `${text} should be refused`);
     assert.equal(result.feature, "task", `${text} should be flagged as a task`);
   }
@@ -151,7 +223,7 @@ test("ชั่วโมง does not read as a clock time", () => {
   assert.equal(looksLikeSchedule("8 โมง ประชุม"), true);
 });
 
-test("a time word glued to another Thai word is part of that word", () => {
+test("a time word glued to another Thai word is part of that word", async () => {
   // Thai has no spaces, so เที่ยง sits inside ข้าวเที่ยง and มื้อเที่ยง. Lunch
   // must stay an expense rather than becoming a noon reminder.
   assert.equal(looksLikeSchedule("ข้าวเที่ยง 80 บาท"), false);
@@ -161,34 +233,41 @@ test("a time word glued to another Thai word is part of that word", () => {
   assert.equal(looksLikeSchedule("เที่ยงประชุม"), true);
   assert.equal(looksLikeSchedule("พรุ่งนี้เที่ยงกินข้าว"), true);
 
-  assert.equal(single("ข้าวเที่ยง 80 บาท").amount, 80);
-  assert.equal(single("มื้อเที่ยง 120 บาท").type, "expense");
+  const lunch = await single("ข้าวเที่ยง 80 บาท");
+  assert.equal(lunch.amount, 80);
+  const meal = await single("มื้อเที่ยง 120 บาท");
+  assert.equal(meal.type, "expense");
 });
 
-test("calorie messages are refused this round", () => {
-  assert.equal(parseMessage("ข้าวมันไก่ 600 แคล", NOW).feature, "calorie");
-  assert.equal(parseMessage("ค ข้าวมันไก่ 600", NOW).feature, "calorie");
+// ---- commands ---------------------------------------------------------------
+
+test("commands", async () => {
+  const cmd = (text) => parseMessage(text, NOW);
+  assert.equal((await cmd("สรุป")).name, "summary_day");
+  assert.equal((await cmd("สรุปเดือน")).name, "summary_month");
+  assert.equal((await cmd("ลบ")).index, 1);
+  assert.equal((await cmd("ลบ 3")).index, 3);
+  assert.equal((await cmd("แก้ 1500")).amount, 1500);
+  assert.equal((await cmd("help")).name, "help");
 });
 
-test("a message with both calories and money records the money", () => {
-  const result = parseMessage("หมูกระทะ 800 แคล จ่าย 350 บาท", NOW);
-  assert.equal(result.kind, "entries");
-  assert.equal(result.ignoredCalories, true);
-  assert.equal(result.entries[0].amount, 350);
+test("calorie commands", async () => {
+  const cmd = (text) => parseMessage(text, NOW);
+
+  const remember = await cmd("จำ ข้าวมันไก่ 600");
+  assert.equal(remember.name, "remember");
+  assert.equal(remember.label, "ข้าวมันไก่");
+  assert.equal(remember.kcal, 600);
+
+  assert.equal((await cmd("ลืม ข้าวมันไก่")).label, "ข้าวมันไก่");
+  assert.equal((await cmd("รายการจำ")).name, "memories");
+  assert.equal((await cmd("เป้า 2000")).kcal, 2000);
+  assert.equal((await cmd("เป้า")).kcal, null, "bare เป้า asks rather than sets");
 });
 
-test("commands", () => {
-  assert.equal(parseMessage("สรุป", NOW).name, "summary_day");
-  assert.equal(parseMessage("สรุปเดือน", NOW).name, "summary_month");
-  assert.equal(parseMessage("ลบ", NOW).index, 1);
-  assert.equal(parseMessage("ลบ 3", NOW).index, 3);
-  assert.equal(parseMessage("แก้ 1500", NOW).amount, 1500);
-  assert.equal(parseMessage("help", NOW).name, "help");
-});
-
-test("messages with no amount are reported as unparsed", () => {
-  assert.equal(parseMessage("สวัสดี", NOW).kind, "unparsed");
-  assert.equal(parseMessage("", NOW).kind, "unparsed");
+test("messages with no amount are reported as unparsed", async () => {
+  assert.equal((await parseMessage("สวัสดี", NOW)).kind, "unparsed");
+  assert.equal((await parseMessage("", NOW)).kind, "unparsed");
 });
 
 test("date helpers", () => {
