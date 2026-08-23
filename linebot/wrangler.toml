@@ -1,0 +1,32 @@
+# Cloudflare Worker config for the LINE assistant bot.
+#
+# Before the first deploy:
+#   1. npx wrangler d1 create napatb_tracker
+#      -> paste the printed database_id below
+#   2. npx wrangler d1 migrations apply napatb_tracker --remote
+#   3. npx wrangler secret put LINE_CHANNEL_SECRET
+#      npx wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
+#   4. npx wrangler deploy
+#
+# Secrets are never written here — `wrangler secret put` stores them encrypted
+# on Cloudflare, so this file stays safe to commit.
+
+name = "napatb-linebot"
+main = "src/index.js"
+compatibility_date = "2026-08-23"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "napatb_tracker"
+database_id = "PASTE_DATABASE_ID_HERE"
+migrations_dir = "migrations"
+
+# Daily housekeeping: drop webhook event ids older than a week.
+#
+# The reminder round will add a second, minute-level trigger ("* * * * *") that
+# checks for due tasks. Cron on Workers is UTC — 03:17 UTC is 10:17 in Bangkok.
+[triggers]
+crons = ["17 3 * * *"]

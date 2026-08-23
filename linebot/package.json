@@ -1,0 +1,17 @@
+{
+  "name": "napatb-linebot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LINE assistant bot — Thai income/expense tracking on Cloudflare Workers",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply napatb_tracker --local",
+    "db:remote": "wrangler d1 migrations apply napatb_tracker --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
