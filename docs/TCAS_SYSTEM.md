@@ -157,6 +157,30 @@ python tcas_cli.py export     # ได้โฟลเดอร์ web/dist/ — 
 เดิมพิมพ์ทั้งสี่ย่อหน้าไว้ท้ายทุกแท็บ คำเตือนที่สำคัญที่สุด ("นี่เป็นตัวเลขของ
 ปีที่แล้ว") จึงกลายเป็นสิ่งที่ตาเลื่อนข้ามทุกครั้ง
 
+### เปิดแอปแล้วเจอ 404 — เช็คอะไรบ้าง
+
+URL ที่ถูกต้องคือ **`https://boonsamnapat-netizen.github.io/Napatb_1.1/`**
+ต้องมี `/Napatb_1.1/` ต่อท้ายเสมอ (นี่เป็น *project page* ไม่ใช่ *user page*)
+และ **ตัวพิมพ์ใหญ่-เล็กมีผล** — `/napatb_1.1/` จะ 404
+
+ไล่จากต้นทางไปปลายทาง
+1. `python tcas_cli.py export` แล้ว `ls web/dist` — ต้องมี `index.html` และ `404.html`
+2. Actions → **TCAS70 Deploy App** — job `deploy` ต้องเขียว
+   log ของ step *Where it landed* พิมพ์ URL จริงที่ deploy ไป
+3. Settings → Pages → Source ต้องเป็น **GitHub Actions**
+   (ถ้าไปเป็น *Deploy from a branch* จะเสิร์ฟไฟล์ในรากของ repo ซึ่งไม่มี
+   `index.html` → 404 ทุกครั้งแม้ workflow จะเขียว)
+4. repo ต้อง **public** — Pages บน repo private ต้องใช้แพ็กเกจเสียเงิน
+
+**เคสที่เจอบ่อยที่สุดคือ service worker ส่งหน้า error ให้ดูแทนแอป** —
+เดิม `sw.js` คืนคำตอบจากเน็ต *ทุกกรณี* แม้จะเป็น 404 หรือ 5xx ทั้งที่มีตัวแอป
+ตัวเต็มอยู่ในแคชแล้ว แก้แล้ว: ถ้าคำตอบไม่ใช่ 2xx หรือไม่ใช่ `text/html`
+จาก origin เดิม จะใช้ของในแคชแทน (กันหน้า login ของ WiFi โรงแรมโดนเก็บลงแคช
+จนแอปหายถาวรด้วย) ทดสอบไว้ใน `sw.mjs` — โค้ดเก่าตกข้อนี้ โค้ดใหม่ผ่าน
+
+ถ้ายังพัง ให้ล้าง service worker ทิ้ง: บนมือถือคือลบไอคอนออกจากจอโฮม
+เปิดใน Safari/Chrome ปกติหนึ่งครั้ง แล้วค่อย *Add to Home Screen* ใหม่
+
 ### ติดตั้งเป็นแอปบนมือถือ (PWA)
 
 push ขึ้น branch แล้ว workflow **`tcas_pages.yml`** จะ build และ deploy ขึ้น

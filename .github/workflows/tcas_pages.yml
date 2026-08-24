@@ -64,7 +64,7 @@ jobs:
       - name: Check the build produced what a PWA needs
         run: |
           cd web/dist
-          for f in index.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-180.png; do
+          for f in index.html 404.html manifest.webmanifest sw.js icon-192.png icon-512.png icon-180.png; do
             test -s "$f" || { echo "::error::missing or empty: $f"; exit 1; }
           done
           grep -q 'rel="manifest"' index.html || { echo "::error::manifest not linked"; exit 1; }

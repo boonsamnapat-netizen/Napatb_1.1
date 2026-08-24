@@ -366,11 +366,21 @@ self.addEventListener("fetch", e => {{
     e.respondWith(
       fetch(e.request)
         .then(res => {{
-          if (res && res.ok) {{
+          // เก็บเฉพาะของที่เป็นตัวแอปจริง ๆ — WiFi โรงแรม/โรงเรียนตอบ 200
+          // พร้อมหน้า login โดยเด้งไปโดเมนอื่น ถ้าเผลอเก็บลงแคชคือแอปหายถาวร
+          const sameOrigin = !res.redirected ||
+            (() => {{ try {{ return new URL(res.url).origin === location.origin; }}
+                     catch (err) {{ return false; }} }})();
+          const html = (res.headers.get("content-type") || "").indexOf("text/html") >= 0;
+          if (res && res.ok && sameOrigin && html) {{
             const copy = res.clone();
             caches.open(CACHE).then(c => c.put("./index.html", copy));
+            return res;
           }}
-          return res;
+          // เน็ตตอบกลับมาแต่ไม่ใช่ตัวแอป — 404 ของ GitHub Pages ตอน deploy ยังไม่เสร็จ,
+          // 5xx, หรือหน้า login ของ WiFi เดิมส่งหน้าพังนั้นให้ผู้ใช้ดูตรง ๆ
+          // ทั้งที่มีแอปตัวเต็มอยู่ในแคชอยู่แล้ว
+          return caches.match("./index.html").then(hit => hit || res);
         }})
         .catch(() => caches.match("./index.html").then(hit => hit || Response.error()))
     );
@@ -390,6 +400,40 @@ self.addEventListener("fetch", e => {{
     }})
   );
 }});
+"""
+
+
+def _not_found() -> str:
+    """หน้าที่ GitHub Pages เสิร์ฟเมื่อ path ใต้เว็บนี้ไม่มีไฟล์.
+
+    เดิมไม่มีไฟล์นี้ ลิงก์เก่า/พิมพ์ path ผิด/ไอคอนบนจอโฮมที่ชี้ path เดิม
+    จะเจอหน้า 404 สีขาวของ GitHub ซึ่งไม่บอกอะไรและกลับเข้าแอปไม่ได้
+    ตอนนี้เด้งกลับหน้าแอปให้เอง (แต่ยังบอกด้วยว่าเกิดอะไรขึ้น เผื่อ JS ปิดอยู่)
+    """
+    return """<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ไม่พบหน้านี้ — TCAS70</title>
+<style>
+  :root{color-scheme:light dark}
+  body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;
+    font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+    line-height:1.8;text-align:center;background:#ece6df;color:#1c1714}
+  @media (prefers-color-scheme:dark){body{background:#14100f;color:#f2ede9}}
+  a{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:99px;
+    background:#f0ab2c;color:#33210a;text-decoration:none;font-weight:600;min-height:44px}
+  p{max-width:34ch;margin:0 auto}
+</style></head><body><div>
+<h1 style="font-size:1.25rem;margin:0 0 8px">ไม่พบหน้านี้</h1>
+<p>ลิงก์นี้ไม่มีอยู่ในแอปแล้ว กำลังพากลับไปหน้าแรก…</p>
+<a href="./">กลับหน้าแรกของแอป</a>
+</div>
+<script>
+  // ./ จากหน้านี้คือรากของเว็บแอปเสมอ ไม่ว่า path ที่พิมพ์ผิดจะลึกแค่ไหน
+  // replace ไม่ใช่ assign เพื่อไม่ให้ปุ่ม back วนกลับมาที่หน้า 404 อีก
+  setTimeout(function () { location.replace(new URL("./", location.href).href); }, 1200);
+</script>
+</body></html>
 """
 
 
@@ -413,6 +457,7 @@ def build_site(
     (out / "index.html").write_text(_document(content, title), encoding="utf-8")
     (out / "manifest.webmanifest").write_text(_manifest(), encoding="utf-8")
     (out / "sw.js").write_text(_service_worker(version), encoding="utf-8")
+    (out / "404.html").write_text(_not_found(), encoding="utf-8")
     # Pages ไม่ต้องประมวลผลด้วย Jekyll — กันไฟล์ที่ขึ้นต้นด้วย _ โดนตัดทิ้ง
     (out / ".nojekyll").write_text("", encoding="utf-8")
     icons.write_all(out)
