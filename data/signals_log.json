@@ -223,6 +223,24 @@
       "result_r": -1.0,
       "closed_date": "2026-08-20",
       "logged_at": "2026-08-17T02:20:49.265632+00:00"
+    },
+    {
+      "date": "2026-08-25",
+      "symbol": "BTCUSDT",
+      "direction": "LONG",
+      "confidence": 55.1,
+      "entry": 80799.140625,
+      "stop": 77589.78768952,
+      "tps": [
+        84149.28125,
+        85000.0,
+        85263.2890625
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-08-25T02:18:55.456733+00:00"
     }
   ]
 }
