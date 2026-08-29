@@ -236,10 +236,10 @@
         85000.0,
         85263.2890625
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 77589.78768952,
+      "result_r": -1.0,
+      "closed_date": "2026-08-29",
       "logged_at": "2026-08-25T02:18:55.456733+00:00"
     }
   ]
