@@ -1,0 +1,71 @@
+name: Affiliate Clip Bot
+
+# Drains pending Telegram updates and advances every job one step:
+#   photo -> confirm product -> confirm clip -> choose link -> confirm -> deliver
+#
+# Setup (one time):
+#   Repo Settings -> Secrets and variables -> Actions -> add:
+#     TELEGRAM_BOT_TOKEN   (from @BotFather; the same bot as the signal alerts
+#                           can be reused, or make a separate one)
+#   Optional:
+#     ANTHROPIC_API_KEY          reads the product name off the photo
+#     AFFILIATE_VIDEO_API_KEY    image-to-video vendor (see config/affiliate.yaml)
+#
+# NOTE ON LATENCY: GitHub's scheduler is best-effort and frequently runs cron
+# jobs 10-30 minutes late, so replies are not instant. For a chat-speed bot run
+# `python affiliate_bot.py --serve` on an always-on machine instead.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+
+permissions:
+  contents: write
+
+# Two overlapping runs would both write data/affiliate_state.json.
+concurrency:
+  group: affiliate-bot
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/video-link-access-sx34f6
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ffmpeg and a Thai-capable font
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-thai-tlwg
+
+      - name: Install Python dependencies
+        run: pip install --quiet pyyaml anthropic
+
+      - name: Drain Telegram updates
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AFFILIATE_VIDEO_API_KEY: ${{ secrets.AFFILIATE_VIDEO_API_KEY }}
+        run: python affiliate_bot.py --once
+
+      - name: Persist job state
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          [ -f data/affiliate_state.json ] && git add data/affiliate_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update affiliate bot state"
+            # Another run may have pushed between our checkout and now.
+            git pull --rebase origin claude/video-link-access-sx34f6 || true
+            git push origin HEAD:claude/video-link-access-sx34f6
+          else
+            echo "No state change."
+          fi

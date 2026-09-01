@@ -1,0 +1,59 @@
+# Config for the affiliate clip bot (affiliate_bot.py / src/affiliate/).
+# Nothing here is a secret: ${VAR} placeholders are resolved from the
+# environment at runtime, so keys live in GitHub Actions secrets.
+
+affiliate:
+  work_dir: "data/affiliate"              # per-job photo + rendered clip
+  state_path: "data/affiliate_state.json" # job state, committed between runs
+  http_timeout_s: 60
+
+  vision:
+    # Reads the product name off the photo. Needs ANTHROPIC_API_KEY;
+    # without it the bot asks you to type the product name instead.
+    model: "claude-sonnet-4-6"
+
+  video:
+    provider: "ai"        # "ai" | "ffmpeg"  (ai falls back to ffmpeg if unset)
+    duration: 8
+
+    ffmpeg:
+      burn_text: true
+      # Thai needs a Thai-capable font; leave null to auto-detect a known one.
+      font_path: null
+
+    ai:
+      # --- fill these in when you have an image-to-video vendor ---------
+      # Any vendor works: declare its endpoint, payload and response fields.
+      submit_url: ""                       # e.g. https://api.vendor.com/v1/video
+      headers:
+        Authorization: "Bearer ${AFFILIATE_VIDEO_API_KEY}"
+      payload:
+        image: "{image_b64}"
+        prompt: "{prompt}"
+        duration: "{duration}"
+      prompt: >-
+        8-second vertical (9:16) product video: {hook}. Slow cinematic push-in
+        on the product, soft studio light, clean background, no text overlay.
+      result_path: "video_url"             # dotted path to the mp4 url
+      job_id_path: "id"                    # used to build poll_url
+      poll_url: ""                         # e.g. https://api.vendor.com/v1/video/{job_id}
+      poll_status_path: "status"
+      poll_done_values: ["succeeded", "completed", "done"]
+      poll_failed_values: ["failed", "error", "cancelled"]
+      poll_interval_s: 5
+      poll_timeout_s: 300
+      http_timeout_s: 120
+
+  finders:
+    # Both are disabled until affiliate API access is approved. Until then the
+    # bot asks you to paste the listings you want compared.
+    lazada:
+      enabled: false
+      app_key: "${LAZADA_APP_KEY}"
+      app_secret: "${LAZADA_APP_SECRET}"
+      endpoint: ""
+    tiktok:
+      enabled: false
+      app_key: "${TIKTOK_APP_KEY}"
+      app_secret: "${TIKTOK_APP_SECRET}"
+      endpoint: ""

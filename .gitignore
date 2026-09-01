@@ -13,3 +13,6 @@ reports/*.md
 !reports/.gitkeep
 data/exports/*.json
 !data/exports/sample_export.json
+
+# Affiliate bot working files: product photos and rendered clips stay local.
+data/affiliate/
