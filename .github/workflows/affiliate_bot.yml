@@ -14,6 +14,15 @@ name: Affiliate Clip Bot
 # NOTE ON LATENCY: GitHub's scheduler is best-effort and frequently runs cron
 # jobs 10-30 minutes late, so replies are not instant. For a chat-speed bot run
 # `python affiliate_bot.py --serve` on an always-on machine instead.
+#
+# DO NOT RUN BOTH. Telegram allows one getUpdates consumer per bot token: a
+# `--serve` process and this schedule running together makes one of them fail
+# with HTTP 409 and updates get lost. Pick one — if you switch to --serve,
+# disable this workflow (Actions tab -> ... -> Disable workflow).
+#
+# On a PUBLIC repo GitHub disables scheduled workflows after 60 days with no
+# commits; the state commits below normally keep it alive, but a quiet spell
+# will stop it silently.
 
 on:
   workflow_dispatch:
@@ -63,8 +72,14 @@ jobs:
           [ -f data/affiliate_state.json ] && git add data/affiliate_state.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: update affiliate bot state"
-            # Another run may have pushed between our checkout and now.
-            git pull --rebase origin claude/video-link-access-sx34f6 || true
+            # The concurrency group serialises our own runs, but a human push
+            # can still land in between. Never swallow a conflict here: a
+            # half-merged state file loses jobs and replays Telegram updates.
+            if ! git pull --rebase origin claude/video-link-access-sx34f6; then
+              git rebase --abort || true
+              echo "::error::state file conflicts with the remote branch; resolve it by hand"
+              exit 1
+            fi
             git push origin HEAD:claude/video-link-access-sx34f6
           else
             echo "No state change."

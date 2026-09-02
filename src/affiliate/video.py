@@ -29,6 +29,11 @@ log = logging.getLogger(__name__)
 
 WIDTH, HEIGHT, FPS = 1080, 1920, 30
 
+# Poll statuses, when a vendor block does not override them. Both spellings of
+# "cancel*ed" are here because Replicate uses the American one.
+DEFAULT_DONE_VALUES = ("succeeded", "completed", "done")
+DEFAULT_FAILED_VALUES = ("failed", "error", "canceled", "cancelled")
+
 # Fonts that can actually render Thai, in the order we try them.
 FONT_CANDIDATES = [
     "/usr/share/fonts/truetype/noto/NotoSansThai-Regular.ttf",
@@ -163,7 +168,15 @@ class AIVideoMaker:
 
     @property
     def configured(self) -> bool:
-        return bool(_expand(self.cfg.get("submit_url", "")))
+        """Usable only if the endpoint is set AND every ${VAR} in it resolved.
+
+        ``safe_substitute`` leaves an unset placeholder verbatim, so a missing
+        API key would otherwise surface as a confusing 401 mid-render.
+        """
+        url = _expand(self.cfg.get("submit_url", ""))
+        if not url or "${" in url:
+            return False
+        return not any("${" in value for value in self._headers().values())
 
     def render(self, image_path: str, script: ClipScript, out_path: str) -> str:
         if not self.configured:
@@ -171,8 +184,7 @@ class AIVideoMaker:
                 "no image-to-video endpoint configured — set affiliate.video.ai."
                 "submit_url (and its api key env var) in config/affiliate.yaml"
             )
-        with open(image_path, "rb") as fh:
-            image_b64 = base64.b64encode(fh.read()).decode()
+        image_b64 = base64.b64encode(self._prepare_image(image_path)).decode()
         fields = {
             "prompt": self.prompt(script),
             "image_b64": image_b64,
@@ -186,6 +198,48 @@ class AIVideoMaker:
         if not url:
             raise VideoError("provider returned no video url — check video.ai.result_path")
         return self._download(str(url), out_path)
+
+    def _fetch_result(self, status_payload: Any) -> Any:
+        """Second hop for queue APIs whose status response omits the output.
+
+        fal.ai is the common case: /status carries `status` but the artefacts
+        live at a separate result URL.
+        """
+        template = self.cfg.get("result_url")
+        if not template:
+            return status_payload
+        url = _expand(template)
+        for key, path in (("job_id", self.cfg.get("job_id_path", "id")),
+                          ("result_id", self.cfg.get("result_id_path", ""))):
+            if path and "{" + key + "}" in url:
+                url = url.replace("{" + key + "}", str(_dig(status_payload, path) or ""))
+        return self._get(url)
+
+    def _prepare_image(self, image_path: str) -> bytes:
+        """Shrink the photo if it would exceed the vendor's data-URI limit.
+
+        Replicate recommends staying under 1MB; Runway hard-rejects over ~5MB
+        encoded. Base64 inflates by ~4/3, so the cap is on the raw bytes.
+        """
+        limit = int(self.cfg.get("max_image_bytes", 1_000_000))
+        with open(image_path, "rb") as fh:
+            raw = fh.read()
+        if not limit or len(raw) <= limit:
+            return raw
+        if not shutil.which("ffmpeg"):
+            log.warning("image is %d bytes (limit %d) and ffmpeg is unavailable to "
+                        "resize it; sending as-is", len(raw), limit)
+            return raw
+        small = os.path.join(os.path.dirname(image_path) or ".", "source_small.jpg")
+        proc = subprocess.run(
+            ["ffmpeg", "-y", "-i", image_path,
+             "-vf", "scale='min(1080,iw)':-2", "-q:v", "6", small],
+            capture_output=True, text=True)
+        if proc.returncode != 0 or not os.path.exists(small):
+            log.warning("could not downscale %s; sending as-is", image_path)
+            return raw
+        with open(small, "rb") as fh:
+            return fh.read()
 
     def prompt(self, script: ClipScript) -> str:
         template = self.cfg.get(
@@ -201,16 +255,18 @@ class AIVideoMaker:
         url = _expand(self.cfg["poll_url"]).replace("{job_id}", str(job_id or ""))
         interval = float(self.cfg.get("poll_interval_s", 5))
         deadline = time.time() + float(self.cfg.get("poll_timeout_s", 300))
-        done = {str(v).lower() for v in self.cfg.get("poll_done_values",
-                                                     ["succeeded", "completed", "done"])}
-        failed = {str(v).lower() for v in self.cfg.get("poll_failed_values",
-                                                      ["failed", "error", "cancelled"])}
+        done = {str(v).lower()
+                for v in self.cfg.get("poll_done_values", DEFAULT_DONE_VALUES)}
+        failed = {str(v).lower()
+                  for v in self.cfg.get("poll_failed_values", DEFAULT_FAILED_VALUES)}
         while time.time() < deadline:
             time.sleep(interval)
             payload = self._get(url)
             status = str(_dig(payload, self.cfg.get("poll_status_path", "status")) or "").lower()
             if status in failed:
                 raise VideoError(f"provider reported status '{status}'")
+            if status and status in done:
+                payload = self._fetch_result(payload)
             video = _dig(payload, self.cfg.get("result_path", "video_url"))
             if video and (not status or status in done):
                 return str(video)
@@ -245,8 +301,13 @@ class AIVideoMaker:
 
     def _download(self, url: str, out_path: str) -> str:
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        # Public CDN links need no auth, but some vendors gate the artefact
+        # behind the same key as the API.
+        headers = self._headers() if self.cfg.get("authenticated_download") else {}
+        headers.pop("Content-Type", None)
+        req = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(url, timeout=self.timeout) as resp, \
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp, \
                     open(out_path, "wb") as fh:
                 shutil.copyfileobj(resp, fh)
         except OSError as exc:
@@ -298,7 +359,8 @@ def make(cfg: dict[str, Any]) -> VideoMaker:
         maker = AIVideoMaker(video_cfg.get("ai", {}))
         if maker.configured:
             return maker
-        log.warning("video.provider=ai but no submit_url set — falling back to ffmpeg")
+        log.warning("video.provider=ai but submit_url or an API key is missing "
+                    "— falling back to ffmpeg")
     ffmpeg_cfg = video_cfg.get("ffmpeg", {}) or {}
     return FfmpegVideoMaker(
         font_path=ffmpeg_cfg.get("font_path"),

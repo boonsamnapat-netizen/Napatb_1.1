@@ -23,6 +23,7 @@ class FakeClient:
 
     def __init__(self):
         self.messages: list[tuple[int, str, dict | None]] = []
+        self.cleared: list[tuple[int, int]] = []
         self.videos: list[str] = []
         self.documents: list[str] = []
         self.answered: list[str] = []
@@ -42,6 +43,9 @@ class FakeClient:
 
     def answer_callback(self, callback_id, text=""):
         self.answered.append(callback_id)
+
+    def clear_keyboard(self, chat_id, message_id):
+        self.cleared.append((chat_id, message_id))
 
     def download_file(self, file_id, dest):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -78,17 +82,18 @@ class StubVideoMaker:
         return out_path
 
 
-def photo_update(update_id=1, chat_id=7):
-    return Update(update_id=update_id, chat_id=chat_id, photo_file_id="file-1")
+def photo_update(update_id=1, chat_id=7, user_id=7):
+    return Update(update_id=update_id, chat_id=chat_id, photo_file_id="file-1",
+                  user_id=user_id)
 
 
-def text_update(text, update_id=2, chat_id=7):
-    return Update(update_id=update_id, chat_id=chat_id, text=text)
+def text_update(text, update_id=2, chat_id=7, user_id=7):
+    return Update(update_id=update_id, chat_id=chat_id, text=text, user_id=user_id)
 
 
-def tap(data, update_id=3, chat_id=7):
+def tap(data, update_id=3, chat_id=7, user_id=7, message_id=11):
     return Update(update_id=update_id, chat_id=chat_id, callback_data=data,
-                  callback_id="cb")
+                  callback_id="cb", user_id=user_id, message_id=message_id)
 
 
 class PipelineTest(unittest.TestCase):
@@ -203,6 +208,104 @@ class PipelineTest(unittest.TestCase):
         self.assertIn("ส่งรูปสินค้า", self.client.last_text())
 
 
+class StaleTapTest(unittest.TestCase):
+    """A re-tapped button must never re-run a step — a render costs money."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.client = FakeClient()
+        self.store = st.JobStore(os.path.join(self.tmp.name, "state.json"))
+        self.pipeline = Pipeline(self.client, self.store, {
+            "affiliate": {"work_dir": os.path.join(self.tmp.name, "jobs")}})
+        self.pipeline.video_maker = StubVideoMaker()
+        self.pipeline.vision.api_key = ""
+        self.pipeline.handle(photo_update())
+        self.pipeline.handle(text_update("https://x.test/a"))
+        self.job_id = self.store.active_for_chat(7).id
+
+    def test_double_tap_renders_once(self):
+        self.pipeline.handle(tap(f"{self.job_id}:product_ok"))
+        result = self.pipeline.handle(tap(f"{self.job_id}:product_ok"))
+        self.assertEqual(self.pipeline.video_maker.calls, 1)
+        self.assertIn("stale", result)
+
+    def test_action_from_a_later_step_is_rejected(self):
+        # "publish" belongs to final_confirm; the job is still at confirm_product.
+        result = self.pipeline.handle(tap(f"{self.job_id}:publish"))
+        self.assertIn("stale", result)
+        self.assertEqual(self.store.get(self.job_id).state, st.CONFIRM_PRODUCT)
+
+    def test_consumed_step_has_its_keyboard_cleared(self):
+        self.pipeline.handle(tap(f"{self.job_id}:product_ok"))
+        self.assertIn((7, 11), self.client.cleared)
+
+    def test_cancelled_job_accepts_nothing_further(self):
+        self.pipeline.handle(tap(f"{self.job_id}:cancel"))
+        result = self.pipeline.handle(tap(f"{self.job_id}:product_ok"))
+        self.assertIn("stale", result)
+
+    def test_cancel_is_allowed_from_any_live_state(self):
+        self.pipeline.handle(tap(f"{self.job_id}:product_ok"))
+        self.pipeline.handle(tap(f"{self.job_id}:cancel"))
+        self.assertEqual(self.store.get(self.job_id).state, st.CANCELLED)
+
+
+class AccessAndBudgetTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.client = FakeClient()
+        self.store = st.JobStore(os.path.join(self.tmp.name, "state.json"))
+
+    def _pipeline(self, **cfg):
+        cfg.setdefault("work_dir", os.path.join(self.tmp.name, "jobs"))
+        pipe = Pipeline(self.client, self.store, {"affiliate": cfg})
+        pipe.video_maker = StubVideoMaker()
+        pipe.vision.api_key = ""
+        return pipe
+
+    def test_stranger_is_turned_away(self):
+        pipe = self._pipeline(allowed_user_ids=[7])
+        result = pipe.handle(photo_update(chat_id=99, user_id=99))
+        self.assertIn("denied", result)
+        self.assertIsNone(self.store.active_for_chat(99))
+
+    def test_owner_passes_the_whitelist(self):
+        pipe = self._pipeline(allowed_user_ids=[7])
+        pipe.handle(photo_update())
+        self.assertIsNotNone(self.store.active_for_chat(7))
+
+    def test_empty_whitelist_allows_everyone(self):
+        pipe = self._pipeline()
+        pipe.handle(photo_update(chat_id=99, user_id=99))
+        self.assertIsNotNone(self.store.active_for_chat(99))
+
+    def test_daily_cap_blocks_the_render(self):
+        pipe = self._pipeline(daily_render_limit=1)
+        pipe.handle(photo_update())
+        pipe.handle(text_update("https://x.test/a"))
+        first = self.store.active_for_chat(7).id
+        pipe.handle(tap(f"{first}:product_ok"))
+        self.assertEqual(pipe.video_maker.calls, 1)
+
+        pipe.handle(photo_update(update_id=10, chat_id=8, user_id=8))
+        pipe.handle(text_update("https://x.test/b", update_id=11, chat_id=8, user_id=8))
+        second = self.store.active_for_chat(8).id
+        result = pipe.handle(tap(f"{second}:product_ok", chat_id=8, user_id=8))
+        self.assertIn("cap", result)
+        self.assertEqual(pipe.video_maker.calls, 1)
+        self.assertIn("โควตา", self.client.last_text())
+
+    def test_a_failed_render_still_consumes_budget(self):
+        pipe = self._pipeline(daily_render_limit=5)
+        pipe.video_maker = StubVideoMaker(fail=True)
+        pipe.handle(photo_update())
+        pipe.handle(text_update("https://x.test/a"))
+        pipe.handle(tap(f"{self.store.active_for_chat(7).id}:product_ok"))
+        self.assertEqual(self.store.renders_today(), 1)
+
+
 class ProductPickTest(unittest.TestCase):
     def setUp(self):
         self.items = [
@@ -228,6 +331,14 @@ class ProductPickTest(unittest.TestCase):
         self.assertIsNone(prod.pick(bare, prod.CHEAPEST))
         self.assertEqual(prod.available_strategies(bare), [])
         self.assertEqual(len(prod.available_strategies(self.items)), 3)
+
+    def test_flat_commission_is_detected(self):
+        flat = [prod.Product(title="A", url="a", price=100, commission_pct=8),
+                prod.Product(title="B", url="b", price=300, commission_pct=8)]
+        self.assertTrue(prod.commission_is_flat(flat))
+        self.assertFalse(prod.commission_is_flat(self.items))
+        # One candidate alone is not a degenerate ranking, just a single choice.
+        self.assertFalse(prod.commission_is_flat(flat[:1]))
 
     def test_unknown_strategy_raises(self):
         with self.assertRaises(ValueError):
@@ -349,6 +460,19 @@ class VideoConfigTest(unittest.TestCase):
             "headers": {"Authorization": "Bearer ${AFFILIATE_TEST_KEY}"},
         })
         self.assertEqual(maker._headers()["Authorization"], "Bearer secret-123")
+
+    def test_missing_api_key_falls_back_instead_of_401ing(self):
+        os.environ.pop("AFFILIATE_ABSENT_KEY", None)
+        maker = videolib.make({"provider": "ai", "ai": {
+            "submit_url": "https://api.test/v1",
+            "headers": {"Authorization": "Bearer ${AFFILIATE_ABSENT_KEY}"}}})
+        self.assertEqual(maker.name, "ffmpeg")
+
+    def test_cancelled_default_covers_both_spellings(self):
+        # Replicate reports "canceled"; a British-only default would poll a
+        # dead job until the timeout instead of failing fast.
+        self.assertIn("canceled", videolib.DEFAULT_FAILED_VALUES)
+        self.assertIn("cancelled", videolib.DEFAULT_FAILED_VALUES)
 
     def test_result_path_digs_through_lists(self):
         payload = {"data": {"output": [{"url": "https://cdn.test/a.mp4"}]}}

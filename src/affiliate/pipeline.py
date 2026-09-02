@@ -31,8 +31,23 @@ HELP = (
     "คำสั่ง: /start /status /cancel"
 )
 
+# Which callback actions each state will accept. Anything else is a stale tap
+# (a double-click, or a scroll back to a message from a finished step) and is
+# rejected — without this, tapping "make the clip" twice pays for two renders.
+ALLOWED_ACTIONS: dict[str, set[str]] = {
+    st.CONFIRM_PRODUCT: {"product_ok", "product_manual"},
+    st.CONFIRM_VIDEO: {"video_ok", "video_retry"},
+    st.CHOOSE_LINK: {"pick"},
+    st.FINAL_CONFIRM: {"publish", "relink"},
+}
+
+STALE_TAP = "ขั้นตอนนี้ผ่านไปแล้วครับ"
+
 MANUAL_PROMPT = (
-    "ส่ง <b>ลิงก์สินค้า</b> มาได้เลย (บรรทัดละ 1 ลิงก์ ใส่ได้หลายอัน)\n\n"
+    "🔎 <b>วิธีหาสินค้าที่แม่นที่สุด</b> — ใช้ค้นด้วยรูปในแอปเอง:\n"
+    "• TikTok Shop → Creator Toolkit → Search by Image\n"
+    "• Lazada → ไอคอนสแกน (Image Search, ใช้ได้ในแอปมือถือ)\n"
+    "แล้วก๊อปลิงก์สินค้าที่เจอมาวางที่นี่ (บรรทัดละ 1 ลิงก์ ใส่ได้หลายอัน)\n\n"
     "อยากให้เทียบ ถูกสุด / ขายดีสุด / คอมเยอะสุด ให้ใส่ตัวเลขคั่นด้วย <code>|</code>:\n"
     "<code>ชื่อสินค้า | ลิงก์ | ราคา | ยอดขาย | คอม%</code>"
 )
@@ -47,6 +62,8 @@ class Pipeline:
         self.store = store
         self.cfg = (config or {}).get("affiliate", config or {}) or {}
         self.work_dir = self.cfg.get("work_dir", "data/affiliate")
+        self.allowed_user_ids = {int(u) for u in self.cfg.get("allowed_user_ids", []) or []}
+        self.daily_render_limit = int(self.cfg.get("daily_render_limit", 50))
         self.vision = ProductVision(
             model=self.cfg.get("vision", {}).get("model", "claude-sonnet-4-6")
         )
@@ -61,6 +78,13 @@ class Pipeline:
             finders.append(prod.LazadaFinder(**_creds(cfg["lazada"])))
         if cfg.get("tiktok", {}).get("enabled"):
             finders.append(prod.TikTokFinder(**_creds(cfg["tiktok"])))
+        for name in ("involve_asia", "accesstrade"):
+            if cfg.get(name, {}).get("enabled"):
+                entry = cfg[name]
+                finders.append(prod.NetworkFinder(
+                    name, api_key=str(entry.get("api_key", "")),
+                    api_secret=str(entry.get("api_secret", "")),
+                    endpoint=str(entry.get("endpoint", ""))))
         return finders
 
     # --- entry point -----------------------------------------------------
@@ -69,6 +93,11 @@ class Pipeline:
         """Advance whatever the update refers to. Returns a log line."""
         if update.chat_id is None:
             return "ignored: no chat"
+        if not self._permitted(update):
+            self.client.send_message(
+                update.chat_id,
+                f"บอทนี้ใช้ได้เฉพาะเจ้าของครับ (user id ของคุณคือ <code>{update.user_id}</code>)")
+            return f"denied: user {update.user_id}"
         try:
             if update.callback_data:
                 return self._on_callback(update)
@@ -81,6 +110,14 @@ class Pipeline:
             self.client.send_message(update.chat_id, f"⚠️ เกิดข้อผิดพลาด: {exc}")
             return f"error: {exc}"
         return "ignored: nothing actionable"
+
+    def _permitted(self, update: Update) -> bool:
+        """An empty whitelist leaves the bot open — logged loudly, not silently."""
+        if not self.allowed_user_ids:
+            log.warning("allowed_user_ids is empty: anyone who finds this bot can "
+                        "trigger a render. Set affiliate.allowed_user_ids.")
+            return True
+        return update.user_id in self.allowed_user_ids
 
     # --- inbound ---------------------------------------------------------
 
@@ -162,6 +199,14 @@ class Pipeline:
         if not job:
             self.client.send_message(update.chat_id, "งานนี้หมดอายุแล้ว ส่งรูปใหม่ได้เลยครับ")
             return "callback: unknown job"
+        if not _action_allowed(job.state, action):
+            if update.callback_id:
+                self.client.answer_callback(update.callback_id, STALE_TAP)
+            return f"job {job.id}: stale '{action}' in state {job.state}"
+        # The step is being consumed now: take its keyboard away so the same
+        # message cannot be tapped again while this run is still working.
+        if update.message_id:
+            self.client.clear_keyboard(update.chat_id, update.message_id)
 
         if action == "cancel":
             job.state = st.CANCELLED
@@ -226,6 +271,19 @@ class Pipeline:
             title=job.query or "สินค้า", url="")
         clip = scriptlib.build(anchor, benefit=(job.script or {}).get("benefit"))
         job.script = clip.to_dict()
+
+        used = self.store.renders_today()
+        if self.daily_render_limit and used >= self.daily_render_limit:
+            self.store.put(job)
+            self.store.save()
+            self.client.send_message(
+                job.chat_id,
+                f"🛑 วันนี้เรนเดอร์ครบโควตาแล้ว ({used}/{self.daily_render_limit}) "
+                "ลองใหม่พรุ่งนี้ หรือแก้ affiliate.daily_render_limit")
+            return f"job {job.id}: daily render cap reached"
+        # Counted before the call: a paid render that then fails still cost money.
+        self.store.record_render()
+        self.store.save()
         self.client.send_message(job.chat_id, "🎬 กำลังทำคลิป 8 วิ… รอสักครู่")
         out = os.path.join(self.work_dir, job.id, "clip.mp4")
         try:
@@ -302,10 +360,16 @@ class Pipeline:
 
     def _summary(self, job: st.Job, chosen: prod.Product) -> str:
         clip = scriptlib.ClipScript.from_dict(job.script or {})
+        candidates = [prod.Product.from_dict(c) for c in job.candidates]
+        caveat = ""
+        if job.strategy == prod.TOP_COMMISSION and prod.commission_is_flat(candidates):
+            caveat = ("\n<i>⚠️ ทุกตัวคอม % เท่ากัน — อันนี้เลยกลายเป็น "
+                      "\"ราคาแพงสุด\" ไม่ใช่ \"คอมเยอะสุด\" จริง ๆ</i>")
         return "\n".join([
             "🧾 <b>ตรวจครั้งสุดท้าย</b>",
             "",
-            f"🔗 ลิงก์ ({prod.STRATEGY_LABELS.get(job.strategy, job.strategy)}):",
+            f"🔗 ลิงก์ ({prod.STRATEGY_LABELS.get(job.strategy, job.strategy)}):"
+            + caveat,
             chosen.summary(),
             "",
             "📝 แคปชั่น:",
@@ -355,6 +419,15 @@ class Pipeline:
         self.store.save()
         self.client.send_message(chat_id, f"❌ ยกเลิกงาน <code>{job.id}</code> แล้ว")
         return f"job {job.id}: cancelled"
+
+
+def _action_allowed(state: str, action: str) -> bool:
+    """Cancelling is always fine; every other action must match the state."""
+    if state in st.TERMINAL:
+        return False
+    if action == "cancel":
+        return True
+    return action.split(":", 1)[0] in ALLOWED_ACTIONS.get(state, set())
 
 
 def _creds(cfg: dict[str, Any]) -> dict[str, str]:

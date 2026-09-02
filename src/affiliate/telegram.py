@@ -54,6 +54,7 @@ class Update:
     callback_data: str | None = None
     callback_id: str | None = None
     message_id: int | None = None
+    user_id: int | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -64,9 +65,11 @@ class Update:
         if cb:
             upd.callback_id = cb.get("id")
             upd.callback_data = cb.get("data")
+            upd.user_id = (cb.get("from") or {}).get("id")
             msg = cb.get("message") or msg
         if msg:
             upd.chat_id = (msg.get("chat") or {}).get("id")
+            upd.user_id = upd.user_id or (msg.get("from") or {}).get("id")
             upd.message_id = msg.get("message_id")
             upd.text = msg.get("text") or msg.get("caption")
             photos = msg.get("photo") or []
@@ -213,6 +216,16 @@ class TelegramClient:
             "document",
             path,
         )
+
+    def clear_keyboard(self, chat_id: int, message_id: int) -> Any:
+        """Drop the inline keyboard from a message whose step is finished."""
+        try:
+            return self._call("editMessageReplyMarkup",
+                              {"chat_id": chat_id, "message_id": message_id})
+        except TelegramError as exc:
+            # Cosmetic: the state gate is what actually enforces the flow.
+            log.debug("could not clear keyboard on %s: %s", message_id, exc)
+            return None
 
     def answer_callback(self, callback_id: str, text: str = "") -> Any:
         return self._call("answerCallbackQuery", {"callback_query_id": callback_id,

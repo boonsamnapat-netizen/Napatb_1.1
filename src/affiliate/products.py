@@ -153,6 +153,30 @@ class TikTokFinder:
         )
 
 
+class NetworkFinder:
+    """Affiliate-network search (Involve Asia / ACCESSTRADE TH).
+
+    These networks — not Lazada's or TikTok's own developer platforms — are the
+    realistic route for a solo affiliate: a free publisher account issues an
+    API key without a business entity. Both carry Lazada Thailand and TikTok
+    Shop Thailand offers.
+
+    Unimplemented: the endpoints and response fields were not verified against
+    the live docs, and guessing them would be worse than raising here.
+    """
+
+    def __init__(self, name: str, api_key: str = "", api_secret: str = "",
+                 endpoint: str = ""):
+        self.name = name
+        self.api_key, self.api_secret, self.endpoint = api_key, api_secret, endpoint
+
+    def search(self, query: str, limit: int = 10) -> list[Product]:
+        raise ProviderNotConfigured(
+            f"{self.name} search is not implemented — open a free publisher "
+            f"account, read the live API docs, then fill in search()"
+        )
+
+
 def detect_platform(url: str) -> str | None:
     lowered = url.lower()
     if "lazada" in lowered:
@@ -183,6 +207,19 @@ def pick(products: list[Product], strategy: str) -> Product | None:
         scored = [p for p in products if p.commission_pct is not None]
         return max(scored, key=lambda p: p.commission_pct) if scored else None
     raise ValueError(f"unknown strategy: {strategy}")
+
+
+def commission_is_flat(products: list[Product]) -> bool:
+    """True when every candidate carries the same commission rate.
+
+    Affiliate networks (Involve Asia, ACCESSTRADE) quote commission per
+    campaign or category rather than per product. When that happens ranking by
+    baht earned degenerates into ranking by price, which is a different
+    strategy than the user asked for — so we say so instead of hiding it.
+    """
+    rates = {p.commission_pct for p in products if p.commission_pct is not None}
+    return len(rates) == 1 and len([p for p in products
+                                    if p.commission_pct is not None]) > 1
 
 
 def available_strategies(products: list[Product]) -> list[str]:

@@ -6,6 +6,7 @@ the repo between scheduled runs and the diff stays readable.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import tempfile
@@ -53,7 +54,7 @@ class JobStore:
 
     def __init__(self, path: str = "data/affiliate_state.json"):
         self.path = path
-        self._data: dict[str, Any] = {"offset": 0, "jobs": {}}
+        self._data: dict[str, Any] = {"offset": 0, "jobs": {}, "renders": {}}
         self.load()
 
     def load(self) -> None:
@@ -67,7 +68,8 @@ class JobStore:
             return
         if isinstance(loaded, dict):
             self._data = {"offset": int(loaded.get("offset", 0)),
-                          "jobs": loaded.get("jobs", {}) or {}}
+                          "jobs": loaded.get("jobs", {}) or {},
+                          "renders": loaded.get("renders", {}) or {}}
 
     def save(self) -> None:
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
@@ -115,6 +117,27 @@ class JobStore:
         """Most recent unfinished job for a chat, so replies need no job id."""
         live = [j for j in self.all() if j.chat_id == chat_id and j.state not in TERMINAL]
         return max(live, key=lambda j: j.updated_at) if live else None
+
+    # --- spend guard -----------------------------------------------------
+
+    @staticmethod
+    def _today() -> str:
+        return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+
+    def renders_today(self) -> int:
+        """Renders already started today (UTC), for the daily cap."""
+        return int(self._data.get("renders", {}).get(self._today(), 0))
+
+    def record_render(self) -> int:
+        """Count one render. Called before the vendor call, so a crashed or
+        failed render still consumes budget — the money is spent either way."""
+        renders = self._data.setdefault("renders", {})
+        today = self._today()
+        renders[today] = int(renders.get(today, 0)) + 1
+        # Keep a fortnight so the file cannot grow without bound.
+        for day in sorted(renders)[:-14]:
+            renders.pop(day, None)
+        return renders[today]
 
     def prune(self, keep_seconds: float = 7 * 24 * 3600) -> int:
         """Drop finished jobs older than ``keep_seconds``. Returns count removed."""
