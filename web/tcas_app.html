@@ -1797,8 +1797,10 @@ function hoursFor(isoStr) {
 /** ชั่วโมงอ่าน "ของใหม่" ที่เหลือระหว่างสองวัน (หักส่วนที่กันไว้ทบทวน) */
 function learnHoursBetween(fromISO, toISO) {
   const learnShare = 1 - ST.reviewShare;
+  /* ครึ่งเปิดข้างท้าย: นับ fromISO ถึงวันก่อน toISO — วันสอบไม่ใช่วันอ่าน
+     (ฝั่ง Python `_hours_between` ก็ตัดวันปลายทิ้งเหมือนกัน ต้องตรงกัน) */
   let total = 0, cur = d(fromISO), end = d(toISO), guard = 0;
-  while (cur <= end && guard++ < 800) {
+  while (cur < end && guard++ < 800) {
     total += hoursFor(iso(cur)) * learnShare;
     cur.setDate(cur.getDate() + 1);
   }

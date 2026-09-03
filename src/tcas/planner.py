@@ -41,15 +41,27 @@ def hours_for(day: date, cfg: Dict[str, Any]) -> float:
 
 
 def _subject_deadlines(cfg: Dict[str, Any]) -> Dict[str, date]:
-    """วันสอบของแต่ละวิชา — TPAT1 มีวันของตัวเอง ที่เหลือใช้วัน A-Level."""
-    from .config import exam_dates
+    """วันสอบของแต่ละวิชา.
+
+    ใช้ `subject_schedule` ก่อนเสมอ เพราะ A-Level กระจายอยู่สองวัน
+    (ชีวะ/ฟิสิกส์/ไทย/สังคม 13 มี.ค. · คณิต/อังกฤษ/เคมี 14 มี.ค.)
+    ถ้าวิชาไหนไม่มีในตารางรายวิชา ค่อยถอยไปใช้วันรวมของสนามนั้น
+
+    ⚠️ ต้องให้ผลตรงกับ `ST.deadlines` ฝั่งแอป (webexport.py ส่งมาจาก
+    subject_schedule เหมือนกัน) — ถ้าสองฝั่งต่างกัน ตารางอ่านจะคนละชุด
+    """
+    from .config import exam_dates, subject_schedule
 
     exams = exam_dates(cfg)
     tpat1_date = exams.get("tpat1", {}).get("date")
     alevel_date = exams.get("alevel", {}).get("date")
+    per_subject = subject_schedule(cfg)
     out: Dict[str, date] = {}
     for code, subj in syllabus.SUBJECTS.items():
-        target = tpat1_date if subj.exam == "tpat1" else alevel_date
+        spec = per_subject.get(code)
+        target = spec["date"] if spec else (
+            tpat1_date if subj.exam == "tpat1" else alevel_date
+        )
         if target:
             out[code] = target
     return out
@@ -149,17 +161,25 @@ def generate_plan(
         if dl and dl < start:
             continue
         rec = dict(store.topic(topic.code))
-        if rec.get("learned_on"):
+        # ชั่วโมงที่ยังเหลือของหัวข้อ — หัวข้อที่อ่านค้างไว้ครึ่งทางต้องเหลือแค่ครึ่ง
+        # ไม่ใช่นับใหม่ทั้งก้อน (ฝั่งแอปคิดแบบนี้มาตลอดผ่าน `hoursLeftOf`)
+        left = round(max(0.0, topic.hours - float(rec.get("hours_done", 0.0))) * 4) / 4
+        if left >= 0.25:
+            pending.append((subj, replace(topic, hours=left)))
+        if rec.get("next_review"):
             sim[topic.code] = rec
-        else:
-            pending.append((subj, topic))
 
     days: List[StudyDay] = []
     cursor = start
     while cursor <= end:
-        capacity = hours_for(cursor, cfg)
+        available = hours_for(cursor, cfg)
+        # หักเวลาที่ลงบันทึกไว้แล้วของวันนั้นออก — อ่านไปครึ่งวันแล้ว ตารางที่เหลือ
+        # ต้องเหลือแค่ส่วนที่ค้าง ไม่ใช่สั่งอ่านเต็มวันซ้ำ (ตรงกับฝั่งแอป)
+        logged = sum(float(e.get("hours", 0.0)) for e in store.day_entries(cursor))
+        capacity = max(0.0, available - logged)
         if capacity <= 0:
-            days.append(StudyDay(day=cursor, note="วันพัก"))
+            note = "วันพัก" if available <= 0 else "ทำครบแล้ว"
+            days.append(StudyDay(day=cursor, note=note))
             cursor += timedelta(days=1)
             continue
 
@@ -213,19 +233,29 @@ def generate_plan(
             avail = _hours_between(cum_hours, cursor, dl)
             urgency[scode] = min(5.0, max(0.1, hours_left / max(avail, 1.0)))
 
+        def score(item) -> float:
+            subj, topic = item
+            mastery = store.mastery(topic.code, baseline)
+            return (
+                topic.weight
+                * _subject_weight(subj.code, group_weights)
+                * (1.0 - mastery / 100.0)
+                * urgency.get(subj.code, 1.0)
+            )
+
+        # เรียงวันละครั้งเท่านั้น — ถ้าเรียงใหม่ในลูป หัวข้อที่เพิ่งแบ่งครึ่ง
+        # จะเด้งกลับมาอันดับ 1 แล้วถูกจัดซ้ำในวันเดียวกัน (ฝั่งแอปเรียงนอกลูป)
+        pending.sort(key=score, reverse=True)
+
+        # หัวข้อที่ลงมือไปแล้ววันนี้ ดันไปท้ายคิว — ไม่งั้นพอบันทึกเสร็จปุ๊บ
+        # มันยังคะแนนสูงสุดอยู่ (เพราะยังอ่านไม่จบ) แล้วเด้งกลับมาซ้ำทันที
+        worked_today = {e.get("topic") for e in store.day_entries(cursor)}
+        if worked_today:
+            front = [x for x in pending if x[1].code not in worked_today]
+            back = [x for x in pending if x[1].code in worked_today]
+            pending[:] = front + back
+
         while learn_budget >= 0.25 and pending:
-
-            def score(item) -> float:
-                subj, topic = item
-                mastery = store.mastery(topic.code, baseline)
-                return (
-                    topic.weight
-                    * _subject_weight(subj.code, group_weights)
-                    * (1.0 - mastery / 100.0)
-                    * urgency.get(subj.code, 1.0)
-                )
-
-            pending.sort(key=score, reverse=True)
             subj, topic = pending[0]
 
             chunk = min(block_hours, topic.hours, learn_budget)

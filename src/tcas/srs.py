@@ -19,22 +19,21 @@ EASE_MAX = 3.0
 EASE_STEP_UP = 0.05
 EASE_STEP_DOWN = 0.20
 
-# น้ำหนักของผลลัพธ์ล่าสุดในการอัปเดตค่าความแม่น (0-1)
-MASTERY_ALPHA = 0.30
-
-
 def next_interval(repetition: int, ease: float, intervals: List[int] | None = None) -> int:
-    """จำนวนวันจนถึงการทบทวนครั้งถัดไป.
+    """จำนวนวันจนถึงการทบทวนครั้งถัดไป — อ่านตรงจากตาราง ไม่คูณ ease.
 
     repetition = จำนวนครั้งที่ทบทวนผ่านติดต่อกันมาแล้ว (0 = เพิ่งอ่านรอบแรก)
+    เลยท้ายตารางแล้วก็คงที่ที่ค่าสุดท้าย (ค่าเริ่มต้น 35 วัน)
+
+    ⚠️ `ease` ยังรับไว้เพื่อความเข้ากันได้ของผู้เรียก และยังถูกเก็บลง store
+    (ใช้ดูว่าหัวข้อไหนพลาดบ่อย) แต่ **ไม่มีผลต่อระยะทบทวน** โดยตั้งใจ:
+    ฝั่งแอป (`tcas_app.html`) ไม่มีฟิลด์ ease เลย ใช้ตารางแบน ๆ ล้วน
+    ถ้าฝั่งนี้คูณ ease ตารางทบทวนสองฝั่งจะแยกกันตั้งแต่ครั้งแรก
+    (ease เริ่มที่ 2.5 บวกครั้งละ 0.05 ทบไปเรื่อย ๆ เกินตารางแล้วยิ่งบานปลาย)
+    จะเอา ease กลับมาใช้เมื่อไหร่ ต้องใส่ในฝั่งแอปพร้อมกันเท่านั้น
     """
     table = intervals or DEFAULT_INTERVALS
-    base = table[min(repetition, len(table) - 1)]
-    if repetition >= len(table):
-        # เกินตารางแล้ว — ยืดต่อด้วย ease ทบไปเรื่อย ๆ
-        base = int(round(table[-1] * (ease ** (repetition - len(table) + 1))))
-    scaled = base * (ease / EASE_START)
-    return max(1, int(round(scaled)))
+    return max(1, int(table[min(repetition, len(table) - 1)]))
 
 
 def schedule(
@@ -77,8 +76,3 @@ def first_schedule(on: date, intervals: List[int] | None = None) -> Dict[str, An
         "next_review": (on + timedelta(days=table[0])).isoformat(),
     }
 
-
-def update_mastery(current: float, correct: bool, alpha: float = MASTERY_ALPHA) -> float:
-    """ค่าความแม่น 0-100 แบบ EWMA — ตอบถูกดันขึ้น ตอบผิดดึงลง."""
-    target = 100.0 if correct else 0.0
-    return round(current * (1 - alpha) + target * alpha, 1)

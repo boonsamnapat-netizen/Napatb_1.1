@@ -94,14 +94,45 @@ def cmd_done(args) -> int:
         if topic is None:
             print(f"ไม่รู้จักหัวข้อ '{code}' — ดูรหัสหัวข้อได้จาก: python tcas_cli.py topics")
             return 1
-        store.set_topic(code, **srs.first_schedule(on, intervals))
-        store.log_study(on, topic.hours)
+        left = max(0.0, topic.hours - float(store.topic(code).get("hours_done", 0.0)))
+        store.add_topic_hours(code, left, topic.hours, on, intervals)
         marked.append((subj, topic))
 
     store.save()
     for subj, topic in marked:
         nxt = store.topic(topic.code)["next_review"]
         print(f"✅ {subj.name} · {topic.name} — ทบทวนครั้งแรก {nxt}")
+    return 0
+
+
+def cmd_log(args) -> int:
+    """บันทึกชั่วโมงที่อ่านไปจริง — ใช้เมื่ออ่านไม่จบหัวข้อในวันเดียว.
+
+    ถ้าไม่มีคำสั่งนี้ ตารางจาก `today`/`notify` จะสั่งอ่านบล็อกเดิมซ้ำทุกเช้า
+    เพราะฝั่ง CLI ไม่มีทางรู้เลยว่าเมื่อวานอ่านไปแล้วเท่าไร
+    """
+    cfg, store, on = _load(args)
+    intervals = list((cfg.get("study") or {}).get("review_intervals_days") or srs.DEFAULT_INTERVALS)
+
+    subj, topic = syllabus.find_topic(args.topic)
+    if topic is None:
+        print(f"ไม่รู้จักหัวข้อ '{args.topic}' — ดูรหัสหัวข้อได้จาก: python tcas_cli.py topics")
+        return 1
+    if args.hours <= 0:
+        print("ชั่วโมงต้องมากกว่า 0")
+        return 1
+
+    finished = store.add_topic_hours(args.topic, args.hours, topic.hours, on, intervals)
+    store.save()
+
+    done = float(store.topic(args.topic).get("hours_done", 0.0))
+    left = max(0.0, topic.hours - done)
+    print(f"📘 {subj.name} · {topic.name} — บันทึก {args.hours:g} ชม. ({on})")
+    if finished:
+        print(f"   อ่านจบแล้ว ({done:g}/{topic.hours:g} ชม.) "
+              f"ทบทวนครั้งแรก {store.topic(args.topic)['next_review']}")
+    else:
+        print(f"   สะสม {done:g}/{topic.hours:g} ชม. · เหลืออีก {left:g} ชม.")
     return 0
 
 
@@ -577,6 +608,11 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("done", help="บันทึกว่าอ่านหัวข้อจบแล้ว")
     s.add_argument("topic", nargs="+", help="รหัสหัวข้อ เช่น bio_cell")
     s.set_defaults(func=cmd_done)
+
+    s = sub.add_parser("log", help="บันทึกชั่วโมงที่อ่านไปจริง (อ่านไม่จบหัวข้อก็บันทึกได้)")
+    s.add_argument("topic", help="รหัสหัวข้อ เช่น bio_cell")
+    s.add_argument("hours", type=float, help="จำนวนชั่วโมง เช่น 1.5")
+    s.set_defaults(func=cmd_log)
 
     s = sub.add_parser("topics", help="รายการหัวข้อทั้งหมดพร้อมสถานะ")
     s.add_argument("--subject", action="append", help="จำกัดเฉพาะวิชานี้")

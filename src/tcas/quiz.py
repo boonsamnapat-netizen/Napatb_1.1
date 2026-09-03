@@ -163,8 +163,6 @@ def grade(
     intervals = list(
         (cfg.get("study") or {}).get("review_intervals_days") or srs.DEFAULT_INTERVALS
     )
-    baseline = float(cfg.get("baseline_mastery", 35.0))
-
     correct_count = 0
     wrong: List[str] = []
     per_topic: Dict[str, List[int]] = {}
@@ -178,6 +176,9 @@ def grade(
 
         # --- สถิติข้อสอบ + คิวทบทวนข้อนี้
         rec = dict(store.question(q.qid))
+        # เก็บหัวข้อไว้กับตัวข้อด้วย เพื่อให้ store.mastery() รวมสถิติรายหัวข้อได้
+        # โดยไม่ต้องโหลดคลังข้อสอบทั้งก้อน
+        rec["topic"] = q.topic_code
         rec["seen"] = int(rec.get("seen", 0)) + 1
         rec["correct"] = int(rec.get("correct", 0)) + int(ok)
         rec.update(srs.schedule(rec, correct=ok, on=on, intervals=intervals))
@@ -188,10 +189,7 @@ def grade(
             slot = per_topic.setdefault(q.topic_code, [0, 0])
             slot[0] += int(ok)
             slot[1] += 1
-            current = store.mastery(q.topic_code, baseline)
-            store.set_topic(
-                q.topic_code, mastery=srs.update_mastery(current, ok)
-            )
+            # ไม่ต้องเขียนฟิลด์ mastery — store.mastery() คำนวณสดจากสถิติรายข้อ
             # ตอบผิดหัวข้อที่อ่านไปแล้ว = ลืม -> ดึงกลับมาทบทวนพรุ่งนี้
             if not ok and store.is_learned(q.topic_code):
                 trec = dict(store.topic(q.topic_code))

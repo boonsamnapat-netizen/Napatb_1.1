@@ -19,16 +19,19 @@ SCHEMA_VERSION = 1
 def _empty() -> Dict[str, Any]:
     return {
         "version": SCHEMA_VERSION,
-        # topic_code -> {learned_on, repetition, next_review, ease, mastery}
+        # topic_code -> {hours_done, learned_on, repetition, next_review, ease, mastery}
         "topics": {},
-        # qid -> {seen, correct, repetition, next_review, ease}
+        # qid -> {topic, seen, correct, repetition, next_review, ease}
         "questions": {},
         # บันทึกการทำ quiz ย้อนหลัง
         "quiz_log": [],
         # คะแนนที่กรอกไว้ (ดิบ) — subject_code -> คะแนน
         "scores": {},
-        # YYYY-MM-DD -> ชั่วโมงที่อ่านจริง
+        # YYYY-MM-DD -> ชั่วโมงที่อ่านจริงรวมทั้งวัน (คู่กับ `S.days` ฝั่งแอป)
         "study_log": {},
+        # YYYY-MM-DD -> [{topic, kind, hours}] รายบล็อกที่ทำจริงในวันนั้น
+        # (คู่กับ `S.log` ฝั่งแอป) — ตารางต้องรู้ว่าวันนี้ลงมือหัวข้อไหนไปแล้ว
+        "day_log": {},
     }
 
 
@@ -75,6 +78,39 @@ class ProgressStore:
     def is_learned(self, topic_code: str) -> bool:
         return bool(self.topic(topic_code).get("learned_on"))
 
+    def add_topic_hours(
+        self,
+        topic_code: str,
+        hours: float,
+        total_hours: float,
+        on: date,
+        intervals: list | None = None,
+        kind: str = "learn",
+    ) -> bool:
+        """บันทึกชั่วโมงที่อ่านหัวข้อนี้ — ครบชั่วโมงแล้วเข้าคิวทบทวนให้เอง.
+
+        คืน True ถ้าหัวข้อนี้เพิ่งอ่านจบในครั้งนี้
+
+        ทำหน้าที่เดียวกับ `completeBlock()` ฝั่งแอปเป๊ะ ๆ รวมถึงชื่อฟิลด์
+        (`hours_done` ↔ `hoursDone`) — ต้องแก้พร้อมกันทั้งสองฝั่งเสมอ
+        ไม่งั้นตารางอ่านจาก CLI กับจากแอปจะเดินคนละทาง
+        """
+        from . import srs
+
+        rec = self.data["topics"].setdefault(topic_code, {})
+        done = round(float(rec.get("hours_done", 0.0)) + float(hours), 2)
+        rec["hours_done"] = done
+        just_finished = False
+        if done >= total_hours - 0.001 and not rec.get("learned_on"):
+            rec.update(srs.first_schedule(on, intervals))
+            rec["hours_done"] = done   # first_schedule ไม่รู้จักฟิลด์นี้
+            just_finished = True
+        self.log_study(on, float(hours))
+        self.data["day_log"].setdefault(on.isoformat(), []).append(
+            {"topic": topic_code, "kind": kind, "hours": float(hours)}
+        )
+        return just_finished
+
     def learned_topics(self) -> Dict[str, Dict[str, Any]]:
         return {k: v for k, v in self.data["topics"].items() if v.get("learned_on")}
 
@@ -92,7 +128,20 @@ class ProgressStore:
 
     # ---------------------------------------------------------- mastery
     def mastery(self, topic_code: str, default: float) -> float:
-        return float(self.topic(topic_code).get("mastery", default))
+        """ความแม่นของหัวข้อ 0-100 = ตอบถูกกี่ % ของข้อที่เคยทำในหัวข้อนั้น.
+
+        คำนวณสด ๆ จากสถิติรายข้อ ไม่เก็บเป็นฟิลด์แยก — เพราะฝั่งแอป
+        (`masteryOf` ใน tcas_app.html) คิดแบบนี้ ถ้าฝั่งนี้เก็บค่าสะสมของตัวเอง
+        สองฝั่งจะแยกกันทันทีที่ทำ quiz และไม่มีทางไล่กลับมาตรงกันได้
+        (ของเดิมเป็น EWMA ที่ขึ้นกับ "ลำดับ" ที่ตอบด้วย จึงทำซ้ำไม่ได้เลย)
+        """
+        seen = ok = 0
+        for rec in self.data["questions"].values():
+            if rec.get("topic") != topic_code:
+                continue
+            seen += int(rec.get("seen", 0))
+            ok += int(rec.get("correct", 0))
+        return 100.0 * ok / seen if seen else float(default)
 
     def subject_mastery(self, subject_code: str, topics: list, default: float) -> float:
         """ค่าเฉลี่ยความแม่นของวิชา ถ่วงด้วยน้ำหนักหัวข้อ."""
@@ -114,6 +163,10 @@ class ProgressStore:
     # ------------------------------------------------------------ misc
     def log_quiz(self, entry: Dict[str, Any]) -> None:
         self.data["quiz_log"].append(entry)
+
+    def day_entries(self, day: date) -> list:
+        """บล็อกที่ทำไปแล้วในวันนั้น — ว่างได้ (ไฟล์เก่าไม่มีคีย์นี้)."""
+        return list((self.data.get("day_log") or {}).get(day.isoformat()) or [])
 
     def log_study(self, day: date, hours: float) -> None:
         key = day.isoformat()
