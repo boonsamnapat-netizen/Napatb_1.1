@@ -923,6 +923,10 @@ main { padding-top: 26px; }
   border-bottom: 1px solid rgba(255,255,255,.25);
 }
 .savewarn[hidden] { display: none; }
+/* display:flex/grid ชนะ [hidden] ของเบราว์เซอร์เสมอ — กับดักนี้โดนมาแล้ว 5 ที่
+   ประกาศทับแบบครอบจักรวาลตรงนี้ทีเดียว จะได้ไม่ต้องไล่เพิ่มทีละคลาสอีก
+   (ที่เจอล่าสุด: กล่องข้อมูลสนามสอบไม่ยอมพับ เลขที่นั่งสอบจึงโชว์ค้างบนจอ) */
+[hidden] { display: none !important; }
 .savewarn b { color: #ffd9a8; }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1527,8 +1531,30 @@ function sanitizeBackup(parsed) {
   }
   out.links = links;
 
+  /* ตรวจ *ค่าข้างใน* ด้วย ไม่ใช่แค่ชนิดของก้อนนอก — ไฟล์ที่แก้มาเองใส่
+     log["2026-09-03"] = "ข้อความ" ได้ แล้ว buildPlan เรียก .reduce() บนสตริง
+     แท็บวันนี้กับตารางอ่านพังถาวรทุกครั้งที่เปิด เพราะค่าเสียอยู่ใน localStorage แล้ว */
+  const dropBad = (key, ok) => {
+    const src = out[key]; if (!src) return;
+    const clean = {};
+    for (const [k, v] of Object.entries(src)) if (ok(v)) clean[k] = v;
+    out[key] = clean;
+  };
+  const isObj = v => v && typeof v === "object" && !Array.isArray(v);
+  dropBad("log", Array.isArray);
+  ["topics", "q", "venues"].forEach(k => dropBad(k, isObj));
+  dropBad("days", v => Number.isFinite(Number(v)));
+  dropBad("tests", v => typeof v === "boolean" || Number.isFinite(Number(v)));
+  // คะแนนต้องเป็นตัวเลขจำกัดและไม่ติดลบ ไม่งั้นคะแนนรวมเพี้ยนเงียบ ๆ
+  dropBad("scores", v => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0));
+
   // ไฟล์สำรองรุ่นเก่าเก็บเป็น "วันที่|หัวข้อ" — แปลงเป็นชั่วโมงต่อหัวข้อ
-  if (!out.topics && dd.done && typeof dd.done === "object") {
+  /* ⚠️ ต้องเช็คว่า topics "ว่างเปล่า" ไม่ใช่แค่ "ไม่มี" — `{}` เป็น truthy
+     เดิมใช้ !out.topics จึงข้ามกิ่งนี้เสมอเมื่อไฟล์มี topics:{} มาด้วย ซึ่งเป็น
+     สภาพที่ migrateFromDateKeyedProgress สร้างเองตอนแปลงไม่สำเร็จ ผลคือ done
+     ถูกทิ้ง (ไม่อยู่ใน STATE_SHAPE) doneLegacy ไม่ถูกตั้ง แล้ว migrated:true
+     ปิดประตูถาวร = ความคืบหน้าหายหมดโดยแอปขึ้นว่า "กู้คืนเรียบร้อย" */
+  if (!Object.keys(out.topics || {}).length && dd.done && typeof dd.done === "object") {
     const hoursOf = new Map();
     for (const day of DATA.plan)
       for (const b of day.blocks)
@@ -1905,7 +1931,8 @@ function outlook() {
     const ratio = avail > 0 ? need / avail : (need > 0 ? 99 : 0);
     return {
       deadline: dl, need, avail, slack: avail - need,
-      name: exam ? exam.name : dl,
+      // เส้นตายรายวิชา (เช่น 2027-03-14) ไม่มีใน DATA.exams จึงเคยตกมาเป็น ISO ดิบกลางข้อความไทย
+      name: exam ? exam.name : thaiDate(dl),
       status: need <= 0 ? "done" : ratio <= 0.85 ? "ok" : ratio <= 1 ? "tight" : "over",
     };
   });
@@ -2932,10 +2959,17 @@ function venueLine(v) {
   return [v.place, roomTxt].filter(Boolean).join(" · ");
 }
 
+/* patch ที่ค่าเป็นสตริงว่างแปลว่า "ไม่มีข้อมูลใหม่สำหรับช่องนี้" ไม่ใช่ "ลบช่องนี้"
+   เดิมรวมสองความหมายเข้าด้วยกัน ผลคือวางข้อความที่ไม่มีเลขที่นั่งสอบทับลงไป
+   แล้วเลขที่นั่งสอบเดิมที่พิมพ์ไว้หายเกลี้ยงโดยไม่ถามอะไรเลย
+   การลบต้องสั่งตรง ๆ ด้วย {ช่อง: null} เท่านั้น */
 function saveVenue(code, patch) {
-  const cur = Object.assign({}, venueOf(code), patch);
-  // ลบฟิลด์ว่างทิ้ง ไม่ให้เหลือ object เปล่า ๆ กินที่ในไฟล์สำรอง
-  Object.keys(cur).forEach(k => { if (!String(cur[k] || "").trim()) delete cur[k]; });
+  const cur = Object.assign({}, venueOf(code));
+  Object.keys(patch).forEach(k => {
+    const v = patch[k];
+    if (v === null) delete cur[k];
+    else if (String(v).trim()) cur[k] = String(v).trim();
+  });
   const all = myVenues();
   if (Object.keys(cur).length) all[code] = cur; else delete all[code];
   Store.save();
@@ -2944,25 +2978,33 @@ function saveVenue(code, patch) {
 /* แกะข้อความที่ก๊อปมาจากหน้าสมัคร — รองรับได้เท่าที่คาดเดารูปแบบได้
    ยังไม่เคยเห็นหน้าจริงของ mytcas จึงจับจากคำนำหน้าที่ใช้กันทั่วไป
    ถ้าแกะไม่ออกก็ไม่เป็นไร ผู้ใช้พิมพ์เองได้ตามปกติ */
+/* เดิมหลวมจนอ่านประโยคบรรยายเป็นข้อมูลได้ เช่น
+   "กรุณาตรวจสอบสนามสอบและห้องสอบของท่าน" -> place:"และ" แล้วรายงานว่าสำเร็จ
+   ตอนนี้บังคับว่าคำนำหน้าต้องอยู่ต้นบรรทัด และต้องมีตัวคั่นตามหลัง
+   (: ： = - หรือเว้นวรรคตั้งแต่สองช่อง หรือขึ้นบรรทัดใหม่) ซึ่งเป็นรูปแบบที่
+   หน้าสมัครจริงใช้ ส่วนประโยคบรรยายจะไม่เข้าเกณฑ์
+
+   ยังไม่เคยเห็นหน้าสมัครจริงของ mytcas จึงยังเป็นการเดารูปแบบอยู่ดี —
+   ด้วยเหตุนี้ผลที่แกะได้ต้องให้ผู้ใช้ยืนยันก่อนบันทึกทับเสมอ */
+const VENUE_SEP = "(?:[ \\t]*[:\uff1a=\\-][ \\t]*|[ \\t]{2,}|[ \\t]*\\n[ \\t]*)";
 function parseVenueText(text) {
-  const t = String(text || "").replace(/ /g, " ");
-  const grab = res => {
-    for (const re of res) {
+  const t = String(text || "").replace(/\u00a0/g, " ").replace(/\r/g, "");
+  const grab = (labels, valuePat) => {
+    for (const lb of labels) {
+      const re = new RegExp("(?:^|\\n)[ \\t]*" + lb + VENUE_SEP + "(" + valuePat + ")");
       const m = t.match(re);
-      if (m && m[1] && m[1].trim()) return m[1].trim().replace(/\s+/g, " ");
+      if (m && m[1] && m[1].trim()) return m[1].trim().replace(/[ \t]+/g, " ");
     }
     return "";
   };
+  // เลขที่นั่งสอบ: ยอมให้มีเว้นวรรคและเลขไทยอยู่ข้างใน — เดิมตัดที่ช่องว่างแรก
+  // ทำให้ "68 12345" เหลือ "68" และเลขไทย ๖๘๑๒๓๔๕ หายทั้งก้อน
+  const seatChars = "[A-Za-z0-9\u0E50-\u0E59][A-Za-z0-9\u0E50-\u0E59 \\-\\/]{0,23}";
   return {
-    seat: grab([/เลขที่นั่งสอบ[\s:：]*([A-Za-z0-9\-\/]+)/,
-                /ที่นั่งสอบ[\s:：]*([A-Za-z0-9\-\/]+)/,
-                /เลขที่นั่ง[\s:：]*([A-Za-z0-9\-\/]+)/]),
-    place: grab([/สนามสอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/,
-                 /ศูนย์สอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/,
-                 /สถานที่สอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/]),
-    room: grab([/ห้องสอบ[\s:：]*(.+?)(?:\n|$)/,
-                /ห้อง[\s:：]*([A-Za-z0-9฀-๿\-\/ ]{1,30})(?:\n|$)/,
-                /อาคาร[\s:：]*(.+?)(?:\n|$)/]),
+    seat: grab(["เลขที่นั่งสอบ", "ที่นั่งสอบ", "เลขที่นั่ง", "เลขประจำตัวสอบ"], seatChars),
+    // ชื่อสนามสอบมักมีคำว่า "อาคาร" อยู่ในตัวเอง จึงตัดที่ "ห้องสอบ" หรือท้ายบรรทัดเท่านั้น
+    place: grab(["สนามสอบ", "ศูนย์สอบ", "สถานที่สอบ"], "[^\\n]*?(?=[ \\t]*(?:ห้องสอบ|\\n|$))"),
+    room: grab(["ห้องสอบ", "ห้อง"], "[^\\n]{1,40}"),
   };
 }
 
@@ -2979,8 +3021,13 @@ function venuePanel() {
     "กรอกเลขที่นั่งสอบและสนามสอบไว้ตรงนี้ เช้าวันสอบจะได้ไม่ต้องไปหาในเว็บสมัคร " +
     "และถ้าดาวน์โหลดปฏิทิน สนามสอบจะติดไปกับนัดหมายให้กดนำทางได้เลย</p>"));
   card.appendChild(el('<div class="note" style="border-color:var(--ok)">' +
-    "<b>ข้อมูลนี้อยู่ในเครื่องนี้เครื่องเดียว</b> ไม่ถูกอัปโหลดขึ้นเว็บหรือ GitHub " +
-    "และไม่มีใครอื่นเห็น — จะออกจากเครื่องก็ต่อเมื่อคุณกดสำรองข้อมูลเอง " +
+    "<b>แอปไม่ส่งข้อมูลนี้ออกไปไหนเอง</b> ไม่มีการอัปโหลดขึ้นเว็บหรือ GitHub " +
+    "แต่มี <b>3 ทางที่ข้อมูลติดไปกับไฟล์</b> ถ้าคุณเป็นคนสร้างไฟล์นั้น:<br>" +
+    "• <b>ไฟล์ปฏิทิน .ics</b> — สนามสอบและ<b>เลขที่นั่งสอบ</b>อยู่ในนัดหมายทุกวิชา " +
+    "นำเข้า Google/iCloud Calendar = ขึ้นคลาวด์ของบัญชีนั้น ถ้าปฏิทินนั้นแชร์ไว้ คนอื่นเห็นด้วย<br>" +
+    "• <b>ไฟล์สำรอง .json</b> — มีข้อมูลสนามสอบอยู่ข้างใน ส่งให้ใครคือส่งเลขที่นั่งสอบไปด้วย<br>" +
+    "• <b>สำรองอัตโนมัติ</b> (ถ้าเปิดไว้) — เขียนไฟล์ทับ<b>ทุกครั้งที่ข้อมูลเปลี่ยน</b> " +
+    "ไม่ต้องกดอะไรอีก ถ้าไฟล์อยู่ในโฟลเดอร์ที่ซิงก์คลาวด์ ก็ขึ้นคลาวด์ตามไปด้วย<br>" +
     "(ถ้าใช้เครื่องสาธารณะ อย่ากรอกทิ้งไว้)</div>"));
 
   /* ---- วางข้อความจากหน้าสมัครแล้วให้แอปแกะให้ */
@@ -2993,17 +3040,33 @@ function venuePanel() {
     'color:var(--text);background:var(--surface-2);border:1px solid var(--line);' +
     'border-radius:var(--r-sm);padding:10px 11px;resize:vertical"></textarea>');
   const pasteBtn = el('<button class="btn btn-sm">แกะข้อมูลจากข้อความ</button>');
+  /* ตัวแกะข้อความเดายังไงก็ผิดได้ และของที่มันเขียนทับคือเลขที่นั่งสอบ
+     ซึ่งเช้าวันสอบนึกเองไม่ออก จึงต้องให้เห็นก่อนว่าจะเขียนอะไร แล้วกดยืนยัน
+     เดิมบันทึกทับทันทีแล้วขึ้น toast ว่าสำเร็จ ทั้งที่บางครั้งแกะได้เป็นขยะ */
+  const LABELS = { seat: "เลขที่นั่งสอบ", place: "สนามสอบ", room: "ห้องสอบ" };
   pasteBtn.addEventListener("click", () => {
+    const code = pasteSel.value;
     const got = parseVenueText(pasteBox.value);
-    const found = Object.keys(got).filter(k => got[k]);
+    const found = Object.keys(LABELS).filter(k => got[k]);
     if (!found.length) {
-      toast("แกะไม่ออก", "ลองกรอกในช่องด้านล่างเอง");
+      toast("แกะไม่ออก", "พิมพ์ในช่องด้านล่างเองได้เลย");
       return;
     }
-    saveVenue(pasteSel.value, got);
+    const cur = venueOf(code);
+    const lines = found.map(k => {
+      const over = cur[k] && cur[k] !== got[k] ? "  (ทับของเดิม: " + cur[k] + ")" : "";
+      return LABELS[k] + ": " + got[k] + over;
+    });
+    const keep = Object.keys(LABELS).filter(k => cur[k] && !got[k]);
+    const msg = "จะบันทึกลง " + SUBJ[code].name + " ตามนี้:\n\n" + lines.join("\n") +
+      (keep.length ? "\n\nของเดิมที่เก็บไว้เหมือนเดิม: " +
+        keep.map(k => LABELS[k]).join(", ") : "") +
+      "\n\nถูกต้องไหม? ถ้าไม่ตรง กด Cancel แล้วพิมพ์เองได้";
+    if (!confirm(msg)) return;
+    saveVenue(code, got);
     pasteBox.value = "";
     render();
-    toast("แกะได้ " + found.length + " ช่อง", esc(SUBJ[pasteSel.value].name));
+    toast("บันทึกแล้ว " + found.length + " ช่อง", SUBJ[code].name);
   });
   pasteWrap.appendChild(el('<div class="tiny" style="margin-top:4px">' +
     "<b>ทางลัด:</b> เลือกวิชา วางข้อความ แล้วกดปุ่ม — แอปจะหาคำว่า " +
@@ -3027,10 +3090,11 @@ function venuePanel() {
        (กติกาเดียวกับที่เขียนไว้ใน docs: อย่าเอาสีวิชาไปทาตัวอักษร) */
     const head = el('<button class="bandhd" aria-expanded="false" style="border-top:0">' +
       '<span class="bandhd-t">' + esc(SUBJ[code].name) + "</span>" +
-      '<span class="tiny" style="margin-left:auto">' +
+      '<span class="tiny" style="margin-left:auto" data-sum="1">' +
         (filled ? esc(v.seat ? "ที่นั่ง " + v.seat : "กรอกแล้ว " + filled + "/3")
                 : "ยังไม่ได้กรอก") + "</span>" +
       '<span class="wk-c">▾</span></button>');
+    const sumEl = $("[data-sum]", head);
     const body = el('<div class="stack" style="gap:0;padding-bottom:8px" hidden></div>');
 
     [["seat", "เลขที่นั่งสอบ", "เช่น 1234567"],
@@ -3040,7 +3104,17 @@ function venuePanel() {
       const row = el('<div class="field"><span class="field-l">' + label + "</span></div>");
       const inp = el('<input type="text" placeholder="' + esc(ph) + '" value="' +
         esc(v[k] || "") + '" style="flex:1;min-width:0;max-width:190px">');
-      inp.addEventListener("change", () => { saveVenue(code, { [k]: inp.value.trim() }); render(); });
+      /* บันทึกอย่างเดียว ไม่วาดใหม่ทั้งแท็บ — เดิมเรียก render() ทุกครั้งที่ออกจากช่อง
+         ทำให้โฟกัสหลุดไปที่ body และ (หลังแก้บั๊ก [hidden]) กล่องจะพับปิดทุกครั้ง
+         กรอก 8 วิชา × 4 ช่อง = เปิดกล่องใหม่ 32 รอบ */
+      inp.addEventListener("change", () => {
+        saveVenue(code, { [k]: inp.value.trim() || null });
+        const v2 = venueOf(code);
+        const n = ["seat", "place", "room"].filter(x => v2[x]).length;
+        sumEl.textContent = n
+          ? (v2.seat ? "ที่นั่ง " + v2.seat : "กรอกแล้ว " + n + "/3")
+          : "ยังไม่ได้กรอก";
+      });
       row.appendChild(inp);
       body.appendChild(row);
     });
@@ -3428,7 +3502,13 @@ function groupPercents(scores) {
     let sum = 0, any = false;
     inGroup.forEach(c => {
       if (scores[c] === "" || scores[c] == null) return;
-      sum += toPercent(c, scores[c]);
+      const pct = toPercent(c, scores[c]);
+      /* ค่าที่ไม่ใช่ตัวเลขต้องถือว่า "ยังไม่กรอก" ไม่ใช่ปล่อยให้ NaN ไหลต่อ —
+         ปลายทาง scoreCard ใช้ `pcts[g] || 0` ซึ่งเปลี่ยน NaN เป็น 0
+         ทำให้ทั้งกลุ่มวิทย์ (28 คะแนน) หายไปโดยหน้าจอไม่แสดงอะไรผิดปกติเลย
+         (เข้าถึงได้ผ่านไฟล์สำรองที่แก้มาเอง — UI คุมค่าไว้แล้ว) */
+      if (!Number.isFinite(pct)) return;
+      sum += pct;
       any = true;
     });
     if (any) out[g] = sum / inGroup.length;
@@ -5027,7 +5107,9 @@ function viewSettings() {
   cal.appendChild(calBtns);
   cal.appendChild(el('<p class="tiny" style="margin:2px 0 0">ปุ่มที่สองใส่เฉพาะ' +
     "<b>วันสอบจริงรายวิชา</b> (พร้อมเวลาเข้าห้อง) และ<b>วันสมัคร/พิมพ์บัตร/ประกาศผล</b> " +
-    "ตามปฏิทิน TCAS70 — ไม่มีตารางอ่านมาปน เหมาะกับปฏิทินที่ใช้ร่วมกับคนอื่น</p>"));
+    "ตามปฏิทิน TCAS70 — ไม่มีตารางอ่านมาปน<br>" +
+    "<b>⚠️ ถ้ากรอกข้อมูลสนามสอบไว้</b> ไฟล์นี้จะมีสนามสอบและ<b>เลขที่นั่งสอบ</b>ติดไปด้วย " +
+    "จะได้กดนำทางจากปฏิทินได้ — แต่แปลว่า<b>อย่าแชร์ปฏิทินนี้ให้คนที่ไม่ควรรู้</b></p>"));
 
   cal.appendChild(el('<p class="tiny" style="margin:2px 0 0"><b>iPhone:</b> กดปุ่มแล้วเลือก ' +
     '“เพิ่มทั้งหมด” · <b>Android:</b> เปิด Google Calendar → ตั้งค่า → นำเข้า แล้วเลือกไฟล์นี้</p>'));

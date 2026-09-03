@@ -25,6 +25,8 @@ import html
 import random
 import re
 import sys
+
+import yaml
 from datetime import timedelta
 
 from src.tcas import config as cfgmod
@@ -164,7 +166,8 @@ def cmd_quiz(args) -> int:
         print(f"คลังข้อสอบมีปัญหา: {exc}")
         return 1
 
-    count = args.n or int((cfg.get("quiz") or {}).get("default_count", 10))
+    # -n ติดลบเคยกลายเป็น chosen[:-5] = ยกคลังทั้งคลังมาให้ทำ
+    count = max(1, args.n) if args.n else int((cfg.get("quiz") or {}).get("default_count", 10))
     rng = random.Random(args.seed) if args.seed is not None else random.Random()
     questions = quiz.select_questions(
         bank, store, on,
@@ -658,7 +661,10 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (KeyError, FileNotFoundError) as exc:
+    # เดิมจับแค่สองชนิด --date ที่พิมพ์ผิดหรือ config ที่ YAML เสีย
+    # จึงพ่น traceback ดิบใส่หน้าคนใช้แทนที่จะบอกว่าผิดตรงไหน
+    except (KeyError, FileNotFoundError, ValueError, AttributeError,
+            yaml.YAMLError) as exc:
         print(f"ผิดพลาด: {exc}")
         return 1
 

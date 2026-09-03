@@ -21,10 +21,12 @@ BAND_SAFE = 3.0        # เกินคะแนนต่ำสุดที่�
 BAND_LIKELY = 0.0      # 0 ถึง +3
 BAND_REACH = -3.0      # −3 ถึง 0
 
-BAND_SAFE_LABEL = "ปลอดภัย"
-BAND_LIKELY_LABEL = "ลุ้น"
+# ป้ายต้องตรงกับ BANDS ใน web/tcas_app.html เป๊ะ ๆ — ถ้า CLI กับแอปเรียกคนละชื่อ
+# ผู้ใช้จะไม่รู้ว่าอันไหนจริง (ยึดคำของแอป เพราะเป็นสิ่งที่เห็นทุกวัน)
+BAND_SAFE_LABEL = "ค่อนข้างปลอดภัย"
+BAND_LIKELY_LABEL = "ลุ้นได้"
 BAND_REACH_LABEL = "ท้าทาย"
-BAND_FAR_LABEL = "เกินเอื้อม"
+BAND_FAR_LABEL = "ยังห่าง"
 BAND_NODATA_LABEL = "ไม่มีข้อมูล"
 
 BAND_ORDER = [
