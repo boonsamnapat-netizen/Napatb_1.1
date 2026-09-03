@@ -1,0 +1,634 @@
+# ชุดที่ 3 — เขียนใหม่ให้สัดส่วนเข้าใกล้ข้อสอบจริง (A-Level 82: 80 ข้อ ปรนัย 4 ตัวเลือก)
+# คลังเดิมมีอังกฤษแค่ 44 ข้อ ทั้งที่เป็นข้อสอบยาวที่สุดใน A-Level และมีน้ำหนัก 14%
+# เท่ากับคณิต 1 — ชุดนี้เติมอีก 40 ข้อ เน้นส่วนบทสนทนา/การอ่านซึ่งกินสัดส่วนมากที่สุด
+#
+# ทุกข้อเขียนขึ้นใหม่ ไม่ได้คัดลอกจากข้อสอบเก่าของ ทปอ. หรือของสำนักติวใด
+# โครงสร้างที่ใช้อ้างอิงอยู่ใน config/tcas_blueprint.yaml (verified: false)
+subject: eng
+questions:
+
+  # ── Listening & Speaking: บทสนทนา ────────────────────────────
+  - qid: eng_conversation_101
+    topic: eng_conversation
+    stem: "A: I've been getting headaches every afternoon this week. B: ___ You should get that checked."
+    choices:
+      - "That's a relief."
+      - "That doesn't sound good."
+      - "Good for you."
+      - "Never mind, then."
+    answer: 1
+    explanation: >-
+      B ตอบต่อด้วย "You should get that checked" ซึ่งเป็นการแสดงความห่วง
+      ประโยคก่อนหน้าจึงต้องเป็นการรับรู้ในทางลบ — "That doesn't sound good"
+      ส่วน "That's a relief" ใช้ตอนโล่งใจ และ "Good for you" ใช้ยินดีกับข่าวดี
+    difficulty: 1
+
+  - qid: eng_conversation_102
+    topic: eng_conversation
+    stem: "Receptionist: Dr. Somchai is fully booked today. ___  Patient: Thursday morning would be fine."
+    choices:
+      - "Would Thursday or Friday suit you better?"
+      - "How long have you had the symptoms?"
+      - "Do you have your insurance card?"
+      - "Please take a seat and wait."
+    answer: 0
+    explanation: >-
+      คำตอบของคนไข้เลือก "Thursday morning" ระหว่างตัวเลือกที่ถูกเสนอ
+      ประโยคที่หายไปจึงต้องเป็นคำถามให้เลือกวัน ตัวเลือกอื่นไม่นำไปสู่คำตอบนี้
+    difficulty: 1
+
+  - qid: eng_conversation_103
+    topic: eng_conversation
+    stem: "A: Sorry, could you repeat that? I didn't quite catch the dosage. B: ___"
+    choices:
+      - "Of course — one tablet twice a day, after meals."
+      - "You're welcome. Take care."
+      - "I'm afraid I can't help with that."
+      - "Yes, the clinic closes at six."
+    answer: 0
+    explanation: >-
+      A ขอให้พูดซ้ำเรื่อง "dosage" (ขนาดยา) B จึงต้องทวนขนาดยาให้
+      ตัวเลือกอื่นไม่ตอบสิ่งที่ถูกถามซ้ำ
+    difficulty: 1
+
+  - qid: eng_conversation_104
+    topic: eng_conversation
+    stem: "A: Would you mind if I opened the window? B: ___"
+    choices:
+      - "Yes, please do."
+      - "Not at all, go ahead."
+      - "Yes, I would love to."
+      - "No, I don't want to."
+    answer: 1
+    explanation: >-
+      "Would you mind if...?" ถามว่า "คุณจะรังเกียจไหมถ้า..." การอนุญาตจึงต้องตอบ
+      ปฏิเสธ — "Not at all" (ไม่รังเกียจเลย) ตอบ "Yes" กับ mind = ไม่อนุญาต
+      ข้อนี้เป็นกับดักคลาสสิกที่คนไทยพลาดบ่อยเพราะแปลตรงตัว
+    difficulty: 2
+
+  - qid: eng_conversation_105
+    topic: eng_conversation
+    stem: "A: I'm afraid I have to cancel our meeting tomorrow. B: ___ Shall we reschedule for next week?"
+    choices:
+      - "That's out of the question."
+      - "No problem at all."
+      - "I told you so."
+      - "It serves you right."
+    answer: 1
+    explanation: >-
+      B เสนอเลื่อนนัดต่อทันที แสดงว่าไม่ติดใจ "No problem at all" จึงเข้ากัน
+      ส่วน "It serves you right" (สมน้ำหน้า) กับ "I told you so" เป็นการตำหนิ
+    difficulty: 1
+
+  - qid: eng_conversation_106
+    topic: eng_conversation
+    stem: "Teacher: You've improved a lot this term. Student: ___"
+    choices:
+      - "Thank you — I've been putting in extra hours."
+      - "No, that's not true at all."
+      - "Yes, I am the best student."
+      - "Why do you say that to me?"
+    answer: 0
+    explanation: >-
+      การตอบรับคำชมที่เหมาะสมคือขอบคุณแล้วเสริมข้อมูลสั้น ๆ
+      ตัวเลือก 2 ปฏิเสธห้วนเกินไป ตัวเลือก 3 อวดตัว ตัวเลือก 4 ฟังดูก้าวร้าว
+    difficulty: 1
+
+  - qid: eng_conversation_107
+    topic: eng_conversation
+    stem: "A: How did the interview go? B: ___ They said they'd call by Friday."
+    choices:
+      - "It's hard to say."
+      - "I have no idea what you mean."
+      - "It went nowhere at all."
+      - "I couldn't agree more."
+    answer: 0
+    explanation: >-
+      ประโยคถัดมาบอกว่ายังต้องรอผลถึงวันศุกร์ แสดงว่ายังไม่รู้ผล
+      "It's hard to say" (บอกยาก) จึงสอดคล้อง ส่วน "It went nowhere" ตัดสินไปแล้วว่าล้มเหลว
+    difficulty: 2
+
+  - qid: eng_conversation_108
+    topic: eng_conversation
+    stem: "Nurse: The doctor will see you shortly. Patient: ___"
+    choices:
+      - "How short is he?"
+      - "Roughly how long is the wait?"
+      - "I will see him shortly too."
+      - "Shortly is not a time."
+    answer: 1
+    explanation: >-
+      "shortly" ในที่นี้แปลว่า "อีกสักครู่" ไม่ใช่ "เตี้ย" คนไข้จึงถามต่อได้ว่ารอนานแค่ไหน
+      ตัวเลือก 1 เล่นคำผิดความหมาย
+    difficulty: 1
+
+  - qid: eng_conversation_109
+    topic: eng_conversation
+    stem: "A: Do you fancy grabbing lunch after the lecture? B: ___ I've got a lab session at one."
+    choices:
+      - "I'd love to, but I can't today."
+      - "That's what I always say."
+      - "You shouldn't have."
+      - "Be my guest."
+    answer: 0
+    explanation: >-
+      B บอกเหตุผลที่ไปไม่ได้ (มีแล็บตอนบ่ายโมง) ประโยคก่อนหน้าจึงต้องเป็นการปฏิเสธอย่างสุภาพ
+      "I'd love to, but..." เป็นรูปแบบมาตรฐานของการปฏิเสธคำชวน
+    difficulty: 1
+
+  - qid: eng_conversation_110
+    topic: eng_conversation
+    stem: "A: Your presentation was clear, though a bit rushed at the end. B: ___"
+    choices:
+      - "Fair enough — I'll watch my timing next time."
+      - "You clearly weren't listening."
+      - "Nothing was rushed at all."
+      - "So you didn't like it."
+    answer: 0
+    explanation: >-
+      คำวิจารณ์เชิงสร้างสรรค์ควรรับด้วยการยอมรับและบอกสิ่งที่จะปรับ
+      อีกสามตัวเลือกเป็นการตั้งรับหรือตีความเกินจากสิ่งที่ผู้พูดบอก
+    difficulty: 2
+
+  # ── Reading Skill ────────────────────────────────────────────
+  - qid: eng_reading_101
+    topic: eng_reading
+    stem: >-
+      "Sleep debt accumulates quietly. A student who loses two hours a night across a
+      week enters the weekend fourteen hours short, and a single long lie-in recovers
+      only a fraction of it. Worse, the deficit degrades exactly the faculties needed to
+      notice it: self-assessment of alertness stays high while reaction time falls."
+      What is the main point of the passage?
+    choices:
+      - Sleeping in on weekends fully repays weekday sleep loss.
+      - Sleep loss builds up and is hard to detect from the inside.
+      - Students need exactly fourteen hours of sleep each week.
+      - Reaction time is the only measure of alertness that matters.
+    answer: 1
+    explanation: >-
+      ประโยคแรกวางประเด็น (สะสมเงียบ ๆ) ประโยคสุดท้ายขยายว่าทำไมถึงไม่รู้ตัว
+      ตัวเลือก 1 ขัดกับ "recovers only a fraction" ส่วน 3 กับ 4 บิดรายละเอียดเป็นข้อสรุป
+    difficulty: 2
+
+  - qid: eng_reading_102
+    topic: eng_reading
+    stem: >-
+      From the same passage: "the deficit degrades exactly the faculties needed to notice it"
+      implies that a sleep-deprived person is likely to ___
+    choices:
+      - overestimate how alert they are
+      - fall asleep during the day
+      - recover faster than expected
+      - become better at self-assessment
+    answer: 0
+    explanation: >-
+      ข้อความบอกว่า "self-assessment of alertness stays high while reaction time falls"
+      คือประเมินตัวเองว่ายังตื่นตัวดีทั้งที่จริงแย่ลง = ประเมินสูงเกินจริง
+    difficulty: 2
+
+  - qid: eng_reading_103
+    topic: eng_reading
+    stem: >-
+      "Unlike antibiotics, which target bacteria, antivirals must work against pathogens that
+      hijack the host's own machinery. This makes selective toxicity — harming the invader but
+      not the patient — far harder to achieve."
+      Why are antivirals harder to design than antibiotics?
+    choices:
+      - Viruses reproduce more slowly than bacteria.
+      - Viruses use the patient's own cellular machinery.
+      - Antibiotics were discovered much earlier.
+      - Antivirals cannot be taken orally.
+    answer: 1
+    explanation: >-
+      ข้อความระบุเหตุผลตรง ๆ ว่าไวรัส "hijack the host's own machinery"
+      ทำให้แยกโจมตีเฉพาะเชื้อโดยไม่ทำร้ายผู้ป่วยได้ยาก ตัวเลือกอื่นไม่มีในบทความ
+    difficulty: 2
+
+  - qid: eng_reading_104
+    topic: eng_reading
+    stem: >-
+      "The committee's report was thorough, if somewhat overdue."
+      The word "if" in this sentence is closest in meaning to ___
+    choices:
+      - although
+      - because
+      - unless
+      - whether
+    answer: 0
+    explanation: >-
+      "if" ในโครงสร้าง adjective + if + adjective ใช้แบบ concessive แปลว่า "แม้จะ"
+      ประโยคนี้ = ละเอียดถี่ถ้วน แม้จะช้าไปหน่อย
+    difficulty: 3
+
+  - qid: eng_reading_105
+    topic: eng_reading
+    stem: >-
+      "Critics dismissed the study as anecdotal; its author countered that thirty documented
+      cases, each independently verified, constitute evidence rather than hearsay."
+      What is the author's attitude toward the criticism?
+    choices:
+      - apologetic
+      - indifferent
+      - defensive
+      - enthusiastic
+    answer: 2
+    explanation: >-
+      "countered" แสดงการโต้กลับ และผู้เขียนยกหลักฐานมาปกป้องงานตัวเอง = defensive
+      ไม่ได้ขอโทษ (apologetic) ไม่ได้เฉย (indifferent) และไม่ได้ตื่นเต้น (enthusiastic)
+    difficulty: 2
+
+  - qid: eng_reading_106
+    topic: eng_reading
+    stem: >-
+      "Air pollution in the city peaks twice daily, mirroring commuter traffic. Yet the
+      afternoon peak is consistently higher, despite similar vehicle numbers — heat drives
+      secondary reactions that generate ozone from the morning's emissions."
+      The afternoon peak is higher mainly because ___
+    choices:
+      - more vehicles are on the road in the afternoon
+      - sunlight and heat convert earlier emissions into ozone
+      - commuters drive longer distances after work
+      - measurement equipment is more sensitive in the afternoon
+    answer: 1
+    explanation: >-
+      ข้อความบอกชัดว่า "despite similar vehicle numbers" จึงตัดตัวเลือก 1 ออก
+      และให้เหตุผลว่า "heat drives secondary reactions that generate ozone"
+    difficulty: 2
+
+  - qid: eng_reading_107
+    topic: eng_reading
+    stem: >-
+      "Whether the policy succeeds will depend less on its design than on whether local
+      clinics have the staff to implement it."
+      The sentence suggests the writer believes ___
+    choices:
+      - the policy design is fundamentally flawed
+      - staffing matters more than policy design
+      - local clinics should design the policy
+      - the policy will certainly fail
+    answer: 1
+    explanation: >-
+      โครงสร้าง "less on X than on Y" ให้น้ำหนัก Y มากกว่า X
+      ผู้เขียนจึงเห็นว่ากำลังคนสำคัญกว่าตัวออกแบบนโยบาย ไม่ได้บอกว่านโยบายแย่หรือจะล้มเหลวแน่
+    difficulty: 3
+
+  - qid: eng_reading_108
+    topic: eng_reading
+    stem: >-
+      "Most students who drop out of science programmes do so not because the material defeats
+      them but because no one told them that struggling is the normal state of learning it."
+      The author implies that dropout is largely a problem of ___
+    choices:
+      - inadequate academic ability
+      - unrealistic expectations about difficulty
+      - poor course content
+      - insufficient tuition fees
+    answer: 1
+    explanation: >-
+      "not because the material defeats them" ตัดเรื่องความสามารถออก
+      สาเหตุที่ยกคือไม่มีใครบอกว่าการรู้สึกยากเป็นเรื่องปกติ = คาดหวังผิดเรื่องความยาก
+    difficulty: 2
+
+  # ── Vocabulary ───────────────────────────────────────────────
+  - qid: eng_vocab_101
+    topic: eng_vocab
+    stem: "The symptoms were so ___ that three specialists reached three different conclusions."
+    choices:
+      - ambiguous
+      - obvious
+      - severe
+      - chronic
+    answer: 0
+    explanation: >-
+      ผลลัพธ์คือหมอสามคนสรุปต่างกัน แปลว่าอาการตีความได้หลายทาง = ambiguous
+      "severe" (รุนแรง) กับ "chronic" (เรื้อรัง) ไม่ได้อธิบายความไม่ลงรอยของการวินิจฉัย
+    difficulty: 2
+
+  - qid: eng_vocab_102
+    topic: eng_vocab
+    stem: "Rather than treating the symptom, the new protocol aims to address the ___ cause."
+    choices:
+      - superficial
+      - underlying
+      - apparent
+      - temporary
+    answer: 1
+    explanation: >-
+      "Rather than treating the symptom" ตั้งคู่ตรงข้ามระหว่างอาการกับต้นเหตุที่ซ่อนอยู่
+      "underlying cause" คือคำที่จับคู่กับ "symptom" เป็นมาตรฐานในภาษาการแพทย์
+    difficulty: 1
+
+  - qid: eng_vocab_103
+    topic: eng_vocab
+    stem: "Choose the word closest in meaning to 'meticulous': The lab technician kept meticulous records."
+    choices:
+      - hasty
+      - extremely careful
+      - illegible
+      - confidential
+    answer: 1
+    explanation: >-
+      meticulous = ละเอียดรอบคอบมาก มักใช้กับ records, notes, planning
+      ตรงข้ามกับ hasty (รีบร้อน) และไม่เกี่ยวกับความลับหรือลายมืออ่านไม่ออก
+    difficulty: 1
+
+  - qid: eng_vocab_104
+    topic: eng_vocab
+    stem: "The drug showed promise in mice, but the results have yet to be ___ in humans."
+    choices:
+      - replicated
+      - duplicated
+      - imitated
+      - repeated
+    answer: 0
+    explanation: >-
+      ในบริบทงานวิจัย คำเฉพาะทางคือ "replicated" (ทำซ้ำแล้วได้ผลเหมือนเดิม)
+      duplicated/imitated/repeated เป็นการทำซ้ำทั่วไป ไม่ใช่ศัพท์ที่วงการวิจัยใช้กับการยืนยันผล
+    difficulty: 3
+
+  - qid: eng_vocab_105
+    topic: eng_vocab
+    stem: "Her explanation was ___: everyone in the room understood it immediately."
+    choices:
+      - convoluted
+      - lucid
+      - tentative
+      - verbose
+    answer: 1
+    explanation: >-
+      ผลคือทุกคนเข้าใจทันที คำที่ต้องเติมจึงแปลว่าชัดเจน = lucid
+      convoluted (ซับซ้อนวกวน) และ verbose (เยิ่นเย้อ) ให้ผลตรงข้าม
+    difficulty: 2
+
+  - qid: eng_vocab_106
+    topic: eng_vocab
+    stem: "Choose the option that best completes the phrase: The findings are consistent ___ earlier studies."
+    choices:
+      - to
+      - with
+      - for
+      - of
+    answer: 1
+    explanation: >-
+      collocation คงที่คือ "consistent with" (สอดคล้องกับ)
+      ข้อนี้วัดการจำคู่คำ ไม่ใช่การเดาความหมาย
+    difficulty: 2
+
+  # ── Cloze ────────────────────────────────────────────────────
+  - qid: eng_cloze_101
+    topic: eng_cloze
+    stem: >-
+      Handwashing remains the single most effective way to prevent infection in hospitals.
+      (101) ___ its simplicity, compliance among staff rarely exceeds sixty percent.
+      Choose the best option for (101).
+    choices:
+      - Because of
+      - Despite
+      - Thanks to
+      - Owing to
+    answer: 1
+    explanation: >-
+      ความง่ายควรทำให้คนทำตามมาก แต่ประโยคบอกว่าทำตามไม่ถึง 60% = ขัดกับที่คาด
+      ต้องใช้คำแสดงความขัดแย้ง "Despite" อีกสามตัวล้วนแสดงเหตุ-ผลที่สอดคล้องกัน
+    difficulty: 2
+
+  - qid: eng_cloze_102
+    topic: eng_cloze
+    stem: >-
+      The trial enrolled 400 patients. Half received the new drug; the other half (102) ___
+      a placebo. Choose the best option for (102).
+    choices:
+      - was given
+      - were given
+      - have given
+      - giving
+    answer: 1
+    explanation: >-
+      "the other half" ในที่นี้หมายถึงคน 200 คน จึงใช้กริยาพหูพจน์ และผู้ป่วยเป็นผู้ถูกให้ยา
+      จึงต้องเป็น passive อดีต = "were given"
+    difficulty: 2
+
+  - qid: eng_cloze_103
+    topic: eng_cloze
+    stem: >-
+      Vaccines train the immune system to recognise a pathogen (103) ___ encountering the
+      disease itself. Choose the best option for (103).
+    choices:
+      - instead of
+      - without
+      - besides
+      - apart
+    answer: 1
+    explanation: >-
+      ตามด้วย -ing ("encountering") และความหมายคือ "โดยไม่ต้อง" = without
+      "instead of" ก็ตามด้วย -ing ได้ แต่ความหมายเป็นการแทนที่ ซึ่งเพี้ยนจากหลักการของวัคซีน
+    difficulty: 2
+
+  - qid: eng_cloze_104
+    topic: eng_cloze
+    stem: >-
+      By the time the ambulance arrived, the patient (104) ___ consciousness.
+      Choose the best option for (104).
+    choices:
+      - regains
+      - had regained
+      - regaining
+      - has regained
+    answer: 1
+    explanation: >-
+      "By the time + past" บอกเหตุการณ์ที่เกิด "ก่อน" อดีตอีกเหตุการณ์ ต้องใช้ past perfect
+      = had regained
+    difficulty: 2
+
+  - qid: eng_cloze_105
+    topic: eng_cloze
+    stem: >-
+      Antibiotic resistance spreads faster in settings (105) ___ the drugs are available
+      without prescription. Choose the best option for (105).
+    choices:
+      - which
+      - where
+      - what
+      - whose
+    answer: 1
+    explanation: >-
+      "settings" เป็นสถานที่/บริบท และประโยคตามหลังสมบูรณ์อยู่แล้ว จึงใช้ relative adverb
+      "where" ไม่ใช่ "which" ที่ต้องมีช่องว่างของประธานหรือกรรมให้เติม
+    difficulty: 3
+
+  - qid: eng_cloze_106
+    topic: eng_cloze
+    stem: >-
+      The report recommends that every clinic (106) ___ a record of adverse reactions.
+      Choose the best option for (106).
+    choices:
+      - keeps
+      - keep
+      - kept
+      - keeping
+    answer: 1
+    explanation: >-
+      หลัง "recommend that" ใช้ subjunctive คือกริยารูป base form ไม่ผัน
+      แม้ประธานจะเป็นเอกพจน์ ("every clinic") ก็ใช้ "keep" ไม่ใช่ "keeps"
+    difficulty: 3
+
+  # ── Grammar ──────────────────────────────────────────────────
+  - qid: eng_grammar_101
+    topic: eng_grammar
+    stem: "Choose the correct option: Neither the doctors nor the nurse ___ informed of the change."
+    choices:
+      - were
+      - was
+      - have been
+      - are
+    answer: 1
+    explanation: >-
+      กฎ neither...nor ให้กริยาผันตามประธานตัวที่อยู่ใกล้กริยาที่สุด
+      ตัวที่ใกล้คือ "the nurse" (เอกพจน์) จึงใช้ "was"
+    difficulty: 3
+
+  - qid: eng_grammar_102
+    topic: eng_grammar
+    stem: "Choose the correct option: The number of applicants ___ risen sharply this year."
+    choices:
+      - have
+      - has
+      - are
+      - were
+    answer: 1
+    explanation: >-
+      "The number of + พหูพจน์" ถือเป็นเอกพจน์ (ตัวเลขหนึ่งตัว) จึงใช้ has
+      ต่างจาก "A number of + พหูพจน์" ที่แปลว่า "หลาย" และใช้กริยาพหูพจน์
+    difficulty: 3
+
+  - qid: eng_grammar_103
+    topic: eng_grammar
+    stem: "Choose the correct option: She is used to ___ night shifts."
+    choices:
+      - work
+      - working
+      - worked
+      - be worked
+    answer: 1
+    explanation: >-
+      "be used to" (คุ้นเคยกับ) ตามด้วยคำนามหรือ V-ing
+      อย่าสับสนกับ "used to + V1" ที่แปลว่าเคยทำในอดีตแต่ตอนนี้ไม่ทำแล้ว
+    difficulty: 2
+
+  - qid: eng_grammar_104
+    topic: eng_grammar
+    stem: "Choose the correct option: ___ more carefully, the sample would not have been contaminated."
+    choices:
+      - Had it been handled
+      - If it handled
+      - Have it been handled
+      - It had been handled
+    answer: 0
+    explanation: >-
+      เป็นเงื่อนไขแบบที่ 3 ที่ตัด "If" ออกแล้วสลับกริยาช่วยขึ้นหน้า (inversion)
+      "If it had been handled..." → "Had it been handled..."
+    difficulty: 3
+
+  # ── Error identification ─────────────────────────────────────
+  - qid: eng_error_101
+    topic: eng_error
+    stem: >-
+      Identify the error: "The research team (A) have published (B) three papers, (C) each of
+      them (D) describing a different trial."
+    choices:
+      - "(A) have published"
+      - "(B) three papers"
+      - "(C) each of them"
+      - "(D) describing"
+    answer: 2
+    explanation: >-
+      "each of them describing..." ทำให้เป็นประโยคซ้อนที่ไม่มีตัวเชื่อม
+      ต้องเป็น "each describing" หรือ "each of which describes"
+      ส่วน (A) ใช้ได้ในอังกฤษแบบบริติชที่มองทีมเป็นกลุ่มคน
+    difficulty: 3
+
+  - qid: eng_error_102
+    topic: eng_error
+    stem: >-
+      Identify the error: "(A) Despite of (B) the heavy rain, the mobile clinic (C) reached
+      every village (D) on schedule."
+    choices:
+      - "(A) Despite of"
+      - "(B) the heavy rain"
+      - "(C) reached"
+      - "(D) on schedule"
+    answer: 0
+    explanation: >-
+      "Despite" ตามด้วยคำนามได้เลย ไม่ต้องมี "of" — ที่มี of คือ "In spite of"
+      ข้อนี้เป็นข้อผิดที่เจอบ่อยเพราะจำสองสำนวนปนกัน
+    difficulty: 2
+
+  - qid: eng_error_103
+    topic: eng_error
+    stem: >-
+      Identify the error: "(A) Walking into the ward, (B) the smell of antiseptic
+      (C) was noticed (D) immediately."
+    choices:
+      - "(A) Walking into the ward"
+      - "(B) the smell of antiseptic"
+      - "(C) was noticed"
+      - "(D) immediately"
+    answer: 1
+    explanation: >-
+      dangling modifier — วลี "Walking into the ward" ต้องขยายคนที่เดินเข้าไป
+      แต่ประธานของประโยคคือ "the smell" ซึ่งเดินไม่ได้ ต้องแก้เป็น
+      "Walking into the ward, I noticed the smell..."
+    difficulty: 3
+
+  # ── Organization / paragraph ─────────────────────────────────
+  - qid: eng_organization_101
+    topic: eng_organization
+    stem: >-
+      Which sentence does NOT belong in this paragraph?
+      (1) Regular exercise lowers resting heart rate. (2) It also improves insulin sensitivity.
+      (3) Gym memberships in Bangkok have risen in price since 2020. (4) Together these effects
+      reduce long-term cardiovascular risk.
+    choices:
+      - Sentence 1
+      - Sentence 2
+      - Sentence 3
+      - Sentence 4
+    answer: 2
+    explanation: >-
+      ย่อหน้าพูดถึงผลของการออกกำลังกายต่อร่างกาย ประโยค 3 พูดเรื่องราคาค่าสมาชิกยิม
+      ซึ่งเป็นคนละประเด็น และประโยค 4 ("these effects") อ้างถึงประโยค 1-2 ไม่ใช่ 3
+    difficulty: 2
+
+  - qid: eng_organization_102
+    topic: eng_organization
+    stem: >-
+      Choose the best order: (a) However, the sample was small. (b) A 2024 trial reported a
+      forty percent reduction in relapse. (c) Larger studies are now under way.
+      (d) The result drew immediate attention.
+    choices:
+      - b – d – a – c
+      - b – a – c – d
+      - d – b – a – c
+      - a – b – d – c
+    answer: 0
+    explanation: >-
+      ลำดับที่สมเหตุสมผลคือ ผลการทดลอง (b) → ปฏิกิริยาที่ตามมา (d) →
+      ข้อจำกัด (a, ขึ้นต้นด้วย However จึงต้องตามหลังข้อความเชิงบวก) →
+      สิ่งที่กำลังทำต่อ (c)
+    difficulty: 2
+
+  - qid: eng_organization_103
+    topic: eng_organization
+    stem: >-
+      Which is the best topic sentence for a paragraph that goes on to describe
+      shortage of beds, long waiting lists, and staff burnout?
+    choices:
+      - Hospitals in the region are under considerable strain.
+      - Nursing is a rewarding profession.
+      - Bed shortages are the only real problem facing hospitals.
+      - The government announced a new budget last March.
+    answer: 0
+    explanation: >-
+      topic sentence ต้องครอบคลุมทุกรายละเอียดที่ตามมาโดยไม่แคบหรือกว้างเกิน
+      ตัวเลือก 3 แคบเกิน (พูดแค่เรื่องเตียง) ส่วน 2 กับ 4 ไม่เชื่อมกับเนื้อหาที่ตามมา
+    difficulty: 2

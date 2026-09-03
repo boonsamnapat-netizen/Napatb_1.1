@@ -950,6 +950,7 @@ main { padding-top: 26px; }
   border: 0; border-top: 1px solid var(--line-soft);
   background: transparent; color: inherit;
   padding: 11px 0 7px; margin-top: 2px;
+  min-height: 40px;   /* เดิมสูง 39px พอดี ต่ำกว่าเกณฑ์พื้นที่กดของทั้งแอปอยู่ 1px */
 }
 .bandhd:first-of-type { border-top: 0; }
 .bandhd-d { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--bc, var(--line)); }
@@ -1489,6 +1490,9 @@ const STATE_SHAPE = {
   topics: "object", q: "object", tests: "object", days: "object",
   settings: "object", links: "object", log: "object", scores: "object",
   doneLegacy: "object",
+  /* ข้อมูลสนามสอบที่ผู้ใช้กรอกเอง — เลขที่นั่งสอบ สนามสอบ ห้องสอบ
+     อยู่ใน localStorage และไฟล์สำรองเท่านั้น ไม่เคยถูกส่งออกจากเครื่อง */
+  venues: "object",
   runs: "array",
   seenIntro: "boolean", migrated: "boolean",
   lastBackup: "string",
@@ -1545,7 +1549,7 @@ function sanitizeBackup(parsed) {
   out.migrated = true;
 
   // replaceAll ข้าม read() จึงต้องรับประกันค่าตั้งต้นเองให้ครบ
-  ["topics", "q", "tests", "days", "settings", "links", "log", "scores"]
+  ["topics", "q", "tests", "days", "settings", "links", "log", "scores", "venues"]
     .forEach(k => { if (!out[k]) out[k] = {}; });
   if (!out.runs) out.runs = [];
   return out;
@@ -2906,6 +2910,166 @@ let testFilter = "all";
 /* ตารางสอบ "ของจริง" — ถอดจากปฏิทินการสอบ TCAS70 ของ ทปอ.
    ต้องแยกให้ขาดจากตารางทดสอบข้างล่าง ซึ่งเป็นของที่แอปจัดให้เองเพื่อซ้อมมือ
    วันสอบจริงเปลี่ยนไม่ได้ ส่วนวันซ้อมเลื่อนได้ — ปนกันแล้วเสียหาย */
+/* ─────────────────────────────────────────────────────────────
+   สนามสอบของฉัน — เลขที่นั่งสอบ สนามสอบ ห้องสอบ
+
+   ⚠️ ข้อมูลชุดนี้ระบุตัวตนได้ (เลขที่นั่งสอบผูกกับชื่อและเลขประจำตัว)
+   จึงเก็บใน localStorage ของเครื่องนี้เท่านั้น เหมือนความคืบหน้าอื่น ๆ
+   **ห้ามส่งไปไหน ห้ามใส่ลงไฟล์ใน repo** — repo กับเว็บที่ deploy เป็น public
+   ทางเดียวที่ข้อมูลออกจากเครื่องได้คือผู้ใช้กดสำรองข้อมูลหรือดาวน์โหลด
+   ปฏิทินเอง ซึ่งเป็นการกระทำที่ตั้งใจและได้ไฟล์มาอยู่ในมือตัวเอง
+   ───────────────────────────────────────────────────────────── */
+const myVenues = () => S.venues || (S.venues = {});
+const venueOf = code => (myVenues()[code] || {});
+
+/** บรรทัดสถานที่สำหรับไฟล์ปฏิทิน — รวมสนามสอบกับห้องเป็นข้อความเดียว */
+function venueLine(v) {
+  if (!v) return "";
+  // ผู้ใช้มักพิมพ์ "อาคาร 3 ห้อง 402" มาเองอยู่แล้ว การเติม "ห้อง " นำหน้าเสมอ
+  // จะได้ "ห้อง อาคาร 3 ห้อง 402" — เติมเฉพาะตอนที่ยังไม่มีคำบอกสถานที่
+  const room = String(v.room || "").trim();
+  const roomTxt = !room ? "" : /^(ห้อง|อาคาร|ตึก|ชั้น)/.test(room) ? room : "ห้อง " + room;
+  return [v.place, roomTxt].filter(Boolean).join(" · ");
+}
+
+function saveVenue(code, patch) {
+  const cur = Object.assign({}, venueOf(code), patch);
+  // ลบฟิลด์ว่างทิ้ง ไม่ให้เหลือ object เปล่า ๆ กินที่ในไฟล์สำรอง
+  Object.keys(cur).forEach(k => { if (!String(cur[k] || "").trim()) delete cur[k]; });
+  const all = myVenues();
+  if (Object.keys(cur).length) all[code] = cur; else delete all[code];
+  Store.save();
+}
+
+/* แกะข้อความที่ก๊อปมาจากหน้าสมัคร — รองรับได้เท่าที่คาดเดารูปแบบได้
+   ยังไม่เคยเห็นหน้าจริงของ mytcas จึงจับจากคำนำหน้าที่ใช้กันทั่วไป
+   ถ้าแกะไม่ออกก็ไม่เป็นไร ผู้ใช้พิมพ์เองได้ตามปกติ */
+function parseVenueText(text) {
+  const t = String(text || "").replace(/ /g, " ");
+  const grab = res => {
+    for (const re of res) {
+      const m = t.match(re);
+      if (m && m[1] && m[1].trim()) return m[1].trim().replace(/\s+/g, " ");
+    }
+    return "";
+  };
+  return {
+    seat: grab([/เลขที่นั่งสอบ[\s:：]*([A-Za-z0-9\-\/]+)/,
+                /ที่นั่งสอบ[\s:：]*([A-Za-z0-9\-\/]+)/,
+                /เลขที่นั่ง[\s:：]*([A-Za-z0-9\-\/]+)/]),
+    place: grab([/สนามสอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/,
+                 /ศูนย์สอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/,
+                 /สถานที่สอบ[\s:：]*(.+?)(?:\n|ห้องสอบ|อาคาร|$)/]),
+    room: grab([/ห้องสอบ[\s:：]*(.+?)(?:\n|$)/,
+                /ห้อง[\s:：]*([A-Za-z0-9฀-๿\-\/ ]{1,30})(?:\n|$)/,
+                /อาคาร[\s:：]*(.+?)(?:\n|$)/]),
+  };
+}
+
+function venuePanel() {
+  const sched = DATA.subjectExams || {};
+  const codes = Object.keys(sched).filter(c => SUBJ[c])
+    .sort((a, b) => String(sched[a].date + sched[a].time)
+                      .localeCompare(String(sched[b].date + sched[b].time)));
+  if (!codes.length) return null;
+
+  const card = el('<div class="card card-pad stack"></div>');
+  card.appendChild(el('<div class="section-title"><h2>สนามสอบของฉัน</h2></div>'));
+  card.appendChild(el('<p class="tiny" style="margin:-8px 0 0">' +
+    "กรอกเลขที่นั่งสอบและสนามสอบไว้ตรงนี้ เช้าวันสอบจะได้ไม่ต้องไปหาในเว็บสมัคร " +
+    "และถ้าดาวน์โหลดปฏิทิน สนามสอบจะติดไปกับนัดหมายให้กดนำทางได้เลย</p>"));
+  card.appendChild(el('<div class="note" style="border-color:var(--ok)">' +
+    "<b>ข้อมูลนี้อยู่ในเครื่องนี้เครื่องเดียว</b> ไม่ถูกอัปโหลดขึ้นเว็บหรือ GitHub " +
+    "และไม่มีใครอื่นเห็น — จะออกจากเครื่องก็ต่อเมื่อคุณกดสำรองข้อมูลเอง " +
+    "(ถ้าใช้เครื่องสาธารณะ อย่ากรอกทิ้งไว้)</div>"));
+
+  /* ---- วางข้อความจากหน้าสมัครแล้วให้แอปแกะให้ */
+  const pasteWrap = el('<div class="stack" style="gap:6px"></div>');
+  const pasteSel = el('<select class="sel" style="width:100%"></select>');
+  codes.forEach(c => pasteSel.appendChild(el(
+    '<option value="' + esc(c) + '">' + esc(SUBJ[c].name) + "</option>")));
+  const pasteBox = el('<textarea rows="3" placeholder="วางข้อความจากหน้าสมัครสอบที่นี่ ' +
+    'แล้วกดแกะข้อมูล" style="width:100%;font-family:inherit;font-size:0.84375rem;' +
+    'color:var(--text);background:var(--surface-2);border:1px solid var(--line);' +
+    'border-radius:var(--r-sm);padding:10px 11px;resize:vertical"></textarea>');
+  const pasteBtn = el('<button class="btn btn-sm">แกะข้อมูลจากข้อความ</button>');
+  pasteBtn.addEventListener("click", () => {
+    const got = parseVenueText(pasteBox.value);
+    const found = Object.keys(got).filter(k => got[k]);
+    if (!found.length) {
+      toast("แกะไม่ออก", "ลองกรอกในช่องด้านล่างเอง");
+      return;
+    }
+    saveVenue(pasteSel.value, got);
+    pasteBox.value = "";
+    render();
+    toast("แกะได้ " + found.length + " ช่อง", esc(SUBJ[pasteSel.value].name));
+  });
+  pasteWrap.appendChild(el('<div class="tiny" style="margin-top:4px">' +
+    "<b>ทางลัด:</b> เลือกวิชา วางข้อความ แล้วกดปุ่ม — แอปจะหาคำว่า " +
+    "“เลขที่นั่งสอบ” “สนามสอบ” “ห้องสอบ” ให้เอง ถ้าแกะไม่ออกก็พิมพ์เองได้</div>"));
+  pasteWrap.appendChild(pasteSel);
+  pasteWrap.appendChild(pasteBox);
+  const pr = el('<div class="btn-row"></div>'); pr.appendChild(pasteBtn);
+  pasteWrap.appendChild(pr);
+  card.appendChild(pasteWrap);
+
+  card.appendChild(el('<hr class="rule">'));
+
+  /* ---- ฟอร์มรายวิชา */
+  codes.forEach(code => {
+    const v = venueOf(code);
+    const filled = ["seat", "place", "room"].filter(k => v[k]).length;
+    const box = el('<div data-s="' + esc(code) + '" style="border-left:4px solid var(--sc,var(--line));' +
+      "padding:2px 0 2px 11px;margin-bottom:4px\"></div>");
+    /* ชื่อวิชาใช้สีตัวอักษรปกติ ไม่ใช่สีประจำวิชา — เฉดวิชาบนพื้นการ์ดธีมมืด
+       ได้คอนทราสต์แค่ ~4.1:1 ต่ำกว่าเกณฑ์ AA สีวิชาอยู่ที่แถบซ้ายของกล่องแล้ว
+       (กติกาเดียวกับที่เขียนไว้ใน docs: อย่าเอาสีวิชาไปทาตัวอักษร) */
+    const head = el('<button class="bandhd" aria-expanded="false" style="border-top:0">' +
+      '<span class="bandhd-t">' + esc(SUBJ[code].name) + "</span>" +
+      '<span class="tiny" style="margin-left:auto">' +
+        (filled ? esc(v.seat ? "ที่นั่ง " + v.seat : "กรอกแล้ว " + filled + "/3")
+                : "ยังไม่ได้กรอก") + "</span>" +
+      '<span class="wk-c">▾</span></button>');
+    const body = el('<div class="stack" style="gap:0;padding-bottom:8px" hidden></div>');
+
+    [["seat", "เลขที่นั่งสอบ", "เช่น 1234567"],
+     ["place", "สนามสอบ", "ชื่อโรงเรียน/มหาวิทยาลัย"],
+     ["room", "ห้องสอบ", "เช่น อาคาร 3 ห้อง 402"],
+     ["note", "หมายเหตุ", "เช่น ไปทางไหน ประตูไหน รอบเช้า"]].forEach(([k, label, ph]) => {
+      const row = el('<div class="field"><span class="field-l">' + label + "</span></div>");
+      const inp = el('<input type="text" placeholder="' + esc(ph) + '" value="' +
+        esc(v[k] || "") + '" style="flex:1;min-width:0;max-width:190px">');
+      inp.addEventListener("change", () => { saveVenue(code, { [k]: inp.value.trim() }); render(); });
+      row.appendChild(inp);
+      body.appendChild(row);
+    });
+
+    const clr = el('<div class="btn-row" style="padding-top:8px"></div>');
+    const cb = el('<button class="btn btn-sm">ล้างข้อมูลวิชานี้</button>');
+    cb.addEventListener("click", () => {
+      if (!filled && !v.note) return;
+      if (!confirm("ล้างข้อมูลสนามสอบของ " + SUBJ[code].name + "?")) return;
+      delete myVenues()[code]; Store.save(); render();
+      toast("ล้างแล้ว", SUBJ[code].name);
+    });
+    clr.appendChild(cb);
+    body.appendChild(clr);
+
+    // พับ/กางอ่านสถานะจาก DOM จริง ไม่ใช่ตัวแปรที่อาจค้างหลัง render
+    head.addEventListener("click", () => {
+      const open = body.hidden;
+      body.hidden = !open;
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      $(".wk-c", head).style.transform = open ? "rotate(180deg)" : "";
+    });
+    box.appendChild(head); box.appendChild(body);
+    card.appendChild(box);
+  });
+
+  return card;
+}
+
 function examTimetable() {
   const sched = DATA.subjectExams || {};
   const codes = Object.keys(sched).filter(c => SUBJ[c]);
@@ -2937,6 +3101,13 @@ function examTimetable() {
           '<span class="wrow-n num" style="min-width:92px">' +
             esc(sched[c].time || "") + "</span>" +
         "</div>")));
+    // สนามสอบที่กรอกไว้ขึ้นใต้ชื่อวิชา — สิ่งที่ต้องรู้เช้าวันสอบคือ "ไปไหน"
+    byDay[day].forEach(c => {
+      const v = venueOf(c);
+      const line = [venueLine(v), v.seat ? "ที่นั่ง " + v.seat : ""].filter(Boolean).join(" · ");
+      if (line) card.appendChild(el('<div class="tiny" style="padding:0 0 4px 17px">' +
+        esc(SUBJ[c].short || SUBJ[c].name) + ": " + esc(line) + "</div>"));
+    });
   });
   return card;
 }
@@ -2948,6 +3119,9 @@ function viewTests() {
 
   const tt = examTimetable();
   if (tt) wrap.appendChild(tt);
+
+  const vp = venuePanel();
+  if (vp) wrap.appendChild(vp);
 
   wrap.appendChild(el(
     '<div class="card card-pad">' +
@@ -4301,6 +4475,8 @@ function icsEvent(o) {
     L.push("DTSTART:" + o.start, "DTEND:" + o.end);
   }
   L.push("SUMMARY:" + icsEscape(o.summary));
+  // สนามสอบลงเป็น LOCATION ปฏิทินมือถือจะขึ้นปุ่มนำทางให้เอง
+  if (o.location) L.push("LOCATION:" + icsEscape(o.location));
   if (o.desc) L.push("DESCRIPTION:" + icsEscape(o.desc));
   L.push("TRANSP:TRANSPARENT");
   // หลายเตือนต่อหนึ่งรายการ — ไม่ใช่หลายรายการอันละหนึ่งเตือน
@@ -4373,15 +4549,21 @@ function buildICS(nDays, startHour, opts) {
     Object.entries(DATA.subjectExams || {}).forEach(([code, sp]) => {
       if (!SUBJ[code] || sp.date < TODAY) return;
       const [h1, m1, h2, m2] = parseSlot(sp.time);
+      const vn = venueOf(code);
+      const where = venueLine(vn);
+      const seatNote = vn.seat ? "เลขที่นั่งสอบ " + vn.seat : "";
       L.push(...icsEvent(h1 == null ? {
         uid: ICS_PREFIX + "s-" + sp.date + "-" + code + "@tcas70",
-        allDay: true, date: sp.date, summary: "สอบ " + SUBJ[code].name, alarms: ["-P1D"],
+        allDay: true, date: sp.date, summary: "สอบ " + SUBJ[code].name,
+        location: where, desc: seatNote, alarms: ["-P1D"],
       } : {
         uid: ICS_PREFIX + "s-" + sp.date + "-" + code + "@tcas70",
         start: icsLocal(sp.date, h1, m1),
         end: icsLocal(sp.date, h2, m2),
         summary: "สอบ " + SUBJ[code].name,
-        desc: "ตารางสอบ TCAS70 · " + sp.time + " น.",
+        location: where,
+        desc: ["ตารางสอบ TCAS70 · " + sp.time + " น.", seatNote, vn.note || ""]
+          .filter(Boolean).join("\n"),
         alarms: ["-P1D", "-PT90M"],
       }));
     });

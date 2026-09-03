@@ -1,0 +1,161 @@
+# โครงสร้างข้อสอบจริง — ใช้กำหนดว่าคลังข้อสอบควรมีสัดส่วนแบบไหน
+#
+# ⚠️ ทุกค่าในไฟล์นี้ verified: false
+#    เก็บจากผลค้นเว็บ (สรุปเป็นข้อความ) ไม่ได้เปิดเอกสารต้นทางเอง —
+#    เครื่องที่สร้างไฟล์นี้เข้า mytcas.com ไม่ได้ (egress proxy บล็อก)
+#    ตัวเลขพวกนี้จึงเป็น "ของมือสอง" ใช้เป็นเข็มทิศจัดสัดส่วนคลังข้อสอบได้
+#    แต่ห้ามเอาไปโชว์ในแอปว่าเป็นข้อเท็จจริงที่ยืนยันแล้ว
+#
+#    วิธียืนยัน: เปิด https://www.mytcas.com/blueprint/ แล้วเทียบทีละวิชา
+#    (URL ของแต่ละวิชาอยู่ในช่อง source ด้านล่าง) เจอค่าที่ต่างให้แก้ตรงนี้
+#    แล้วเปลี่ยน verified เป็น true พร้อมใส่ verified_on
+#
+# โครงสร้างนี้ไม่ได้ถูกอ่านโดยตัวแอป — เป็นเอกสารอ้างอิงสำหรับคนเขียนข้อสอบ
+# ว่าควรเพิ่มข้อในวิชา/หัวข้อไหน ดู `python tcas_cli.py bank` ประกอบ
+
+source_note: >-
+  เก็บเมื่อ 2026-09-03 จากผลค้นเว็บ ไม่ใช่จากเอกสาร ทปอ. โดยตรง
+  ปีที่อ้างถึงคือ TCAS68 (ปีการศึกษา 2568) เป็นหลัก ซึ่งเป็นชุดล่าสุด
+  ที่หาข้อมูลได้ — โครงสร้างของปี 2570 ที่กำลังจะสอบยังไม่ประกาศ
+
+exams:
+  tpat1:
+    name: TPAT1 ความถนัดแพทย์ (วิชาเฉพาะ กสพท)
+    total_marks: 300
+    weight_pct: 30          # น้ำหนักในคะแนนรวม กสพท
+    verified: false
+    source: https://www.ondemand.in.th/tpat1-2/
+    source_year: 2568
+    parts:
+      - name: เชาวน์ปัญญา
+        questions: 45
+        minutes: 75
+      - name: จริยธรรมทางการแพทย์
+        questions: 55
+        minutes: 60
+      - name: การเชื่อมโยงความเป็นเหตุเป็นผล
+        questions: 1         # 1 บทความ (นับเป็นชุด ไม่ใช่ข้อเดี่ยว)
+        minutes: 60
+        note: >-
+          สัญลักษณ์ที่ใช้ตอบยังไม่ได้ยืนยัน — ในแอปใช้ A B C D
+          แต่มีแหล่งที่ระบุ A D H F ต้องเปิดประกาศ กสพท ฉบับที่ 1 เช็ค
+          (ค้างมาจากผลตรวจรอบก่อน ยังไม่ได้แก้)
+
+  alevel_math1:
+    name: A-Level 61 คณิตศาสตร์ประยุกต์ 1
+    questions: 30
+    minutes: 90
+    total_marks: 100
+    weight_pct: 14
+    verified: false
+    source: https://www.mytcas.com/blueprint/a-level-61-math1/
+    source_year: 2568
+    format: >-
+      ตอนที่ 1 ปรนัย 5 ตัวเลือก 25 ข้อ ข้อละ 3 คะแนน (75) ·
+      ตอนที่ 2 เติมคำตอบเป็นตัวเลข 5 ข้อ ข้อละ 5 คะแนน (25)
+    areas:
+      - { name: จำนวนและพีชคณิต, questions: "15-17" }
+      - { name: การวัดและเรขาคณิต, questions: "3-5" }
+      - { name: สถิติและความน่าจะเป็น, questions: "6-8" }
+    gap: >-
+      แหล่งบอกว่ามี 4 สาระ แต่ระบุมาแค่ 3 — สาระที่ขาดยังไม่รู้ว่าอะไร
+
+  alevel_phys:
+    name: A-Level 64 ฟิสิกส์
+    questions: 30
+    minutes: 90
+    total_marks: 100
+    verified: false
+    source: https://www.mytcas.com/blueprint/a-level-64-phy/
+    source_year: 2568
+    areas:
+      - { name: กลศาสตร์, questions: "8-10" }
+      - { name: คลื่นกลและแสง, questions: "5-7" }
+      - { name: ไฟฟ้า แม่เหล็ก และคลื่นแม่เหล็กไฟฟ้า, questions: "6-8" }
+      - { name: อุณหพลศาสตร์และสมบัติเชิงกลของสาร, questions: "3-5" }
+      - { name: ฟิสิกส์แผนใหม่, questions: "3-5" }
+
+  alevel_chem:
+    name: A-Level 65 เคมี
+    questions: 35
+    total_marks: 100
+    minutes: null            # ยังไม่เจอตัวเลขเวลาที่ระบุชัด
+    verified: false
+    source: https://www.mytcas.com/blueprint/
+    source_year: 2568
+
+  alevel_bio:
+    name: A-Level 66 ชีววิทยา
+    questions: 40
+    minutes: 90
+    total_marks: 100
+    verified: false
+    source: https://www.mytcas.com/blueprint/a-level-66-bio/
+    source_year: 2568
+    areas:
+      - { name: ความหลากหลายทางชีวภาพและสิ่งแวดล้อม }
+      - { name: หน่วยพื้นฐานของสิ่งมีชีวิต }
+      - { name: ระบบและการทำงานต่าง ๆ ของสัตว์และมนุษย์ }
+      - { name: โครงสร้างและการทำงานของส่วนต่าง ๆ ในพืช, questions: "6-8" }
+      - { name: พันธุศาสตร์และวิวัฒนาการ, questions: "6-8" }
+
+  alevel_social:
+    name: A-Level 70 สังคมศึกษา
+    questions: 35
+    total_marks: 100
+    minutes: null
+    weight_pct: 7
+    verified: false
+    source: https://www.mytcas.com/blueprint/
+    source_year: 2568
+    areas:
+      - { name: ศาสนา ศีลธรรม จริยธรรม, questions: 10 }
+      - { name: (อีก 4 ส่วน ยังไม่ได้ตัวเลข) }
+
+  alevel_thai:
+    name: A-Level 81 ภาษาไทย
+    questions: 50
+    minutes: 90
+    total_marks: 100
+    weight_pct: 7
+    verified: false
+    source: https://www.mytcas.com/blueprint/a-level-81-thai/
+    source_year: 2568
+    format: ปรนัย 5 ตัวเลือก
+    areas:
+      - { name: การอ่าน }
+      - { name: การเขียน }
+      - { name: การพูด การฟัง }
+      - { name: หลักการใช้ภาษา }
+
+  alevel_eng:
+    name: A-Level 82 ภาษาอังกฤษ
+    questions: 80
+    minutes: 90
+    total_marks: 100
+    weight_pct: 14
+    verified: false
+    source: https://www.mytcas.com/blueprint/a-level-82-eng/
+    source_year: 2568
+    format: ปรนัย 4 ตัวเลือก
+    areas:
+      - { name: "Listening and Speaking Skills" }
+      - { name: "Reading Skill" }
+      - { name: "Writing Skill" }
+
+# ── สิ่งที่ตัวเลขข้างบนบอกเกี่ยวกับคลังข้อสอบของเรา ────────────────
+#
+# เทียบ "จำนวนข้อในข้อสอบจริง" กับ "จำนวนข้อในคลัง" ณ 2026-09-03:
+#
+#   วิชา        ข้อสอบจริง   คลังมี   น้ำหนัก กสพท
+#   อังกฤษ          80         44         14%      ← ข้อสอบใหญ่สุด แต่คลังน้อยเป็นอันดับสอง
+#   TPAT1          100         73         30%      ← น้ำหนักสูงสุด แต่คลังน้อยกว่าชีวะเกือบครึ่ง
+#   ไทย             50         41          7%
+#   ชีววิทยา         40        134         ~9%      ← คลังเกินรูปข้อสอบไปมาก
+#   เคมี            35         82         ~9%
+#   สังคม           35         39          7%
+#   ฟิสิกส์          30         96         ~9%      ← เกินเช่นกัน
+#   คณิต 1          30         83         14%
+#
+# ข้อสรุป: คลังเบ้ไปทางวิทยาศาสตร์ ทั้งที่อังกฤษกับ TPAT1 รวมกันคือ 44%
+# ของคะแนน กสพท และเป็นสองสนามที่ข้อสอบยาวที่สุด — เติมสองอันนี้ก่อน
