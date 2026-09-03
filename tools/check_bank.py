@@ -11,6 +11,8 @@
 from __future__ import annotations
 
 import collections
+import difflib
+import itertools
 import pathlib
 import re
 import sys
@@ -21,12 +23,37 @@ QDIR = pathlib.Path(__file__).resolve().parent.parent / "data" / "tcas" / "quest
 MIN_PER_TOPIC = 5
 SKEW_LIMIT = 0.35   # ไม่มีช่องไหนควรเกิน 35% ของเฉลยทั้งหมด (สุ่มเท่ากันคือ 25%)
 
+# เพดาน "เฉลยเป็นตัวเลือกที่ยาวที่สุด" รายวิชา — ตั้งไว้ที่ค่าปัจจุบันเพื่อกันถอยหลัง
+# ยังห่างจากเป้าหมาย 25% อยู่มาก ต้องไล่เขียนตัวลวงให้ยาวพอ ๆ กับเฉลยทีละวิชา
+# (จริยธรรม TPAT1 ทำไปแล้ว 46 ข้อ จาก 76% เหลือ 26%)
+LONGEST_CAP = {
+    "bio": 65.8, "chem": 67.1, "eng": 52.4, "math1": 44.6,
+    "phys": 62.5, "social": 81.9, "thai": 74.6, "tpat1": 53.4,
+}
+
+
+# คู่ที่หน้าตาคล้ายกันแต่ "ไม่ใช่" ข้อซ้ำ — คนละโจทย์ที่บังเอิญเฉลยเป็นค่าเดียวกัน
+# ใส่ไว้ตรงนี้เท่านั้น อย่าไปลดเกณฑ์ความคล้ายเพื่อให้มันรอด
+NOT_DUPES = {
+    ("math_trig_001", "math_trig_003"),      # sin30+cos60 กับ tan45 ต่างโจทย์ แต่ตอบ 1 เท่ากัน
+    ("tpat1_series_005", "tpat1_series_006"),  # กำลังสอง กับ คูณเพิ่ม คนละแบบ
+}
+
+
+def _sim(a, b) -> float:
+    """ความคล้ายของข้อความ โดยตัดเว้นวรรคและเครื่องหมายออกก่อน."""
+    norm = lambda s: re.sub(r"[^\w฀-๿]", "", re.sub(r"\s+", "", str(s))).lower()
+    return difflib.SequenceMatcher(None, norm(a), norm(b)).ratio()
+
 
 def load() -> list[tuple[str, dict]]:
     out = []
     for f in sorted(QDIR.glob("*.yaml")):
         doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        subject = doc.get("subject")
         for q in doc.get("questions", []):
+            # วิชาอยู่ที่หัวไฟล์ ไม่ได้อยู่ในแต่ละข้อ — ติดไปกับข้อเลยจะได้จัดกลุ่มง่าย
+            q.setdefault("subject", subject)
             out.append((f.name, q))
     return out
 
@@ -71,6 +98,52 @@ def main() -> int:
     for t, n in sorted(topics.items()):
         if n < MIN_PER_TOPIC:
             bad.append(f"หัวข้อ {t} มีแค่ {n} ข้อ (ขั้นต่ำ {MIN_PER_TOPIC})")
+
+    # ── ข้อที่ถามเรื่องเดียวกันซ้ำ ─────────────────────────────
+    # โจทย์ที่พิมพ์ต่างกันนิดหน่อยแต่ถามเรื่องเดียวกันและเฉลยตรงกัน = ข้อซ้ำ
+    # ตัวตรวจ "โจทย์ตรงกันเป๊ะ" จับไม่ได้ เพราะแค่เว้นวรรคต่างก็รอดแล้ว
+    # ข้อซ้ำไม่ใช่แค่เปลืองที่ — มันดันค่าความแม่นของหัวข้อให้สูงเกินจริง
+    by_topic: dict[str, list] = {}
+    for _f, q in items:
+        by_topic.setdefault(q.get("topic"), []).append(q)
+    for topic, qs in sorted(by_topic.items()):
+        for qa, qb in itertools.combinations(qs, 2):
+            pair = tuple(sorted((qa["qid"], qb["qid"])))
+            if pair in NOT_DUPES:
+                continue
+            if _sim(qa["stem"], qb["stem"]) < 0.70:
+                continue
+            try:
+                aa, ab = qa["choices"][qa["answer"]], qb["choices"][qb["answer"]]
+            except (IndexError, TypeError, KeyError):
+                continue
+            if _sim(aa, ab) >= 0.80:
+                bad.append(f"ถามซ้ำกันในหัวข้อ {topic}: {pair[0]} กับ {pair[1]}")
+
+    # ── เฉลยยาวกว่าตัวลวงจนเดาได้ ─────────────────────────────
+    # ถ้าเฉลยเป็นตัวเลือกที่ยาวที่สุดบ่อยเกินไป เด็กจะทำคะแนนได้โดยไม่ต้องอ่านโจทย์
+    # (คนเขียนข้อสอบมักใส่เหตุผลประกอบไว้ในข้อถูก แต่เขียนตัวลวงห้วน ๆ)
+    # สุ่มล้วน = 25% · เป้าหมายคือไล่ลดให้เข้าใกล้ค่านั้น
+    #
+    # ตัวเลขข้างล่างคือ "เพดานปัจจุบัน" ไม่ใช่ค่าที่ยอมรับได้ — ห้ามขยับขึ้น
+    # แก้ข้อไหนให้ตัวลวงยาวขึ้นแล้ว ให้ลดเพดานของวิชานั้นลงตามจริง
+    by_subject: dict[str, list] = {}
+    for _f, q in items:
+        by_subject.setdefault(q.get("subject") or "?", []).append(q)
+    print("\nเฉลยเป็นตัวเลือกที่ยาวที่สุด (สุ่มล้วน = 25%):")
+    for subj, qs in sorted(by_subject.items()):
+        longest = sum(1 for q in qs
+                      if isinstance(q.get("choices"), list) and q["choices"]
+                      and len(str(q["choices"][q["answer"]]))
+                      == max(len(str(c)) for c in q["choices"]))
+        pct = 100.0 * longest / len(qs)
+        cap = LONGEST_CAP.get(subj)
+        mark = ""
+        if cap is not None and pct > cap:
+            mark = f"  ← เกินเพดาน {cap:.0f}%"
+            bad.append(f"วิชา {subj}: เฉลยเป็นตัวเลือกยาวที่สุด {pct:.0f}% "
+                       f"(เพดาน {cap:.0f}%) — เดาได้โดยไม่ต้องอ่านโจทย์")
+        print(f"  {subj:8s} {len(qs):4d} ข้อ  {pct:5.1f}%{mark}")
 
     # ── การกระจายตำแหน่งเฉลย ──────────────────────────────────
     slots = collections.Counter(q["answer"] for _, q in items

@@ -2965,12 +2965,18 @@ function venueLine(v) {
    เดิมรวมสองความหมายเข้าด้วยกัน ผลคือวางข้อความที่ไม่มีเลขที่นั่งสอบทับลงไป
    แล้วเลขที่นั่งสอบเดิมที่พิมพ์ไว้หายเกลี้ยงโดยไม่ถามอะไรเลย
    การลบต้องสั่งตรง ๆ ด้วย {ช่อง: null} เท่านั้น */
+/* ความยาวสูงสุดของแต่ละช่อง — ตัวแกะข้อความอาจคว้าทั้งย่อหน้ามาก็ได้
+   ถ้าไม่ตัด ข้อความก้อนโตจะไปโผล่ในไฟล์ .ics (บรรทัดยาวเกิน RFC) และกิน
+   โควตา localStorage ซึ่งเต็มแล้วคือ Store.save() พังทั้งแอป ไม่ใช่แค่ช่องนี้ */
+const VENUE_MAX = { seat: 24, place: 80, room: 40, note: 200 };
+
 function saveVenue(code, patch) {
   const cur = Object.assign({}, venueOf(code));
   Object.keys(patch).forEach(k => {
     const v = patch[k];
     if (v === null) delete cur[k];
-    else if (String(v).trim()) cur[k] = String(v).trim();
+    else if (String(v).trim())
+      cur[k] = String(v).trim().slice(0, VENUE_MAX[k] || 80);
   });
   const all = myVenues();
   if (Object.keys(cur).length) all[code] = cur; else delete all[code];
@@ -2990,7 +2996,9 @@ function saveVenue(code, patch) {
    ด้วยเหตุนี้ผลที่แกะได้ต้องให้ผู้ใช้ยืนยันก่อนบันทึกทับเสมอ */
 const VENUE_SEP = "(?:[ \\t]*[:\uff1a=\\-][ \\t]*|[ \\t]{2,}|[ \\t]*\\n[ \\t]*)";
 function parseVenueText(text) {
-  const t = String(text || "").replace(/\u00a0/g, " ").replace(/\r/g, "");
+  /* จำกัดขนาดข้อความที่รับมาแกะ — วางมาทั้งหน้าเว็บก็ยังไม่ควรให้ regex ไล่ทั้งก้อน */
+  const t = String(text || "").slice(0, 20000)
+    .replace(/\u00a0/g, " ").replace(/\r/g, "");
   const grab = (labels, valuePat) => {
     for (const lb of labels) {
       const re = new RegExp("(?:^|\\n)[ \\t]*" + lb + VENUE_SEP + "(" + valuePat + ")");
@@ -3104,7 +3112,8 @@ function venuePanel() {
      ["room", "ห้องสอบ", "เช่น อาคาร 3 ห้อง 402"],
      ["note", "หมายเหตุ", "เช่น ไปทางไหน ประตูไหน รอบเช้า"]].forEach(([k, label, ph]) => {
       const row = el('<div class="field"><span class="field-l">' + label + "</span></div>");
-      const inp = el('<input type="text" placeholder="' + esc(ph) + '" value="' +
+      const inp = el('<input type="text" maxlength="' + (VENUE_MAX[k] || 80) +
+        '" placeholder="' + esc(ph) + '" value="' +
         esc(v[k] || "") + '" style="flex:1;min-width:0;max-width:190px">');
       /* บันทึกอย่างเดียว ไม่วาดใหม่ทั้งแท็บ — เดิมเรียก render() ทุกครั้งที่ออกจากช่อง
          ทำให้โฟกัสหลุดไปที่ body และ (หลังแก้บั๊ก [hidden]) กล่องจะพับปิดทุกครั้ง
@@ -4417,10 +4426,21 @@ function viewProgress() {
   const nBlocks = Object.values(S.log).reduce((a, v) => a + v.length, 0);
   const nTopics = Object.keys(S.topics).length;
   const nQ = Object.keys(S.q).length;
+  const nScores = Object.values(S.scores || {}).filter(v => v !== "" && v != null).length;
+  const nVenues = Object.keys(S.venues || {}).length;
   rc.appendChild(el('<p class="tiny" style="margin:0">ตอนนี้เก็บไว้: บล็อกที่ทำแล้ว ' + nBlocks +
     " · หัวข้อที่มีความคืบหน้า " + nTopics + " · ข้อสอบที่เคยทำ " + nQ +
     " · ชุดที่ทำจบ " + S.runs.length +
-    " · ลิงก์ที่บันทึก " + Object.values(S.links || {}).reduce((a, v) => a + v.length, 0) + "</p>"));
+    " · คะแนนที่กรอก " + nScores +
+    " · ลิงก์ที่บันทึก " + Object.values(S.links || {}).reduce((a, v) => a + v.length, 0) +
+    " · สนามสอบ " + nVenues + " วิชา</p>"));
+  /* สนามสอบต้องอยู่ในรายการนี้ด้วย — มันคือของที่อ่อนไหวที่สุดในไฟล์สำรอง
+     (เลขที่นั่งสอบ ชื่อโรงเรียน) คนกดส่งไฟล์ให้เพื่อนควรเห็นก่อนว่ามันติดไปด้วย */
+  if (nVenues) {
+    rc.appendChild(el('<p class="tiny" style="margin:0;color:var(--marigold)">' +
+      "⚠️ ไฟล์สำรองมีข้อมูลสนามสอบ " + nVenues + " วิชา (รวมเลขที่นั่งสอบ) " +
+      "ส่งไฟล์ให้ใครคือส่งข้อมูลนี้ไปด้วย</p>"));
+  }
 
   const row = el('<div class="btn-row"></div>');
 

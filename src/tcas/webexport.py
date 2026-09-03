@@ -159,7 +159,16 @@ def build_payload(
     program_list: List[Dict[str, Any]] = []
     if programs:
         spec_of = {str(x.get("code")): x for x in (programs.get("programs") or [])}
-        latest_year = max((programs.get("meta") or {}).get("years") or [0]) - 1
+        # ปีล่าสุดที่ "มีข้อมูลจริง" ไม่ใช่ max(meta.years) − 1
+        # meta.years คือปีที่ไฟล์นี้เกี่ยวข้องด้วย (รวมปีที่กำลังจะสอบซึ่งยังไม่มีคะแนน)
+        # การเดาว่าปีข้อมูลคือ "ปีท้ายสุดลบหนึ่ง" เป็นจริงเฉพาะตอนที่รายการมีสองปีพอดี
+        # เติมปีถัดไปเข้าไปเมื่อไหร่ ช่อง "คะแนนสูงสุด" จะกลายเป็นค่าว่างทั้งหน้าโดยไม่มีใครรู้
+        years_with_data = {
+            int(y)
+            for x in (programs.get("programs") or [])
+            for y in ((x.get("top") or {}) | (x.get("cutoffs") or {}))
+        }
+        latest_year = max(years_with_data) if years_with_data else None
         for c in ranking.rank(programs, None):
             program_list.append(
                 {

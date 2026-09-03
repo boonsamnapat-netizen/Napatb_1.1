@@ -173,6 +173,25 @@ def audit(
         a.verified += 1
 
     # ── คะแนนต่ำสุดของแต่ละคณะ ─────────────────────────────────
+    # ปีล่าสุดที่คะแนนต่ำสุดในไฟล์นี้ครอบคลุมถึง — คะแนนของปีที่กำลังจะสอบ
+    # ไม่มีทางมีอยู่แล้ว (กสพท ประกาศหลังสอบ) เกณฑ์ที่ถูกจึงคือ "ปีก่อนหน้า"
+    # ไม่ใช่ target_year เหมือนของ minimums
+    cut_years = {
+        int(y)
+        for x in (programs.get("programs") or [])
+        for y in (x.get("cutoffs") or {})
+    }
+    newest_cut = max(cut_years) if cut_years else None
+    if target_year and newest_cut and newest_cut < target_year - 1:
+        a.findings.append(Finding(
+            severity="high", kind="cutoff",
+            where="config/tcas_programs.yaml → meta.source",
+            what=f"คะแนนต่ำสุดล่าสุดในไฟล์เป็นของปี {newest_cut} "
+                 f"แต่กำลังเตรียมสอบปี {target_year}",
+            why="คะแนนต่ำสุดขยับทุกปีตามจำนวนผู้สมัครและความยากข้อสอบ "
+                f"ควรมีของปี {target_year - 1} แล้ว — ใช้ของเก่าคือประเมินโอกาสผิด",
+        ))
+
     for p in programs.get("programs") or []:
         if _unverified(p):
             a.findings.append(Finding(
