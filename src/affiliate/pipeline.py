@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from typing import Any
 
 from . import products as prod
@@ -36,6 +37,7 @@ HELP = (
 # rejected — without this, tapping "make the clip" twice pays for two renders.
 ALLOWED_ACTIONS: dict[str, set[str]] = {
     st.CONFIRM_PRODUCT: {"product_ok", "product_manual"},
+    st.RENDERING: set(),          # nothing but cancel while the vendor works
     st.CONFIRM_VIDEO: {"video_ok", "video_retry"},
     st.CHOOSE_LINK: {"pick"},
     st.FINAL_CONFIRM: {"publish", "relink"},
@@ -64,6 +66,7 @@ class Pipeline:
         self.work_dir = self.cfg.get("work_dir", "data/affiliate")
         self.allowed_user_ids = {int(u) for u in self.cfg.get("allowed_user_ids", []) or []}
         self.daily_render_limit = int(self.cfg.get("daily_render_limit", 50))
+        self.render_timeout_s = float(self.cfg.get("render_timeout_s", 900))
         self.vision = ProductVision(
             model=self.cfg.get("vision", {}).get("model", "claude-sonnet-4-6")
         )
@@ -284,18 +287,43 @@ class Pipeline:
         # Counted before the call: a paid render that then fails still cost money.
         self.store.record_render()
         self.store.save()
+
+        if getattr(self.video_maker, "is_async", False):
+            # A vendor render takes minutes. Submit, persist the handle and let
+            # a later run collect it, so one job cannot stall the whole batch.
+            try:
+                job.render_ref = self.video_maker.submit(job.photo_path, clip)
+            except videolib.VideoError as exc:
+                return self._fail(job, exc, "ส่งงานทำคลิปไม่สำเร็จ")
+            job.render_started_at = time.time()
+            job.state = st.RENDERING
+            self.store.put(job)
+            self.store.save()
+            self.client.send_message(
+                job.chat_id,
+                "🎬 ส่งไปทำคลิปแล้ว ใช้เวลาสักพัก (ปกติ 1–5 นาที)\n"
+                "เสร็จแล้วบอทจะส่งมาให้เอง ไม่ต้องรอหน้าจอ",
+                keyboard([Button("❌ ยกเลิก", f"{job.id}:cancel")]))
+            return f"job {job.id}: render submitted"
+
         self.client.send_message(job.chat_id, "🎬 กำลังทำคลิป 8 วิ… รอสักครู่")
         out = os.path.join(self.work_dir, job.id, "clip.mp4")
         try:
             job.video_path = self.video_maker.render(job.photo_path, clip, out)
         except videolib.VideoError as exc:
-            job.state = st.FAILED
-            job.error = str(exc)
-            self.store.put(job)
-            self.store.save()
-            self.client.send_message(job.chat_id, f"⚠️ ทำคลิปไม่สำเร็จ: {exc}")
-            return f"job {job.id}: video failed"
+            return self._fail(job, exc, "ทำคลิปไม่สำเร็จ")
+        return self._offer_clip(job, clip)
 
+    def _fail(self, job: st.Job, exc: Exception, headline: str) -> str:
+        job.state = st.FAILED
+        job.error = str(exc)
+        self.store.put(job)
+        self.store.save()
+        self.client.send_message(job.chat_id, f"⚠️ {headline}: {exc}")
+        return f"job {job.id}: video failed"
+
+    def _offer_clip(self, job: st.Job, clip: scriptlib.ClipScript) -> str:
+        """Send the finished clip for approval."""
         job.state = st.CONFIRM_VIDEO
         self.store.put(job)
         self.store.save()
@@ -309,6 +337,33 @@ class Pipeline:
             ),
         )
         return f"job {job.id}: video ready"
+
+    def advance_renders(self) -> list[str]:
+        """Check every in-flight vendor render once. Safe to call each run."""
+        results = []
+        for job in self.store.all():
+            if job.state != st.RENDERING:
+                continue
+            try:
+                url = self.video_maker.poll_once(job.render_ref or {})
+            except videolib.VideoError as exc:
+                results.append(self._fail(job, exc, "ทำคลิปไม่สำเร็จ"))
+                continue
+            if url is None:
+                waited = time.time() - (job.render_started_at or 0)
+                if waited > self.render_timeout_s:
+                    results.append(self._fail(
+                        job, TimeoutError(f"{waited / 60:.0f} นาที"), "รอคลิปนานเกินไป"))
+                continue
+            out = os.path.join(self.work_dir, job.id, "clip.mp4")
+            try:
+                job.video_path = self.video_maker.fetch(url, out)
+            except videolib.VideoError as exc:
+                results.append(self._fail(job, exc, "โหลดคลิปไม่สำเร็จ"))
+                continue
+            results.append(self._offer_clip(
+                job, scriptlib.ClipScript.from_dict(job.script or {})))
+        return results
 
     def _ask_link(self, job: st.Job) -> str:
         candidates = [prod.Product.from_dict(c) for c in job.candidates]
@@ -437,9 +492,9 @@ def _creds(cfg: dict[str, Any]) -> dict[str, str]:
 def drain(client: TelegramClient, store: st.JobStore, pipeline: Pipeline,
           limit: int = 50, poll_timeout: int = 0) -> list[str]:
     """Process every pending update once, advancing the stored offset."""
+    results = pipeline.advance_renders()
     updates = client.get_updates(offset=store.offset or None, limit=limit,
                                  poll_timeout=poll_timeout)
-    results = []
     for update in updates:
         results.append(pipeline.handle(update))
         # Advance past this update even if it failed, so it cannot loop forever.

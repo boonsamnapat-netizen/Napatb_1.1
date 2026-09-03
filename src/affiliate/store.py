@@ -17,6 +17,7 @@ from typing import Any
 
 # Pipeline states, in the order a job moves through them.
 CONFIRM_PRODUCT = "confirm_product"
+RENDERING = "rendering"
 CONFIRM_VIDEO = "confirm_video"
 CHOOSE_LINK = "choose_link"
 FINAL_CONFIRM = "final_confirm"
@@ -42,6 +43,8 @@ class Job:
     chosen: dict[str, Any] | None = None
     strategy: str | None = None
     video_path: str | None = None
+    render_ref: dict[str, Any] | None = None
+    render_started_at: float | None = None
     script: dict[str, Any] | None = None
     error: str | None = None
 

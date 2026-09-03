@@ -10,6 +10,8 @@ affiliate:
   # Hard stop on renders per UTC day. The point is the paid path: an
   # image-to-video vendor bills per generation.
   daily_render_limit: 50
+  # Give up on a vendor render that never comes back (seconds).
+  render_timeout_s: 900
 
   work_dir: "data/affiliate"              # per-job photo + rendered clip
   state_path: "data/affiliate_state.json" # job state, committed between runs

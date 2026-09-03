@@ -67,6 +67,7 @@ class FakeClient:
 
 class StubVideoMaker:
     name = "stub"
+    is_async = False
 
     def __init__(self, fail: bool = False):
         self.fail = fail
@@ -76,6 +77,37 @@ class StubVideoMaker:
         self.calls += 1
         if self.fail:
             raise videolib.VideoError("stub failure")
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        with open(out_path, "wb") as fh:
+            fh.write(b"fake-mp4")
+        return out_path
+
+
+class StubAsyncMaker:
+    """Mimics a vendor that takes several polls to finish."""
+
+    name = "stub-async"
+    is_async = True
+
+    def __init__(self, polls_until_done=2, fail_on_poll=False):
+        self.polls_until_done = polls_until_done
+        self.fail_on_poll = fail_on_poll
+        self.submits = 0
+        self.polls = 0
+
+    def submit(self, image_path, script):
+        self.submits += 1
+        return {"job_id": f"vendor-{self.submits}", "video_url": None}
+
+    def poll_once(self, handle):
+        self.polls += 1
+        if self.fail_on_poll:
+            raise videolib.VideoError("vendor said failed")
+        if self.polls < self.polls_until_done:
+            return None
+        return "https://cdn.test/clip.mp4"
+
+    def fetch(self, url, out_path):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, "wb") as fh:
             fh.write(b"fake-mp4")
@@ -306,6 +338,89 @@ class AccessAndBudgetTest(unittest.TestCase):
         self.assertEqual(self.store.renders_today(), 1)
 
 
+class AsyncRenderTest(unittest.TestCase):
+    """A slow vendor render must not block the rest of the batch."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.client = FakeClient()
+        self.store = st.JobStore(os.path.join(self.tmp.name, "state.json"))
+        self.pipeline = Pipeline(self.client, self.store, {
+            "affiliate": {"work_dir": os.path.join(self.tmp.name, "jobs")}})
+        self.pipeline.video_maker = StubAsyncMaker()
+        self.pipeline.vision.api_key = ""
+
+    def _start_render(self, chat_id=7):
+        self.pipeline.handle(photo_update(chat_id=chat_id, user_id=chat_id))
+        self.pipeline.handle(text_update("https://x.test/a", chat_id=chat_id,
+                                         user_id=chat_id))
+        job_id = self.store.active_for_chat(chat_id).id
+        self.pipeline.handle(tap(f"{job_id}:product_ok", chat_id=chat_id,
+                                 user_id=chat_id))
+        return job_id
+
+    def test_submit_parks_the_job_without_waiting(self):
+        job_id = self._start_render()
+        job = self.store.get(job_id)
+        self.assertEqual(job.state, st.RENDERING)
+        self.assertEqual(job.render_ref["job_id"], "vendor-1")
+        self.assertEqual(self.client.videos, [])   # nothing sent yet
+
+    def test_a_later_pass_collects_the_finished_clip(self):
+        job_id = self._start_render()
+        self.assertEqual(self.pipeline.advance_renders(), [])       # still pending
+        self.assertEqual(self.store.get(job_id).state, st.RENDERING)
+
+        self.pipeline.advance_renders()                             # now done
+        job = self.store.get(job_id)
+        self.assertEqual(job.state, st.CONFIRM_VIDEO)
+        self.assertEqual(len(self.client.videos), 1)
+        self.assertIn(f"{job_id}:video_ok", self.client.buttons())
+
+    def test_the_flow_continues_normally_after_collection(self):
+        job_id = self._start_render()
+        self.pipeline.advance_renders()
+        self.pipeline.advance_renders()
+        self.pipeline.handle(tap(f"{job_id}:video_ok"))
+        self.pipeline.handle(tap(f"{job_id}:pick:cheapest"))
+        self.pipeline.handle(tap(f"{job_id}:publish"))
+        self.assertEqual(self.store.get(job_id).state, st.DELIVERED)
+        self.assertEqual(len(self.client.documents), 1)
+
+    def test_only_cancel_is_accepted_while_rendering(self):
+        job_id = self._start_render()
+        self.assertIn("stale", self.pipeline.handle(tap(f"{job_id}:video_ok")))
+        self.pipeline.handle(tap(f"{job_id}:cancel"))
+        self.assertEqual(self.store.get(job_id).state, st.CANCELLED)
+
+    def test_a_vendor_failure_marks_the_job_failed(self):
+        job_id = self._start_render()
+        self.pipeline.video_maker.fail_on_poll = True
+        self.pipeline.advance_renders()
+        self.assertEqual(self.store.get(job_id).state, st.FAILED)
+        self.assertIn("ทำคลิปไม่สำเร็จ", self.client.last_text())
+
+    def test_a_stuck_render_times_out(self):
+        job_id = self._start_render()
+        self.pipeline.video_maker.polls_until_done = 99
+        self.pipeline.render_timeout_s = 0
+        self.pipeline.advance_renders()
+        self.assertEqual(self.store.get(job_id).state, st.FAILED)
+        self.assertIn("นานเกินไป", self.client.last_text())
+
+    def test_one_slow_render_does_not_block_another_job(self):
+        first = self._start_render(chat_id=7)
+        second = self._start_render(chat_id=8)
+        self.pipeline.video_maker.polls_until_done = 2
+        self.pipeline.video_maker.polls = 0
+        self.pipeline.advance_renders()
+        # Both were polled in the same pass; neither waited on the other.
+        self.assertEqual(self.pipeline.video_maker.polls, 2)
+        self.assertEqual(self.store.get(first).state, st.RENDERING)
+        self.assertEqual(self.store.get(second).state, st.CONFIRM_VIDEO)
+
+
 class ProductPickTest(unittest.TestCase):
     def setUp(self):
         self.items = [
@@ -460,6 +575,48 @@ class VideoConfigTest(unittest.TestCase):
             "headers": {"Authorization": "Bearer ${AFFILIATE_TEST_KEY}"},
         })
         self.assertEqual(maker._headers()["Authorization"], "Bearer secret-123")
+
+    def test_the_local_encoder_is_not_treated_as_async(self):
+        self.assertFalse(videolib.FfmpegVideoMaker(burn_text=False).is_async)
+        self.assertTrue(videolib.AIVideoMaker({"submit_url": "x"}).is_async)
+
+    def test_submit_rejects_a_response_with_no_url_and_no_job_id(self):
+        maker = videolib.AIVideoMaker({"submit_url": "https://api.test/v1"})
+        maker._post = lambda url, payload: {"unexpected": "shape"}
+        maker._prepare_image = lambda path: b"x"
+        clip = scriptlib.build(prod.Product(title="x", url="y"))
+        with self.assertRaises(videolib.VideoError):
+            maker.submit("ignored.jpg", clip)
+
+    def test_poll_once_returns_none_while_pending(self):
+        maker = videolib.AIVideoMaker({
+            "submit_url": "https://api.test/v1",
+            "poll_url": "https://api.test/v1/{job_id}"})
+        maker._get = lambda url: {"status": "processing"}
+        self.assertIsNone(maker.poll_once({"job_id": "abc", "video_url": None}))
+
+    def test_poll_once_raises_on_a_failed_status(self):
+        maker = videolib.AIVideoMaker({
+            "submit_url": "https://api.test/v1",
+            "poll_url": "https://api.test/v1/{job_id}"})
+        maker._get = lambda url: {"status": "canceled"}
+        with self.assertRaises(videolib.VideoError):
+            maker.poll_once({"job_id": "abc"})
+
+    def test_poll_once_returns_the_url_on_success(self):
+        maker = videolib.AIVideoMaker({
+            "submit_url": "https://api.test/v1",
+            "poll_url": "https://api.test/v1/{job_id}",
+            "result_path": "output"})
+        maker._get = lambda url: {"status": "succeeded",
+                                  "output": "https://cdn.test/a.mp4"}
+        self.assertEqual(maker.poll_once({"job_id": "abc"}),
+                         "https://cdn.test/a.mp4")
+
+    def test_a_url_already_on_the_handle_needs_no_poll(self):
+        maker = videolib.AIVideoMaker({"submit_url": "https://api.test/v1"})
+        self.assertEqual(maker.poll_once({"video_url": "https://cdn.test/a.mp4"}),
+                         "https://cdn.test/a.mp4")
 
     def test_missing_api_key_falls_back_instead_of_401ing(self):
         os.environ.pop("AFFILIATE_ABSENT_KEY", None)

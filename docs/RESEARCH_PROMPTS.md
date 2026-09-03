@@ -8,6 +8,39 @@ developer ของ Lazada / TikTok / Replicate / Involve Asia เปิดไ�
 
 ---
 
+## ⛔ ผลรอบที่ 1 — อย่าเสีย agent ไปค้นซ้ำ
+
+**เอกสาร TikTok Shop Partner Center อ่านด้วย AI ไม่ได้เลย ไม่ว่าตัวไหน**
+`partner.tiktokshop.com/docv2` เป็น React SPA render ฝั่ง client ล้วน — ทุก URL
+คืน HTML เดียวกัน *"We're sorry but react app doesn't work properly without
+JavaScript enabled"* ไม่มีเนื้อหา API สักตัวอักษร ต้องเปิดด้วยเบราว์เซอร์จริงเท่านั้น
+(ทดสอบแล้ว 3 หน้า รวมหน้า overview, หน้า search product และหน้า rate limit)
+
+ที่ยืนยันได้จาก index ของ search engine — **มีหน้าเอกสารชื่อเหล่านี้อยู่จริง**
+แต่อ่านเนื้อหาไม่ได้:
+
+| หน้า | path |
+|---|---|
+| Creator Search Open Collaboration Product | `/docv2/page/creator-search-open-collaboration-product-202405` |
+| Affiliate Creator API overview | `/docv2/page/affiliate-creator-api-overview` |
+| Creator authorization guide | `/docv2/page/creator-authorization-guide` |
+| Developer onboarding | `/docv2/page/developer-onboarding` |
+| **Legacy Versions and Endpoints Sunset** | `/docv2/page/1wqfoc2s` |
+
+**2 เรื่องที่ต้องเช็คก่อนเขียนโค้ดสักบรรทัด:**
+
+1. **`/docv2/page/1wqfoc2s`** — หน้า sunset อัปเดต 29 ก.ค. 2026 → generation `202405`
+   อาจกำลังจะถูกยกเลิก ถ้าเขียนตาม 202405 วันนี้อาจต้องรื้อทิ้ง **เปิดหน้านี้ก่อนเลย**
+2. **Affiliate Creator API รองรับ market ไทยหรือเปล่า** — ไม่มีใครยืนยันได้
+   ถ้าไม่รองรับ TH คำถามที่เหลือทั้งหมดไม่มีความหมาย
+
+**ยังหาไม่เจอเลยแม้แต่จากบล็อก:** ชื่อฟิลด์ ราคา / ยอดขาย / commission rate
+และไม่รู้ว่า commission ที่ API ตอบกลับเป็นเรตรายสินค้าหรือรายแคมเปญ
+
+**ทางเดียวที่เหลือ → คุณต้องเปิดเบราว์เซอร์เอง** (ดูหัวข้อ "แผนสำรอง" ท้ายไฟล์)
+
+---
+
 ## #1 — สำคัญที่สุด: TikTok Shop Affiliate Creator API ตอบฟิลด์อะไรบ้าง
 
 > ปลดล็อก: กลยุทธ์ "ขายดีสุด" กับ "คอมเยอะสุด" จะรอดหรือตาย
@@ -230,6 +263,23 @@ Project เก็บ context กลางให้ทุกแชทในนั
 ถ้าตอบมาโดยไม่ยอมเปิดเว็บ ให้สั่งตรง ๆ ว่า "ค้นเว็บและเปิดหน้าเอกสารจริงก่อนตอบ"
 
 ---
+
+## แผนสำรองเมื่อ AI อ่านเอกสารไม่ได้ (กรณี TikTok)
+
+เอกสารเป็น public แต่ต้องมี JavaScript → **เบราว์เซอร์ในมือถือคุณเปิดได้ AI เปิดไม่ได้**
+เรียงตามลำดับที่ควรทำ:
+
+1. เปิด **`/docv2/page/1wqfoc2s`** ก่อน — ถ้า 202405 กำลังจะ sunset ให้หา
+   generation ปัจจุบันมาแทน แล้วค่อยทำข้อต่อไป
+2. สมัคร Partner Center จริง (`partner.tiktokshop.com/account/sign-up`) เลือกหมวด
+   **Developer** — **การสมัครนี่แหละคือคำตอบของคำถามข้อ 4** ว่าบุคคลธรรมดาทำได้ไหม
+   ต้องใช้เอกสารอะไร ใช้เวลาไม่ถึง 15 นาที เร็วกว่านั่งหาเอกสารมาก
+3. สมัครผ่านแล้วจะเห็นว่ารองรับ market ไทยไหม (คำถามที่สำคัญที่สุด)
+4. ใน Partner Center มี **API Testing Tool** — ยิง API จริงแล้วเห็น JSON จริง
+   **แม่นกว่าเอกสารด้วยซ้ำ** ก๊อป response มาวางให้ผมได้เลย
+
+> ระหว่างนี้อย่าเพิ่งแตะ `TikTokFinder.search()` — `ManualFinder` + image search
+> ในแอป ยังเป็นทางเดียวที่ทำงานได้จริง
 
 ## เอาคำตอบกลับมาให้ผมยังไง
 

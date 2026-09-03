@@ -49,6 +49,9 @@ class VideoError(RuntimeError):
 
 class VideoMaker(Protocol):
     name: str
+    # True when a render takes long enough that the caller should submit it,
+    # persist a handle and poll later instead of blocking.
+    is_async: bool
 
     def render(self, image_path: str, script: ClipScript, out_path: str) -> str:
         ...
@@ -61,6 +64,7 @@ class FfmpegVideoMaker:
     """Ken-Burns push-in on a still, with the four beats overlaid."""
 
     name = "ffmpeg"
+    is_async = False   # local encode, a few seconds
 
     def __init__(self, font_path: str | None = None, burn_text: bool = True,
                  duration: float = DURATION):
@@ -161,6 +165,7 @@ class AIVideoMaker:
     """Config-driven image-to-video adapter (submit, then optionally poll)."""
 
     name = "ai"
+    is_async = True    # vendors take 1-5 minutes per clip
 
     def __init__(self, cfg: dict[str, Any]):
         self.cfg = cfg or {}
@@ -179,25 +184,68 @@ class AIVideoMaker:
         return not any("${" in value for value in self._headers().values())
 
     def render(self, image_path: str, script: ClipScript, out_path: str) -> str:
+        """Blocking render — used by the CLI and selftest.
+
+        The bot uses submit/poll_once/fetch instead so a slow generation does
+        not hold up every other job in the batch.
+        """
+        handle = self.submit(image_path, script)
+        deadline = time.time() + float(self.cfg.get("poll_timeout_s", 300))
+        while True:
+            url = self.poll_once(handle)
+            if url:
+                return self.fetch(url, out_path)
+            if time.time() >= deadline:
+                raise VideoError("timed out waiting for the provider to render the clip")
+            time.sleep(float(self.cfg.get("poll_interval_s", 5)))
+
+    def submit(self, image_path: str, script: ClipScript) -> dict[str, Any]:
+        """Start a generation. Returns a small JSON-serialisable handle."""
         if not self.configured:
             raise VideoError(
                 "no image-to-video endpoint configured — set affiliate.video.ai."
                 "submit_url (and its api key env var) in config/affiliate.yaml"
             )
-        image_b64 = base64.b64encode(self._prepare_image(image_path)).decode()
         fields = {
             "prompt": self.prompt(script),
-            "image_b64": image_b64,
+            "image_b64": base64.b64encode(self._prepare_image(image_path)).decode(),
             "duration": str(self.cfg.get("duration", int(DURATION))),
         }
         submitted = self._post(_expand(self.cfg["submit_url"]),
                                _fill(self.cfg.get("payload", {}), fields))
         url = _dig(submitted, self.cfg.get("result_path", "video_url"))
-        if not url and self.cfg.get("poll_url"):
-            url = self._poll(submitted, fields)
-        if not url:
-            raise VideoError("provider returned no video url — check video.ai.result_path")
-        return self._download(str(url), out_path)
+        job_id = _dig(submitted, self.cfg.get("job_id_path", "id"))
+        if not url and not job_id:
+            raise VideoError("provider returned neither a video url nor a job id "
+                             "— check video.ai.result_path / job_id_path")
+        return {"job_id": str(job_id or ""), "video_url": str(url) if url else None}
+
+    def poll_once(self, handle: dict[str, Any]) -> str | None:
+        """One non-blocking check. Returns the video url, or None if pending."""
+        if handle.get("video_url"):
+            return str(handle["video_url"])
+        if not self.cfg.get("poll_url"):
+            raise VideoError("provider gave no video url on submit and no "
+                             "video.ai.poll_url is configured")
+        url = _expand(self.cfg["poll_url"]).replace("{job_id}",
+                                                    str(handle.get("job_id", "")))
+        payload = self._get(url)
+        status = str(_dig(payload, self.cfg.get("poll_status_path", "status")) or "").lower()
+        if status and status in {str(v).lower() for v in
+                                 self.cfg.get("poll_failed_values", DEFAULT_FAILED_VALUES)}:
+            raise VideoError(f"provider reported status '{status}'")
+        done = {str(v).lower()
+                for v in self.cfg.get("poll_done_values", DEFAULT_DONE_VALUES)}
+        if status and status in done:
+            payload = self._fetch_result(payload)
+        video = _dig(payload, self.cfg.get("result_path", "video_url"))
+        if video and (not status or status in done):
+            return str(video)
+        return None
+
+    def fetch(self, url: str, out_path: str) -> str:
+        """Download a finished clip."""
+        return self._download(url, out_path)
 
     def _fetch_result(self, status_payload: Any) -> Any:
         """Second hop for queue APIs whose status response omits the output.
@@ -249,28 +297,6 @@ class AIVideoMaker:
         )
         return template.format(hook=script.hook, benefit=script.benefit,
                                price=script.price, cta=script.cta)
-
-    def _poll(self, submitted: Any, fields: dict[str, str]) -> str | None:
-        job_id = _dig(submitted, self.cfg.get("job_id_path", "id"))
-        url = _expand(self.cfg["poll_url"]).replace("{job_id}", str(job_id or ""))
-        interval = float(self.cfg.get("poll_interval_s", 5))
-        deadline = time.time() + float(self.cfg.get("poll_timeout_s", 300))
-        done = {str(v).lower()
-                for v in self.cfg.get("poll_done_values", DEFAULT_DONE_VALUES)}
-        failed = {str(v).lower()
-                  for v in self.cfg.get("poll_failed_values", DEFAULT_FAILED_VALUES)}
-        while time.time() < deadline:
-            time.sleep(interval)
-            payload = self._get(url)
-            status = str(_dig(payload, self.cfg.get("poll_status_path", "status")) or "").lower()
-            if status in failed:
-                raise VideoError(f"provider reported status '{status}'")
-            if status and status in done:
-                payload = self._fetch_result(payload)
-            video = _dig(payload, self.cfg.get("result_path", "video_url"))
-            if video and (not status or status in done):
-                return str(video)
-        raise VideoError("timed out waiting for the provider to render the clip")
 
     # --- transport -------------------------------------------------------
 
