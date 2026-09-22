@@ -254,11 +254,47 @@
         4.54168078,
         4.57631767
       ],
+      "status": "TP1",
+      "exit": 4.5,
+      "result_r": 2.068,
+      "closed_date": "2026-09-22",
+      "logged_at": "2026-09-19T05:33:35.204813+00:00"
+    },
+    {
+      "date": "2026-09-22",
+      "symbol": "BTCUSDT",
+      "direction": "LONG",
+      "confidence": 68.9,
+      "entry": 85504.046875,
+      "stop": 81898.57499524,
+      "tps": [
+        89246.98828125,
+        90000.0,
+        90413.45833333
+      ],
       "status": "open",
       "exit": null,
       "result_r": null,
       "closed_date": null,
-      "logged_at": "2026-09-19T05:33:35.204813+00:00"
+      "logged_at": "2026-09-22T05:56:14.756067+00:00"
+    },
+    {
+      "date": "2026-09-22",
+      "symbol": "BNBUSDT",
+      "direction": "LONG",
+      "confidence": 64.3,
+      "entry": 788.5,
+      "stop": 754.86476714,
+      "tps": [
+        827.26071777,
+        850.0,
+        865.78063965
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-22T05:56:14.756088+00:00"
     }
   ]
 }
