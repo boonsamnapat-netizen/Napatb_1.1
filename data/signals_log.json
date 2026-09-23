@@ -295,6 +295,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-09-22T05:56:14.756088+00:00"
+    },
+    {
+      "date": "2026-09-23",
+      "symbol": "NEARUSDT",
+      "direction": "LONG",
+      "confidence": 66.6,
+      "entry": 4.46850014,
+      "stop": 3.99247153,
+      "tps": [
+        5.0,
+        5.05059814,
+        5.10217762
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-23T05:38:09.988791+00:00"
+    },
+    {
+      "date": "2026-09-23",
+      "symbol": "XRPUSDT",
+      "direction": "LONG",
+      "confidence": 55.2,
+      "entry": 1.61919999,
+      "stop": 1.49635428,
+      "tps": [
+        1.75882006,
+        1.93932001,
+        1.97006762
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-23T05:38:09.988815+00:00"
     }
   ]
 }
