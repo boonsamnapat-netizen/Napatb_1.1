@@ -326,10 +326,10 @@
         1.93932001,
         1.97006762
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 1.49635428,
+      "result_r": -1.0,
+      "closed_date": "2026-09-24",
       "logged_at": "2026-09-23T05:38:09.988815+00:00"
     }
   ]
