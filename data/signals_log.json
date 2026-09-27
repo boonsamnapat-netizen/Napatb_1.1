@@ -308,10 +308,10 @@
         5.05059814,
         5.10217762
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 5.0,
+      "result_r": 1.117,
+      "closed_date": "2026-09-25",
       "logged_at": "2026-09-23T05:38:09.988791+00:00"
     },
     {
