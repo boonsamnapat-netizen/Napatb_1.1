@@ -331,6 +331,24 @@
       "result_r": -1.0,
       "closed_date": "2026-09-24",
       "logged_at": "2026-09-23T05:38:09.988815+00:00"
+    },
+    {
+      "date": "2026-09-28",
+      "symbol": "NEARUSDT",
+      "direction": "LONG",
+      "confidence": 58.3,
+      "entry": 5.1401,
+      "stop": 4.55988543,
+      "tps": [
+        6.0,
+        6.4786673,
+        6.5
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-28T06:27:32.701710+00:00"
     }
   ]
 }
