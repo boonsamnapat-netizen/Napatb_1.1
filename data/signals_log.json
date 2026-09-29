@@ -290,10 +290,10 @@
         850.0,
         865.78063965
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 754.86476714,
+      "result_r": -1.0,
+      "closed_date": "2026-09-29",
       "logged_at": "2026-09-22T05:56:14.756088+00:00"
     },
     {
@@ -344,10 +344,10 @@
         6.4786673,
         6.5
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 4.55988543,
+      "result_r": -1.0,
+      "closed_date": "2026-09-29",
       "logged_at": "2026-09-28T06:27:32.701710+00:00"
     }
   ]
