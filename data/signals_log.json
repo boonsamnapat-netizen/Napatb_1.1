@@ -349,6 +349,42 @@
       "result_r": -1.0,
       "closed_date": "2026-09-29",
       "logged_at": "2026-09-28T06:27:32.701710+00:00"
+    },
+    {
+      "date": "2026-09-30",
+      "symbol": "MKRUSDT",
+      "direction": "LONG",
+      "confidence": 67.0,
+      "entry": 1943.52600098,
+      "stop": 1455.61358684,
+      "tps": [
+        2455.5,
+        2500.0,
+        2563.0769043
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-30T06:23:55.009298+00:00"
+    },
+    {
+      "date": "2026-09-30",
+      "symbol": "NEARUSDT",
+      "direction": "LONG",
+      "confidence": 58.9,
+      "entry": 4.94199991,
+      "stop": 4.33090111,
+      "tps": [
+        5.5,
+        5.95823684,
+        6.0
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-09-30T06:23:55.009360+00:00"
     }
   ]
 }
