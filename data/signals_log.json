@@ -380,10 +380,10 @@
         5.95823684,
         6.0
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 5.5,
+      "result_r": 0.913,
+      "closed_date": "2026-10-01",
       "logged_at": "2026-09-30T06:23:55.009360+00:00"
     }
   ]
