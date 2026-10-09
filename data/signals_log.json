@@ -272,10 +272,10 @@
         90000.0,
         90413.45833333
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 81898.57499524,
+      "result_r": -1.0,
+      "closed_date": "2026-10-08",
       "logged_at": "2026-09-22T05:56:14.756067+00:00"
     },
     {
