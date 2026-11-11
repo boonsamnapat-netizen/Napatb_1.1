@@ -385,6 +385,24 @@
       "result_r": 0.913,
       "closed_date": "2026-10-01",
       "logged_at": "2026-09-30T06:23:55.009360+00:00"
+    },
+    {
+      "date": "2026-11-11",
+      "symbol": "DOTUSDT",
+      "direction": "SHORT",
+      "confidence": 56.7,
+      "entry": 0.82920003,
+      "stop": 0.90916714,
+      "tps": [
+        0.75,
+        0.74277735,
+        0.7
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-11T07:35:06.271679+00:00"
     }
   ]
 }
