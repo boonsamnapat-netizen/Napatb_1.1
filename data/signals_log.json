@@ -403,6 +403,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-11T07:35:06.271679+00:00"
+    },
+    {
+      "date": "2026-11-13",
+      "symbol": "DOGEUSDT",
+      "direction": "SHORT",
+      "confidence": 65.5,
+      "entry": 0.06458,
+      "stop": 0.06949063,
+      "tps": [
+        0.06,
+        0.055,
+        0.052382
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-13T07:40:49.966990+00:00"
+    },
+    {
+      "date": "2026-11-13",
+      "symbol": "ADAUSDT",
+      "direction": "SHORT",
+      "confidence": 61.7,
+      "entry": 0.17133,
+      "stop": 0.18638047,
+      "tps": [
+        0.1538035,
+        0.15,
+        0.14936375
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-13T07:40:49.967004+00:00"
     }
   ]
 }
