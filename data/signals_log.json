@@ -439,6 +439,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-13T07:40:49.967004+00:00"
+    },
+    {
+      "date": "2026-11-14",
+      "symbol": "LTCUSDT",
+      "direction": "SHORT",
+      "confidence": 55.1,
+      "entry": 48.24399948,
+      "stop": 51.78587604,
+      "tps": [
+        45.0,
+        41.90251096,
+        40.0
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-14T07:27:37.751569+00:00"
+    },
+    {
+      "date": "2026-11-14",
+      "symbol": "SOLUSDT",
+      "direction": "SHORT",
+      "confidence": 55.4,
+      "entry": 75.30999756,
+      "stop": 81.31480141,
+      "tps": [
+        70.0,
+        67.99214935,
+        66.49260966
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-14T07:27:37.751619+00:00"
     }
   ]
 }
