@@ -398,10 +398,10 @@
         0.74277735,
         0.7
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.75,
+      "result_r": 0.99,
+      "closed_date": "2026-11-14",
       "logged_at": "2026-11-11T07:35:06.271679+00:00"
     },
     {
@@ -416,10 +416,10 @@
         0.055,
         0.052382
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.06,
+      "result_r": 0.933,
+      "closed_date": "2026-11-14",
       "logged_at": "2026-11-13T07:40:49.966990+00:00"
     },
     {
@@ -434,10 +434,10 @@
         0.15,
         0.14936375
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.1538035,
+      "result_r": 1.165,
+      "closed_date": "2026-11-14",
       "logged_at": "2026-11-13T07:40:49.967004+00:00"
     },
     {
@@ -452,10 +452,10 @@
         41.90251096,
         40.0
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 45.0,
+      "result_r": 0.916,
+      "closed_date": "2026-11-15",
       "logged_at": "2026-11-14T07:27:37.751569+00:00"
     },
     {
@@ -470,11 +470,65 @@
         67.99214935,
         66.49260966
       ],
+      "status": "TP1",
+      "exit": 70.0,
+      "result_r": 0.884,
+      "closed_date": "2026-11-15",
+      "logged_at": "2026-11-14T07:27:37.751619+00:00"
+    },
+    {
+      "date": "2026-11-15",
+      "symbol": "ETHUSDT",
+      "direction": "SHORT",
+      "confidence": 62.2,
+      "entry": 1784.17004395,
+      "stop": 1939.44146818,
+      "tps": [
+        1500.0,
+        1330.72354929,
+        1176.82276611
+      ],
       "status": "open",
       "exit": null,
       "result_r": null,
       "closed_date": null,
-      "logged_at": "2026-11-14T07:27:37.751619+00:00"
+      "logged_at": "2026-11-15T07:39:31.310747+00:00"
+    },
+    {
+      "date": "2026-11-15",
+      "symbol": "XRPUSDT",
+      "direction": "SHORT",
+      "confidence": 62.8,
+      "entry": 0.9501,
+      "stop": 1.03546329,
+      "tps": [
+        0.85,
+        0.8,
+        0.77852191
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-15T07:39:31.310790+00:00"
+    },
+    {
+      "date": "2026-11-15",
+      "symbol": "AVAXUSDT",
+      "direction": "SHORT",
+      "confidence": 55.8,
+      "entry": 7.18400002,
+      "stop": 8.03589947,
+      "tps": [
+        6.5,
+        6.19945849,
+        6.0
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-15T07:39:31.310826+00:00"
     }
   ]
 }
