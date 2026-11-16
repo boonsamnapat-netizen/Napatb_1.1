@@ -529,6 +529,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-15T07:39:31.310826+00:00"
+    },
+    {
+      "date": "2026-11-16",
+      "symbol": "LTCUSDT",
+      "direction": "SHORT",
+      "confidence": 55.8,
+      "entry": 44.82600021,
+      "stop": 50.77677649,
+      "tps": [
+        40.0,
+        36.3972346,
+        36.26830673
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-16T07:44:48.689910+00:00"
+    },
+    {
+      "date": "2026-11-16",
+      "symbol": "DOGEUSDT",
+      "direction": "SHORT",
+      "confidence": 55.3,
+      "entry": 0.05881,
+      "stop": 0.06606764,
+      "tps": [
+        0.052382,
+        0.052269,
+        0.05
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-16T07:44:48.689940+00:00"
     }
   ]
 }
