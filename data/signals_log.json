@@ -565,6 +565,60 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-16T07:44:48.689940+00:00"
+    },
+    {
+      "date": "2026-11-17",
+      "symbol": "OPUSDT",
+      "direction": "SHORT",
+      "confidence": 56.8,
+      "entry": 0.07668,
+      "stop": 0.08850795,
+      "tps": [
+        0.065,
+        0.06,
+        0.0005088
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-17T08:54:10.781471+00:00"
+    },
+    {
+      "date": "2026-11-17",
+      "symbol": "DOTUSDT",
+      "direction": "SHORT",
+      "confidence": 55.4,
+      "entry": 0.73049998,
+      "stop": 0.809659,
+      "tps": [
+        0.65,
+        0.6,
+        0.55
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-17T08:54:10.781492+00:00"
+    },
+    {
+      "date": "2026-11-17",
+      "symbol": "ADAUSDT",
+      "direction": "SHORT",
+      "confidence": 55.3,
+      "entry": 0.15285,
+      "stop": 0.16816243,
+      "tps": [
+        0.135929,
+        0.12776573,
+        0.127359
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-17T08:54:10.781505+00:00"
     }
   ]
 }
