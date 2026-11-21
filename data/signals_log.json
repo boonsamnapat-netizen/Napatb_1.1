@@ -524,10 +524,10 @@
         6.19945849,
         6.0
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 6.5,
+      "result_r": 0.803,
+      "closed_date": "2026-11-20",
       "logged_at": "2026-11-15T07:39:31.310826+00:00"
     },
     {
@@ -542,10 +542,10 @@
         36.3972346,
         36.26830673
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 40.0,
+      "result_r": 0.811,
+      "closed_date": "2026-11-20",
       "logged_at": "2026-11-16T07:44:48.689910+00:00"
     },
     {
@@ -560,10 +560,10 @@
         0.052269,
         0.05
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.052382,
+      "result_r": 0.886,
+      "closed_date": "2026-11-21",
       "logged_at": "2026-11-16T07:44:48.689940+00:00"
     },
     {
@@ -578,10 +578,10 @@
         0.06,
         0.0005088
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.065,
+      "result_r": 0.987,
+      "closed_date": "2026-11-21",
       "logged_at": "2026-11-17T08:54:10.781471+00:00"
     },
     {
@@ -596,10 +596,10 @@
         0.6,
         0.55
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.65,
+      "result_r": 1.017,
+      "closed_date": "2026-11-21",
       "logged_at": "2026-11-17T08:54:10.781492+00:00"
     },
     {
@@ -614,10 +614,10 @@
         0.12776573,
         0.127359
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "TP1",
+      "exit": 0.135929,
+      "result_r": 1.105,
+      "closed_date": "2026-11-21",
       "logged_at": "2026-11-17T08:54:10.781505+00:00"
     },
     {
@@ -632,10 +632,10 @@
         500.0,
         384.00005936
       ],
-      "status": "open",
-      "exit": null,
-      "result_r": null,
-      "closed_date": null,
+      "status": "SL",
+      "exit": 1261.88374371,
+      "result_r": -1.0,
+      "closed_date": "2026-11-20",
       "logged_at": "2026-11-19T08:30:36.688670+00:00"
     },
     {
@@ -655,6 +655,78 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-20T08:12:24.823833+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "symbol": "BNBUSDT",
+      "direction": "SHORT",
+      "confidence": 65.6,
+      "entry": 523.09002686,
+      "stop": 561.37193028,
+      "tps": [
+        450.0,
+        419.21875321,
+        400.0
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-21T08:05:48.538908+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "symbol": "LINKUSDT",
+      "direction": "SHORT",
+      "confidence": 67.1,
+      "entry": 8.31000042,
+      "stop": 9.18009031,
+      "tps": [
+        7.5,
+        7.0,
+        6.5038342
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-21T08:05:48.538929+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "symbol": "ATOMUSDT",
+      "direction": "SHORT",
+      "confidence": 56.3,
+      "entry": 1.15470004,
+      "stop": 1.27452025,
+      "tps": [
+        1.0,
+        0.6754192,
+        0.5
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-21T08:05:48.538940+00:00"
+    },
+    {
+      "date": "2026-11-21",
+      "symbol": "BTCUSDT",
+      "direction": "SHORT",
+      "confidence": 67.2,
+      "entry": 57703.01953125,
+      "stop": 61913.39659066,
+      "tps": [
+        53206.57617188,
+        52622.06953125,
+        50709.17382812
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-21T08:05:48.538955+00:00"
     }
   ]
 }
