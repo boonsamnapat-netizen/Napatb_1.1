@@ -727,6 +727,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-21T08:05:48.538955+00:00"
+    },
+    {
+      "date": "2026-11-22",
+      "symbol": "OPUSDT",
+      "direction": "SHORT",
+      "confidence": 55.4,
+      "entry": 0.07002,
+      "stop": 0.08043157,
+      "tps": [
+        0.06,
+        0.055,
+        0.0005088
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-22T07:51:27.179615+00:00"
+    },
+    {
+      "date": "2026-11-22",
+      "symbol": "DOTUSDT",
+      "direction": "SHORT",
+      "confidence": 55.7,
+      "entry": 0.64459997,
+      "stop": 0.71700846,
+      "tps": [
+        0.55,
+        0.5,
+        0.45
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-22T07:51:27.179634+00:00"
     }
   ]
 }
