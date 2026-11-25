@@ -781,6 +781,42 @@
       "result_r": null,
       "closed_date": null,
       "logged_at": "2026-11-24T10:44:18.419986+00:00"
+    },
+    {
+      "date": "2026-11-25",
+      "symbol": "BNBUSDT",
+      "direction": "SHORT",
+      "confidence": 55.3,
+      "entry": 539.39001465,
+      "stop": 581.20434433,
+      "tps": [
+        500.0,
+        450.0,
+        419.21875321
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-25T09:39:46.448339+00:00"
+    },
+    {
+      "date": "2026-11-25",
+      "symbol": "AAVEUSDT",
+      "direction": "SHORT",
+      "confidence": 56.4,
+      "entry": 91.69999695,
+      "stop": 103.41672998,
+      "tps": [
+        80.0,
+        75.46712887,
+        75.0
+      ],
+      "status": "open",
+      "exit": null,
+      "result_r": null,
+      "closed_date": null,
+      "logged_at": "2026-11-25T09:39:46.448379+00:00"
     }
   ]
 }
