@@ -31,13 +31,20 @@ python3 tools/check_bank.py
 ```
 python3 tcas_cli.py export
 python3 -m http.server -d web/dist 8765 &
-npm i playwright        # ครั้งแรกครั้งเดียว
+npm i playwright        # ครั้งแรกของ container
 node tools/check_app.mjs      # 6 หน้า × 2 ธีม × 2 ความกว้าง
 node tools/check_venue.mjs    # ฟีเจอร์สนามสอบ + ความเป็นส่วนตัว
 ```
 
 `check_app.mjs` ตรวจ: สกรอลล์แนวนอน · ปุ่มเตี้ยกว่า 40px · คอนทราสต์ต่ำกว่า
-WCAG AA · JS error
+WCAG AA · JS error · **"ยังทันไหม" คิดชั่วโมงเป็นพูลเดียว** (ดูด้านล่าง)
+
+> **ห้ามรัน `npx playwright install`** — Chromium ติดมากับ image แล้ว
+> `tools/_chrome.mjs` (และ `_chrome()` ใน `check_planner.py`) หา binary เองจาก
+> `PLAYWRIGHT_BROWSERS_PATH` เพราะทั้งเลข build และชื่อโฟลเดอร์เปลี่ยนเวลา image
+> อัปเดต (เคย `chromium-1194/chrome-linux` ตอนนี้ `chromium-1243/chrome-linux64`)
+> และ playwright ที่ npm ลงใหม่มักมองหา build คนละตัวกับที่ image มี
+> จะบังคับ path เองก็ตั้ง `CHROME_PATH`
 `check_venue.mjs` ตรวจ: ตัวแกะข้อความ · ข้อมูลไม่ออกนอกเครื่อง · LOCATION
 ในไฟล์ปฏิทิน · ไฟล์สำรองพาไปด้วย
 

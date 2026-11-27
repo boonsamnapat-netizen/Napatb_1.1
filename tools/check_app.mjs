@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
+import { chromePath } from "./_chrome.mjs";
 let pass=0, fail=0;
 const ok=(c,m)=>{ if(c){pass++;} else {fail++;console.log("  ✗ "+m);} };
-const B = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const B = await chromium.launch({ executablePath: chromePath() });
 const seed={app:"tcas70",seenIntro:true,
   settings:{targetProgram:"cu_med",watch:["cu_med"]},
   scores:{tpat1:210,bio:62,chem:55,phys:48,math1:58,eng:66,thai:60,social:64},
@@ -88,6 +89,30 @@ for (const theme of ["light","dark"]) {
     await ctx.close();
   }
 }
+/* ── "ยังทันไหม" ต้องคิดชั่วโมงเป็นพูลเดียว ──────────────────────────
+   ชั่วโมงว่างก้อนเดียวถูกนับซ้ำให้ทุกเส้นตายมาก่อน แล้วรายงานว่าขาดน้อยกว่า
+   ความจริงสิบเท่า (27 พ.ย. 69: ก้อน 14 มี.ค. ขึ้น "ตึง" ทั้งที่ขาด 386 ชม.)
+   เป็นฟีเจอร์ที่ตอบคำถามสำคัญที่สุดของแอป พลาดแล้วเด็กวางแผนผิดทั้งเทอม */
+{
+  const ctx = await B.newContext();
+  const p = await ctx.newPage();
+  await p.addInitScript(st => localStorage.setItem("tcas70.v1", JSON.stringify(st)),
+    {...seed, scores:{}, venues:{}});
+  await p.goto("http://localhost:8765/", {waitUntil:"networkidle"});
+  const o = await p.evaluate(() => outlook().map(x =>
+    ({d:x.deadline, own:x.own, need:x.need, avail:x.avail})));
+  ok(o.length > 1, `outlook: ควรมีเส้นตายมากกว่าหนึ่ง (ได้ ${o.length})`);
+  ok(o.every((x, i) => i === 0 || x.need >= o[i-1].need - 1e-6),
+     "outlook: ต้องอ่านสะสมต้องไม่ลดลงตามเส้นตายที่ไล่ไปข้างหน้า");
+  const sumOwn = o.reduce((a, x) => a + x.own, 0);
+  ok(Math.abs(o[o.length-1].need - sumOwn) < 1e-6,
+     `outlook: ยอดสะสมก้อนสุดท้าย (${Math.round(o[o.length-1].need)}) ` +
+     `ต้องเท่าผลรวมทุกก้อน (${Math.round(sumOwn)})`);
+  ok(o.every(x => x.need >= x.own - 1e-6),
+     "outlook: ยอดสะสมต้องไม่น้อยกว่าของก้อนตัวเอง");
+  await ctx.close();
+}
+
 console.log(`รวม ${pass} ผ่าน / ${fail} ไม่ผ่าน`);
 await B.close();
 process.exit(fail?1:0);

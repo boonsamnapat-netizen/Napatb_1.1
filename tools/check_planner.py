@@ -30,7 +30,29 @@ from src.tcas import planner, quiz, syllabus  # noqa: E402
 from src.tcas.config import load_config  # noqa: E402
 from src.tcas.store import ProgressStore  # noqa: E402
 
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+def _chrome() -> str:
+    """หา Chromium ที่ติดมากับ image — ห้ามฮาร์ดโค้ดเลขเวอร์ชัน.
+
+    เลข build กับชื่อโฟลเดอร์เปลี่ยนเองเวลา image อัปเดต (เคย chromium-1194/
+    chrome-linux ตอนนี้ chromium-1243/chrome-linux64) และ playwright ที่ npm
+    ลงใหม่มักมองหา build คนละตัวกับที่ image มี จึงต้องส่ง path ให้ตรง ๆ
+    """
+    env = os.environ.get("CHROME_PATH")
+    if env and pathlib.Path(env).exists():
+        return env
+    root = pathlib.Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers"))
+    dirs = sorted(
+        (d for d in root.glob("chromium-*") if d.name.split("-")[-1].isdigit()),
+        key=lambda d: int(d.name.split("-")[-1]), reverse=True)
+    for d in dirs:
+        for sub in ("chrome-linux64", "chrome-linux"):
+            p = d / sub / "chrome"
+            if p.exists():
+                return str(p)
+    raise SystemExit(f"หา Chromium ใน {root} ไม่เจอ — ตั้ง CHROME_PATH ชี้ไปที่ binary เอง")
+
+
+CHROME = _chrome()
 
 _BANK = quiz.load_bank("data/tcas/questions")
 QIDS_BY_TOPIC: dict = {}

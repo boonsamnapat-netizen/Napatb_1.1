@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
+import { chromePath } from "./_chrome.mjs";
 let pass=0, fail=0;
 const ok=(c,m)=>{ if(c){pass++;console.log("  ✓ "+m);} else {fail++;console.log("  ✗ "+m);} };
-const B = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const B = await chromium.launch({ executablePath: chromePath() });
 const ctx = await B.newContext({viewport:{width:390,height:844}, reducedMotion:'reduce'});
 const p = await ctx.newPage();
 p.on("pageerror", e => { fail++; console.log("  ✗ JS error: "+e.message); });

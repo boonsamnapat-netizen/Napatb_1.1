@@ -1927,12 +1927,20 @@ function outlook() {
     if (!dl || dl < TODAY) continue;   // สนามที่สอบไปแล้วไม่ต้องเตือนอีก
     byDeadline[dl] = (byDeadline[dl] || 0) + s.topics.reduce((a, t) => a + hoursLeftOf(t), 0);
   }
-  return Object.entries(byDeadline).sort().map(([dl, need]) => {
+  /* ⚠️ ชั่วโมงว่างเป็น "พูลเดียว" ที่ทุกเส้นตายแย่งกันใช้ ไม่ใช่โควตาของใครของมัน
+     เดิมแต่ละเส้นตายเอา learnHoursBetween(วันนี้, เส้นตายตัวเอง) มาเต็มจำนวน
+     ชั่วโมงก้อนเดียวจึงถูกนับซ้ำให้ทุกก้อน แล้วรายงานว่าขาดน้อยกว่าความจริงมาก
+     (เคสจริง 27 พ.ย. 69: ก้อน 14 มี.ค. ขึ้น "ตึง" ทั้งที่ขาดอยู่ 386 ชม.)
+     ที่ถูกคือ "ต้องอ่านสะสม" — ก่อนถึงเส้นตายหนึ่ง ต้องอ่านของเส้นตายก่อน ๆ จบด้วย */
+  let running = 0;
+  return Object.entries(byDeadline).sort().map(([dl, own]) => {
+    running += own;
+    const need = running;
     const avail = learnHoursBetween(TODAY, dl);
     const exam = DATA.exams.find(e => e.date === dl);
     const ratio = avail > 0 ? need / avail : (need > 0 ? 99 : 0);
     return {
-      deadline: dl, need, avail, slack: avail - need,
+      deadline: dl, need, own, avail, slack: avail - need,
       // เส้นตายรายวิชา (เช่น 2027-03-14) ไม่มีใน DATA.exams จึงเคยตกมาเป็น ISO ดิบกลางข้อความไทย
       name: exam ? exam.name : thaiDate(dl),
       status: need <= 0 ? "done" : ratio <= 0.85 ? "ok" : ratio <= 1 ? "tight" : "over",
@@ -5034,7 +5042,9 @@ function viewSettings() {
         '">' + Math.round(o.need) + " / " + Math.round(o.avail) + " ชม.</span>" +
       "</div>")));
     im.appendChild(el('<p class="tiny" style="margin:8px 0 0">ต้องอ่าน / เวลาว่างที่มี — ' +
-      "ถ้าตัวซ้ายมากกว่าตัวขวา แปลว่าเวลาไม่พอ</p>"));
+      "ถ้าตัวซ้ายมากกว่าตัวขวา แปลว่าเวลาไม่พอ<br>" +
+      "ตัวเลขซ้ายเป็น<b>ยอดสะสม</b> เพราะก่อนถึงวันสอบหนึ่ง ต้องอ่านของวันสอบก่อนหน้าจบไปแล้วด้วย " +
+      "ชั่วโมงว่างมีพูลเดียว ไม่ได้แยกโควตาให้แต่ละวันสอบ</p>"));
     wrap.appendChild(im);
   }
 
